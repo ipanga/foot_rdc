@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/utils/date_utils.dart';
+import 'package:foot_rdc/utils/string_utils.dart';
 
 class ArticleDetailsPage extends ConsumerWidget {
   final Article article;
@@ -143,34 +144,20 @@ class ArticleDetailsPage extends ConsumerWidget {
                               // meta row: date • read time • category
                               Row(
                                 children: [
+                                  if (category.isNotEmpty)
+                                    Text(
+                                      '${formatCategory(category)}  -',
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  // static read time placeholder (replace if you have read time)
+                                  if (category.isNotEmpty)
+                                    const SizedBox(width: 8),
                                   if (date.isNotEmpty)
                                     Text(
                                       date,
                                       style: theme.textTheme.bodySmall,
                                     ),
                                   if (date.isNotEmpty) const SizedBox(width: 8),
-                                  // static read time placeholder (replace if you have read time)
-                                  Text(
-                                    '• 5 min read',
-                                    style: theme.textTheme.bodySmall,
-                                  ),
-                                  if (category.isNotEmpty)
-                                    const SizedBox(width: 8),
-                                  if (category.isNotEmpty)
-                                    GestureDetector(
-                                      onTap: () {
-                                        // TODO: navigate to category
-                                      },
-                                      child: Text(
-                                        category,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: Colors.redAccent,
-                                              decoration:
-                                                  TextDecoration.underline,
-                                            ),
-                                      ),
-                                    ),
                                 ],
                               ),
                             ],
