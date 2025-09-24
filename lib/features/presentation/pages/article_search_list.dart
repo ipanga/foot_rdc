@@ -154,7 +154,13 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
         : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Search Articles')),
+      appBar: AppBar(
+        title: const Text('|  SEARCH ARTICLES'),
+        centerTitle: false,
+        //backgroundColor: Colors.white,
+        elevation: 4.0,
+        shadowColor: Colors.black26,
+      ),
       body: Column(
         children: [
           // Search input area with validation and submit button.

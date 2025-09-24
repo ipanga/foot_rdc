@@ -23,7 +23,12 @@ class ArticleSavedList extends ConsumerWidget {
 
     return Scaffold(
       // App bar with simple title
-      appBar: AppBar(title: const Text('Articles')),
+      appBar: AppBar(
+        title: const Text('|  SAVED ARTICLES'),
+        centerTitle: false,
+        elevation: 4.0,
+        shadowColor: Colors.black26,
+      ),
 
       // Main body content
       body: savedArticles.isEmpty

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/utils/date_utils.dart';
 import 'package:foot_rdc/utils/string_utils.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ArticleDetailsPage extends ConsumerWidget {
   final Article article;
@@ -115,8 +118,101 @@ class ArticleDetailsPage extends ConsumerWidget {
                           child: IconButton(
                             icon: const Icon(Icons.share),
                             color: Colors.black87,
-                            onPressed: () {
-                              // TODO: show actions
+                            onPressed: () async {
+                              try {
+                                // Check if we're on a supported platform
+                                if (defaultTargetPlatform ==
+                                        TargetPlatform.windows ||
+                                    defaultTargetPlatform ==
+                                        TargetPlatform.linux) {
+                                  // For unsupported platforms, show a message
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Share not supported on this platform',
+                                      ),
+                                      backgroundColor: Colors.orange,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                final String shareText =
+                                    '${article.title}\n\n${article.link}';
+
+                                // Use Share.share with better error handling
+                                await Share.share(
+                                  shareText,
+                                  subject: article.title,
+                                );
+
+                                // Show success message
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Article shared successfully!',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              } catch (e) {
+                                // Handle specific share_plus errors
+                                String errorMessage = 'Failed to share article';
+
+                                if (e.toString().contains(
+                                  'No implementation found',
+                                )) {
+                                  errorMessage =
+                                      'Share feature not available on this device. Please try copying the link instead.';
+                                } else {
+                                  errorMessage =
+                                      'Failed to share: ${e.toString()}';
+                                }
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(errorMessage),
+                                    backgroundColor: Colors.red,
+                                    duration: const Duration(seconds: 4),
+                                    action: SnackBarAction(
+                                      label: 'Copy Link',
+                                      textColor: Colors.white,
+                                      onPressed: () async {
+                                        // Copy to clipboard as fallback
+                                        try {
+                                          await Clipboard.setData(
+                                            ClipboardData(
+                                              text:
+                                                  '${article.title}\n\n${article.link}',
+                                            ),
+                                          );
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Article link copied to clipboard!',
+                                              ),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        } catch (_) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Unable to copy link',
+                                              ),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                           ),
                         ),

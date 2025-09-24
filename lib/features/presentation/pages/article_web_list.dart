@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/main.dart';
@@ -85,7 +86,11 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
         _currentPage = 1;
         _hasReachedEnd = false;
         _isLoadingMore = false;
+        _allArticles = []; // Clear the articles to trigger provider reload
       });
+
+      // Invalidate the provider to force a fresh fetch
+      ref.invalidate(fetchArticlesProvider);
 
       // Fetch fresh data from the first page
       const input = "page=1&per_page=15";
@@ -116,7 +121,19 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
       final articlesAsync = ref.watch(fetchArticlesProvider(input));
 
       return Scaffold(
-        appBar: AppBar(title: const Text('Articles')),
+        appBar: AppBar(
+          title: SvgPicture.asset(
+            'assets/images/footrdc_header_cropped.svg',
+            height: 24,
+            fit: BoxFit.contain,
+            colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+          ),
+          actions: [
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _onRefresh),
+          ],
+          elevation: 4.0,
+          shadowColor: Colors.black26,
+        ),
         // Use AsyncValue.when to handle loading, data and error states cleanly.
         body: articlesAsync.when(
           data: (articles) {
@@ -169,7 +186,17 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
 
     // Once we have articles loaded, render them independently of the provider
     return Scaffold(
-      appBar: AppBar(title: const Text('Articles')),
+      appBar: AppBar(
+        title: SvgPicture.asset(
+          'assets/images/footrdc_header_cropped.svg',
+          height: 24,
+          fit: BoxFit.contain,
+          colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+        ),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _onRefresh),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         child: ListView.builder(
