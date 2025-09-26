@@ -37,7 +37,7 @@ class ArticleDetailsPage extends ConsumerWidget {
     final double topPadding = MediaQuery.of(context).padding.top;
     // add the top inset to the image height so it visually covers the status bar
     return Scaffold(
-      backgroundColor: Colors.pink.shade50,
+      backgroundColor: Colors.white,
       body: SafeArea(
         top: false,
         bottom: false,
@@ -145,16 +145,6 @@ class ArticleDetailsPage extends ConsumerWidget {
                                   shareText,
                                   subject: article.title,
                                 );
-
-                                // Show success message
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Article shared successfully!',
-                                    ),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
                               } catch (e) {
                                 // Handle specific share_plus errors
                                 String errorMessage = 'Failed to share article';
@@ -172,7 +162,7 @@ class ArticleDetailsPage extends ConsumerWidget {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(errorMessage),
-                                    backgroundColor: Colors.red,
+                                    backgroundColor: const Color(0xFFec3535),
                                     duration: const Duration(seconds: 4),
                                     action: SnackBarAction(
                                       label: 'Copy Link',
@@ -204,7 +194,9 @@ class ArticleDetailsPage extends ConsumerWidget {
                                               content: Text(
                                                 'Unable to copy link',
                                               ),
-                                              backgroundColor: Colors.red,
+                                              backgroundColor: Color(
+                                                0xFFec3535,
+                                              ),
                                             ),
                                           );
                                         }

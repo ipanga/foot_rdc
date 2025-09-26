@@ -11,19 +11,19 @@ class ArticleListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            //borderRadius: BorderRadius.circular(12),
             child: Image.network(
               article.imageUrl,
-              width: 110,
+              width: 120,
               height: 90,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
-                  Container(width: 110, height: 90, color: Colors.grey[300]),
+                  Container(width: 120, height: 90, color: Colors.grey[300]),
             ),
           ),
           const SizedBox(width: 12),
@@ -36,9 +36,8 @@ class ArticleListItem extends StatelessWidget {
                   article.title,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -47,10 +46,9 @@ class ArticleListItem extends StatelessWidget {
                   children: [
                     Text(
                       formatCategory(article.category),
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
-                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -63,7 +61,9 @@ class ArticleListItem extends StatelessWidget {
                       formatArticleDate(article.dateGmt),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

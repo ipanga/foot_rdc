@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core_error/logger_riverpod.dart';
 import 'package:foot_rdc/features/data/models/article_model.dart';
@@ -50,49 +51,66 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // Set system UI overlay style for light status bar
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
+        fontFamily: 'Lato', // Use the custom font defined in pubspec.yaml
         // Start from a red seed, then force all background/surface colors to white
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red).copyWith(
-          surface: Colors.white,
-          primary: Colors.red,
-          secondary: Colors.red,
-          brightness: Brightness.light,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFec3535))
+            .copyWith(
+              surface: Colors.white,
+              primary: const Color(0xFFec3535),
+              secondary: const Color(0xFFec3535),
+              brightness: Brightness.light,
+            ),
         scaffoldBackgroundColor: Colors.white,
 
         // App bar (top) white
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
-          foregroundColor: Colors.red,
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.red),
+          surfaceTintColor: Colors.white,
+          foregroundColor: Color(0xFFec3535),
+          elevation: 6,
+          iconTheme: IconThemeData(color: Color(0xFFec3535)),
           titleTextStyle: TextStyle(
-            color: Colors.red,
+            color: Color(0xFFec3535),
             fontSize: 20,
             fontWeight: FontWeight.w600,
+          ),
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
           ),
         ),
 
         // Bottom app bar & BottomNavigation white
         bottomAppBarTheme: const BottomAppBarThemeData(
           color: Colors.white,
-          elevation: 0,
+          elevation: 6,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
-          selectedItemColor: Colors.red,
-          unselectedItemColor: Colors.grey,
-          elevation: 0,
+          selectedItemColor: Color(0xFFec3535),
+          unselectedItemColor: Colors.black,
+          elevation: 6,
         ),
 
         // Material 3 NavigationBar (if used) white
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: Colors.white,
-          indicatorColor: Colors.red.withValues(alpha: 0.2),
+          indicatorColor: Color(0xFFec3535).withValues(alpha: 0.2),
           labelTextStyle: WidgetStateProperty.all(
-            const TextStyle(color: Colors.red),
+            const TextStyle(color: Color(0xFFec3535)),
           ),
         ),
         cardColor: Colors.white,
@@ -107,13 +125,13 @@ class MyApp extends StatelessWidget {
 
         // Controls keep red as primary accent
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Colors.red,
+          backgroundColor: Color(0xFFec3535),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFec3535)),
         ),
         textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          style: TextButton.styleFrom(foregroundColor: Color(0xFFec3535)),
         ),
         dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
       ),

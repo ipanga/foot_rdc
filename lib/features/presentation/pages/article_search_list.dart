@@ -155,9 +155,9 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Text('|  SEARCH ARTICLES'),
         centerTitle: false,
-        //backgroundColor: Colors.white,
         elevation: 4.0,
         shadowColor: Colors.black26,
       ),
@@ -165,12 +165,12 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
         children: [
           // Search input area with validation and submit button.
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(12.0), // Space around the search bar
             child: Form(
               key: _formKey,
               child: CustomSearchBar(
                 controller: _controller,
-                hintText: 'Type keywords (e.g. jackson muleka)',
+                hintText: 'Type keywords (e.g. Jackson Muleka)',
                 onSubmitted: _submitSearch,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
@@ -181,6 +181,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
               ),
             ),
           ),
+
           // Results area:
           // - If no search has been performed yet, show an empty-message.
           // - Otherwise use AsyncValue.when to render loading/error/data.
@@ -210,10 +211,32 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                     if (_allArticles.isNotEmpty) {
                       return RefreshIndicator(
                         onRefresh: _onRefresh,
-                        child: ListView.builder(
+                        child: ListView.separated(
                           controller: _scrollController,
                           itemCount:
                               _allArticles.length + (_isLoadingMore ? 1 : 0),
+                          separatorBuilder: (context, index) {
+                            // Don't show separator before the loading indicator
+                            if (index == _allArticles.length - 1 &&
+                                _isLoadingMore) {
+                              return const SizedBox.shrink();
+                            }
+                            return Container(
+                              height: 1,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.grey.shade200,
+                                    Colors.grey.shade300,
+                                    Colors.grey.shade200,
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                           itemBuilder: (context, index) {
                             // Show loading indicator at the bottom
                             if (index == _allArticles.length) {
@@ -251,9 +274,22 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                     // Build a scrollable list of articles (initial load).
                     return RefreshIndicator(
                       onRefresh: _onRefresh,
-                      child: ListView.builder(
+                      child: ListView.separated(
                         controller: _scrollController,
                         itemCount: articles.length,
+                        separatorBuilder: (context, index) => Container(
+                          height: 1,
+                          margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.grey.shade200,
+                                Colors.grey.shade300,
+                                Colors.grey.shade200,
+                              ],
+                            ),
+                          ),
+                        ),
                         itemBuilder: (context, index) {
                           final article = articles[index];
                           // Navigate to ArticleDetailsPage when tapping an item.
