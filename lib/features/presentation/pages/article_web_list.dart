@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/main.dart';
@@ -123,14 +122,26 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
-          title: SvgPicture.asset(
-            'assets/images/footrdc_header_cropped.svg',
-            height: 24,
-            fit: BoxFit.contain,
-            colorFilter: const ColorFilter.mode(
-              Color(0xFFec3535),
-              BlendMode.srcIn,
-            ),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Image.asset(
+                'assets/images/logo_splash_footrdc.png',
+                height: 50, // Set a specific height for the logo
+                fit: BoxFit.contain,
+              ),
+              // const SizedBox(width: 2),
+              const Text(
+                'FOOTRDC.COM',
+                style: TextStyle(
+                  color: Color(0xFFec3535),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Oswald',
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
           ),
           actions: [
             IconButton(icon: const Icon(Icons.refresh), onPressed: _onRefresh),
@@ -205,14 +216,26 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: SvgPicture.asset(
-          'assets/images/footrdc_header_cropped.svg',
-          height: 24,
-          fit: BoxFit.contain,
-          colorFilter: const ColorFilter.mode(
-            Color(0xFFec3535),
-            BlendMode.srcIn,
-          ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Image.asset(
+              'assets/images/logo_splash_footrdc.png',
+              height: 50, // Set a specific height for the logo
+              fit: BoxFit.contain,
+            ),
+            // const SizedBox(width: 2),
+            const Text(
+              'FOOTRDC.COM',
+              style: TextStyle(
+                color: Color(0xFFec3535),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Oswald',
+                letterSpacing: 1.5,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _onRefresh),

@@ -25,7 +25,16 @@ class ArticleSavedList extends ConsumerWidget {
       // App bar with simple title
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('|  SAVED ARTICLES'),
+        title: const Text(
+          '|  SAVED ARTICLES',
+          style: TextStyle(
+            color: Color(0xFFec3535),
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Oswald',
+            letterSpacing: 1.5,
+          ),
+        ),
         centerTitle: false,
         elevation: 4.0,
         shadowColor: Colors.black26,

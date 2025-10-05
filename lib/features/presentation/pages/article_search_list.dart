@@ -156,7 +156,16 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('|  SEARCH ARTICLES'),
+        title: const Text(
+          '|  SEARCH ARTICLES',
+          style: TextStyle(
+            color: Color(0xFFec3535),
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Oswald',
+            letterSpacing: 1.5,
+          ),
+        ),
         centerTitle: false,
         elevation: 4.0,
         shadowColor: Colors.black26,

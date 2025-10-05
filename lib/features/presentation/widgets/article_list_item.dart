@@ -11,44 +11,44 @@ class ArticleListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            //borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             child: Image.network(
               article.imageUrl,
               width: 120,
-              height: 90,
+              height: 75,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
-                  Container(width: 120, height: 90, color: Colors.grey[300]),
+                  Container(width: 120, height: 75, color: Colors.grey[300]),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title on top only
+                // Title positioned at top right of image
                 Text(
                   article.title,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 6),
-                // Category and date on the same line, separated by a sign
+                // Category and date positioned at bottom right of image
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
                       formatCategory(article.category),
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(width: 8),

@@ -284,5 +284,133 @@ class _SearchArticlesProviderElement
   @override
   String get searchName => (origin as SearchArticlesProvider).searchName;
 }
+
+String _$fetchMatchesHash() => r'894b269c8feb632534ae5d982131650a561a18fd';
+
+/// See also [fetchMatches].
+@ProviderFor(fetchMatches)
+const fetchMatchesProvider = FetchMatchesFamily();
+
+/// See also [fetchMatches].
+class FetchMatchesFamily extends Family<AsyncValue<List<Match>>> {
+  /// See also [fetchMatches].
+  const FetchMatchesFamily();
+
+  /// See also [fetchMatches].
+  FetchMatchesProvider call(
+    String pagination,
+  ) {
+    return FetchMatchesProvider(
+      pagination,
+    );
+  }
+
+  @override
+  FetchMatchesProvider getProviderOverride(
+    covariant FetchMatchesProvider provider,
+  ) {
+    return call(
+      provider.pagination,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'fetchMatchesProvider';
+}
+
+/// See also [fetchMatches].
+class FetchMatchesProvider extends AutoDisposeFutureProvider<List<Match>> {
+  /// See also [fetchMatches].
+  FetchMatchesProvider(
+    String pagination,
+  ) : this._internal(
+          (ref) => fetchMatches(
+            ref as FetchMatchesRef,
+            pagination,
+          ),
+          from: fetchMatchesProvider,
+          name: r'fetchMatchesProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$fetchMatchesHash,
+          dependencies: FetchMatchesFamily._dependencies,
+          allTransitiveDependencies:
+              FetchMatchesFamily._allTransitiveDependencies,
+          pagination: pagination,
+        );
+
+  FetchMatchesProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.pagination,
+  }) : super.internal();
+
+  final String pagination;
+
+  @override
+  Override overrideWith(
+    FutureOr<List<Match>> Function(FetchMatchesRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: FetchMatchesProvider._internal(
+        (ref) => create(ref as FetchMatchesRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        pagination: pagination,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<List<Match>> createElement() {
+    return _FetchMatchesProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is FetchMatchesProvider && other.pagination == pagination;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, pagination.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+mixin FetchMatchesRef on AutoDisposeFutureProviderRef<List<Match>> {
+  /// The parameter `pagination` of this provider.
+  String get pagination;
+}
+
+class _FetchMatchesProviderElement
+    extends AutoDisposeFutureProviderElement<List<Match>> with FetchMatchesRef {
+  _FetchMatchesProviderElement(super.provider);
+
+  @override
+  String get pagination => (origin as FetchMatchesProvider).pagination;
+}
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

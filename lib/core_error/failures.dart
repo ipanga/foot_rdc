@@ -6,3 +6,7 @@ abstract class Failure {
 class SomeSpecificError extends Failure {
   SomeSpecificError(String message) : super(message);
 }
+
+class ServerFailure extends Failure {
+  ServerFailure(String message) : super(message);
+}

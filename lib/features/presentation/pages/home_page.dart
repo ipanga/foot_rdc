@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:foot_rdc/features/presentation/pages/article_web_list.dart';
 import 'package:foot_rdc/features/presentation/pages/article_saved_list.dart';
 import 'package:foot_rdc/features/presentation/pages/article_search_list.dart';
+import 'package:foot_rdc/features/presentation/pages/matchs_list.dart';
+import 'package:foot_rdc/features/presentation/pages/table_league.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,6 +19,8 @@ class _HomePageState extends State<HomePage> {
   List<Widget> pages = const [
     ArticleWebList(),
     ArticleSavedList(),
+    MatchsList(),
+    TableLeague(),
     ArticleSearchList(),
   ];
 
@@ -29,70 +33,121 @@ class _HomePageState extends State<HomePage> {
         children: pages,
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        //iconSize: 35,
-        selectedFontSize: 10,
-        unselectedFontSize: 10,
-        onTap: (value) {
-          setState(() {
-            currentPage = value;
-          });
-        },
-        currentIndex: currentPage,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: Colors.grey, width: 0.2)),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          selectedFontSize: 9,
+          unselectedFontSize: 9,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w300),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w300),
+          elevation: 0,
+          onTap: (value) {
+            setState(() {
+              currentPage = value;
+            });
+          },
+          currentIndex: currentPage,
 
-        items: [
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
-              'assets/images/home-icon-v2-outlined.svg',
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            activeIcon: SvgPicture.asset(
-              'assets/images/home-icon-v2-full.svg',
-              height: 24,
-              fit: BoxFit.contain,
-              colorFilter: const ColorFilter.mode(
-                Color(0xFFec3535),
-                BlendMode.srcIn,
+          items: [
+            // Home Icon
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/images/home-icon-v2-outlined.svg',
+                height: 24,
+                fit: BoxFit.contain,
               ),
-            ),
-            label: 'HOME',
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
-              'assets/images/save-icon-outlined.svg',
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            activeIcon: SvgPicture.asset(
-              'assets/images/save-icon-full.svg',
-              height: 24,
-              fit: BoxFit.contain,
-              colorFilter: const ColorFilter.mode(
-                Color(0xFFec3535),
-                BlendMode.srcIn,
+              activeIcon: SvgPicture.asset(
+                'assets/images/home-icon-v2-filled.svg',
+                height: 24,
+                fit: BoxFit.contain,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFFec3535),
+                  BlendMode.srcIn,
+                ),
               ),
+              label: 'ACCUEIL',
             ),
-            label: 'SAVED',
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
-              'assets/images/search-icon-outlined.svg',
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            activeIcon: SvgPicture.asset(
-              'assets/images/search-icon-outlined.svg',
-              height: 24,
-              fit: BoxFit.contain,
-              colorFilter: const ColorFilter.mode(
-                Color(0xFFec3535),
-                BlendMode.srcIn,
+
+            // Saved Icon
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/images/save-icon-outlined.svg',
+                height: 24,
+                fit: BoxFit.contain,
               ),
+              activeIcon: SvgPicture.asset(
+                'assets/images/save-icon-filled.svg',
+                height: 24,
+                fit: BoxFit.contain,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFFec3535),
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: 'ENREGISTRÉS',
             ),
-            label: 'SEARCH',
-          ),
-        ],
+
+            // Matchs Icon
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/images/soccer-field-icon-outlined.svg',
+                height: 24,
+                fit: BoxFit.contain,
+              ),
+              activeIcon: SvgPicture.asset(
+                'assets/images/soccer-field-icon-filled.svg',
+                height: 24,
+                fit: BoxFit.contain,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFFec3535),
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: 'MATCHS',
+            ),
+
+            // Ranking Icon
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/images/ranking-icon-outlined.svg',
+                height: 24,
+                fit: BoxFit.contain,
+              ),
+              activeIcon: SvgPicture.asset(
+                'assets/images/ranking-icon-filled.svg',
+                height: 24,
+                fit: BoxFit.contain,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFFec3535),
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: 'CLASSEMENT',
+            ),
+
+            // Search Icon
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/images/search-icon-outlined.svg',
+                height: 24,
+                fit: BoxFit.contain,
+              ),
+              activeIcon: SvgPicture.asset(
+                'assets/images/search-icon-outlined.svg',
+                height: 24,
+                fit: BoxFit.contain,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFFec3535),
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: 'RECHERCHE',
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core_error/logger_riverpod.dart';
 import 'package:foot_rdc/features/data/models/article_model.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
+import 'package:foot_rdc/features/domain/entities/match.dart';
 import 'package:foot_rdc/features/domain/repositories/article_web_repository.dart';
 import 'package:foot_rdc/features/domain/repositories/article_search_repository.dart';
+import 'package:foot_rdc/features/domain/repositories/match_repository.dart';
 import 'package:foot_rdc/features/presentation/pages/home_page.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,6 +24,12 @@ Future<List<Article>> fetchArticles(Ref ref, String input) {
 Future<List<Article>> searchArticles(Ref ref, String searchName) {
   final articleSearchRepository = ref.watch(articleSearchRepositoryProvider);
   return articleSearchRepository.searchArticlesData(searchName);
+}
+
+@riverpod
+Future<List<Match>> fetchMatches(Ref ref, String pagination) {
+  final matchRepository = ref.watch(matchRepositoryProvider);
+  return matchRepository.fetchMatchesData(pagination);
 }
 
 Future<void> main() async {
@@ -63,7 +71,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        fontFamily: 'Lato', // Use the custom font defined in pubspec.yaml
+        fontFamily: 'Poppins', // Use the custom font defined in pubspec.yaml
         // Start from a red seed, then force all background/surface colors to white
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFec3535))
             .copyWith(
@@ -94,15 +102,11 @@ class MyApp extends StatelessWidget {
         ),
 
         // Bottom app bar & BottomNavigation white
-        bottomAppBarTheme: const BottomAppBarThemeData(
-          color: Colors.white,
-          elevation: 6,
-        ),
+        bottomAppBarTheme: const BottomAppBarThemeData(color: Colors.white),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
           selectedItemColor: Color(0xFFec3535),
           unselectedItemColor: Colors.black,
-          elevation: 6,
         ),
 
         // Material 3 NavigationBar (if used) white
