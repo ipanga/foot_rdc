@@ -18,9 +18,9 @@ class _HomePageState extends State<HomePage> {
 
   List<Widget> pages = const [
     ArticleWebList(),
-    ArticleSavedList(),
     MatchsList(),
     TableLeague(),
+    ArticleSavedList(),
     ArticleSearchList(),
   ];
 
@@ -68,26 +68,8 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'ACCUEIL',
-            ),
-
-            // Saved Icon
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/images/save-icon-outlined.svg',
-                height: 24,
-                fit: BoxFit.contain,
-              ),
-              activeIcon: SvgPicture.asset(
-                'assets/images/save-icon-filled.svg',
-                height: 24,
-                fit: BoxFit.contain,
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFFec3535),
-                  BlendMode.srcIn,
-                ),
-              ),
-              label: 'ENREGISTRÉS',
+              label: 'Accueil',
+              //label: 'ACCUEIL',
             ),
 
             // Matchs Icon
@@ -106,7 +88,8 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'MATCHS',
+              label: 'Matchs',
+              //label: 'MATCHS',
             ),
 
             // Ranking Icon
@@ -125,7 +108,28 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'CLASSEMENT',
+              label: 'Classement',
+              //label: 'CLASSEMENT',
+            ),
+
+            // Saved Icon
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/images/save-icon-outlined.svg',
+                height: 24,
+                fit: BoxFit.contain,
+              ),
+              activeIcon: SvgPicture.asset(
+                'assets/images/save-icon-filled.svg',
+                height: 24,
+                fit: BoxFit.contain,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFFec3535),
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: 'Enregistrés',
+              //label: 'ENREGISTRÉS',
             ),
 
             // Search Icon
@@ -144,7 +148,8 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'RECHERCHE',
+              label: 'Recherche',
+              //label: 'RECHERCHE',
             ),
           ],
         ),

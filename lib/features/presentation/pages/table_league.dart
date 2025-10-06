@@ -63,7 +63,7 @@ class _TableLeagueState extends ConsumerState<TableLeague>
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          '| CLASSEMENT LINAFOOT',
+          '|  CLASSEMENT LINAFOOT',
           style: TextStyle(
             color: Color(0xFFec3535),
             fontSize: 20,
@@ -87,10 +87,12 @@ class _TableLeagueState extends ConsumerState<TableLeague>
           labelStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
+            fontFamily: 'Oswald',
           ),
           unselectedLabelStyle: const TextStyle(
             fontWeight: FontWeight.w500,
             fontSize: 14,
+            fontFamily: 'Oswald',
           ),
           tabs: const [
             Tab(text: 'Groupe A'),

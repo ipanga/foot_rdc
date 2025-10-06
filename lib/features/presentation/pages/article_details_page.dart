@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_html/flutter_html.dart'; // Add this import
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/utils/date_utils.dart';
 import 'package:foot_rdc/utils/string_utils.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ArticleDetailsPage extends ConsumerWidget {
   final Article article;
@@ -269,9 +271,45 @@ class ArticleDetailsPage extends ConsumerWidget {
                     const SizedBox(height: 12),
 
                     // Excerpt / content preview
-                    Text(
-                      content.isEmpty ? 'No content available.' : content,
-                      style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+                    Html(
+                      data: content.isEmpty
+                          ? '<p>No content available.</p>'
+                          : content,
+                      style: {
+                        "body": Style(
+                          margin: Margins.zero,
+                          padding: HtmlPaddings.zero,
+                          fontSize: FontSize(
+                            theme.textTheme.bodyLarge?.fontSize ?? 16,
+                          ),
+                          lineHeight: LineHeight(1.5),
+                          fontFamily: theme.textTheme.bodyLarge?.fontFamily,
+                        ),
+                        "p": Style(margin: Margins.only(bottom: 16)),
+                        "h1, h2, h3, h4, h5, h6": Style(
+                          fontWeight: FontWeight.bold,
+                          margin: Margins.only(top: 16, bottom: 8),
+                        ),
+                        "a": Style(
+                          color: theme.colorScheme.primary,
+                          textDecoration: TextDecoration.underline,
+                        ),
+                        "img": Style(
+                          width: Width(double.infinity),
+                          margin: Margins.only(top: 8, bottom: 8),
+                        ),
+                      },
+                      onLinkTap: (url, attributes, element) async {
+                        if (url != null) {
+                          final uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        }
+                      },
                     ),
 
                     const SizedBox(height: 12),

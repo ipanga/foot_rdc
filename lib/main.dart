@@ -8,7 +8,7 @@ import 'package:foot_rdc/features/domain/entities/match.dart';
 import 'package:foot_rdc/features/domain/repositories/article_web_repository.dart';
 import 'package:foot_rdc/features/domain/repositories/article_search_repository.dart';
 import 'package:foot_rdc/features/domain/repositories/match_repository.dart';
-import 'package:foot_rdc/features/presentation/pages/home_page.dart';
+import 'package:foot_rdc/features/presentation/pages/home_page.dart'; // Changed import
 import 'package:hive_flutter/adapters.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -139,7 +139,7 @@ class MyApp extends StatelessWidget {
         ),
         dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
       ),
-      home: const HomePage(),
+      home: const HomePage(), // Changed from SplashScreen to HomePage
     );
   }
 }
