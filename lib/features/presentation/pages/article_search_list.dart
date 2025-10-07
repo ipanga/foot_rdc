@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/custom_search_bar.dart';
+import 'package:foot_rdc/l10n/app_localizations.dart';
 import 'package:foot_rdc/main.dart';
 
 class ArticleSearchList extends ConsumerStatefulWidget {
@@ -86,7 +87,11 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
       // Handle error silently or show a snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load more articles: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToLoadMoreArticles,
+            ),
+          ),
         );
       }
     }
@@ -116,7 +121,11 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
       // Handle error silently or show a snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to refresh articles: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToRefreshArticles,
+            ),
+          ),
         );
       }
     }
@@ -146,6 +155,8 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     // Only watch the provider after a search has been submitted.
     // When _query is null, we intentionally do not call ref.watch so the
     // provider is not invoked and the UI shows the prior-empty state.
@@ -156,9 +167,9 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text(
-          '|  SEARCH ARTICLES',
-          style: TextStyle(
+        title: Text(
+          l10n.searchArticles,
+          style: const TextStyle(
             color: Color(0xFFec3535),
             fontSize: 20,
             fontWeight: FontWeight.w500,
@@ -179,11 +190,11 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
               key: _formKey,
               child: CustomSearchBar(
                 controller: _controller,
-                hintText: 'Type keywords (e.g. Jackson Muleka)',
+                hintText: l10n.searchHintText,
                 onSubmitted: _submitSearch,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
-                    return 'Please enter a search term';
+                    return l10n.searchValidationError;
                   }
                   return null;
                 },
@@ -199,7 +210,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
               builder: (context) {
                 // Prior to searching we show an empty list (friendly message).
                 if (searchArticlesAsync == null) {
-                  return const Center(child: Text('No articles'));
+                  return Center(child: Text(l10n.noArticles));
                 }
 
                 // Handle provider states.
@@ -277,7 +288,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
 
                     // If the list is empty show a placeholder message.
                     if (articles.isEmpty) {
-                      return const Center(child: Text('No articles'));
+                      return Center(child: Text(l10n.noArticles));
                     }
 
                     // Build a scrollable list of articles (initial load).
@@ -319,7 +330,8 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                   },
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(child: Text('Error: $error')),
+                  error: (error, stack) =>
+                      Center(child: Text('${l10n.error}: $error')),
                 );
               },
             ),

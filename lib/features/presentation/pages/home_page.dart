@@ -1,38 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:foot_rdc/features/presentation/pages/article_web_list.dart';
 import 'package:foot_rdc/features/presentation/pages/article_saved_list.dart';
 import 'package:foot_rdc/features/presentation/pages/article_search_list.dart';
 import 'package:foot_rdc/features/presentation/pages/matchs_list.dart';
 import 'package:foot_rdc/features/presentation/pages/table_league.dart';
+import 'package:foot_rdc/l10n/app_localizations.dart';
 
-class HomePage extends StatefulWidget {
+final currentPageProvider = StateProvider<int>((ref) => 0);
+
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentPage = ref.watch(currentPageProvider);
 
-class _HomePageState extends State<HomePage> {
-  int currentPage = 0;
+    List<Widget> pages = const [
+      ArticleWebList(),
+      MatchsList(),
+      TableLeague(),
+      ArticleSavedList(),
+      ArticleSearchList(),
+    ];
 
-  List<Widget> pages = const [
-    ArticleWebList(),
-    MatchsList(),
-    TableLeague(),
-    ArticleSavedList(),
-    ArticleSearchList(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        // Maintains the state of each page after navigation to another page
-        index: currentPage,
-        children: pages,
-      ),
-
+      body: pages[currentPage],
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Colors.grey, width: 0.2)),
@@ -44,15 +39,11 @@ class _HomePageState extends State<HomePage> {
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w300),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w300),
           elevation: 0,
-          onTap: (value) {
-            setState(() {
-              currentPage = value;
-            });
-          },
           currentIndex: currentPage,
-
+          onTap: (value) {
+            ref.read(currentPageProvider.notifier).state = value;
+          },
           items: [
-            // Home Icon
             BottomNavigationBarItem(
               icon: SvgPicture.asset(
                 'assets/images/home-icon-v2-outlined.svg',
@@ -68,11 +59,8 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'Accueil',
-              //label: 'ACCUEIL',
+              label: l10n.home,
             ),
-
-            // Matchs Icon
             BottomNavigationBarItem(
               icon: SvgPicture.asset(
                 'assets/images/soccer-field-icon-outlined.svg',
@@ -88,11 +76,8 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'Matchs',
-              //label: 'MATCHS',
+              label: l10n.matches,
             ),
-
-            // Ranking Icon
             BottomNavigationBarItem(
               icon: SvgPicture.asset(
                 'assets/images/ranking-icon-outlined.svg',
@@ -108,11 +93,8 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'Classement',
-              //label: 'CLASSEMENT',
+              label: l10n.ranking,
             ),
-
-            // Saved Icon
             BottomNavigationBarItem(
               icon: SvgPicture.asset(
                 'assets/images/save-icon-outlined.svg',
@@ -128,11 +110,8 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'Enregistrés',
-              //label: 'ENREGISTRÉS',
+              label: l10n.saved,
             ),
-
-            // Search Icon
             BottomNavigationBarItem(
               icon: SvgPicture.asset(
                 'assets/images/search-icon-outlined.svg',
@@ -148,8 +127,7 @@ class _HomePageState extends State<HomePage> {
                   BlendMode.srcIn,
                 ),
               ),
-              label: 'Recherche',
-              //label: 'RECHERCHE',
+              label: l10n.search,
             ),
           ],
         ),

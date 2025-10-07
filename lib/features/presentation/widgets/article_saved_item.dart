@@ -151,12 +151,56 @@ class ArticleSavedItem extends ConsumerWidget {
 
             // Show success feedback
             messenger.showSnackBar(
-              const SnackBar(content: Text('Article deleted')),
+              SnackBar(
+                content: const Text(
+                  'Article deleted',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 2),
+                action: SnackBarAction(
+                  label: 'OK',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    messenger.hideCurrentSnackBar();
+                  },
+                ),
+              ),
             );
           } catch (err) {
             // Show error feedback
             messenger.showSnackBar(
-              SnackBar(content: Text('Delete failed: $err')),
+              SnackBar(
+                content: Text(
+                  'Delete failed: $err',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                backgroundColor: Colors.red[700],
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 3),
+                action: SnackBarAction(
+                  label: 'RETRY',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    messenger.hideCurrentSnackBar();
+                  },
+                ),
+              ),
             );
           }
         },

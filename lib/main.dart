@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core_error/logger_riverpod.dart';
 import 'package:foot_rdc/features/data/models/article_model.dart';
@@ -8,10 +9,13 @@ import 'package:foot_rdc/features/domain/entities/match.dart';
 import 'package:foot_rdc/features/domain/repositories/article_web_repository.dart';
 import 'package:foot_rdc/features/domain/repositories/article_search_repository.dart';
 import 'package:foot_rdc/features/domain/repositories/match_repository.dart';
-import 'package:foot_rdc/features/presentation/pages/home_page.dart'; // Changed import
+import 'package:foot_rdc/features/presentation/pages/home_page.dart';
+import 'package:foot_rdc/features/presentation/providers/locale_provider.dart';
+import 'package:foot_rdc/l10n/app_localizations.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 part 'main.g.dart';
 
 @riverpod
@@ -53,23 +57,18 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    // Set system UI overlay style for light status bar
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-      ),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeNotifierProvider);
 
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'FootRDC',
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
         fontFamily: 'Poppins', // Use the custom font defined in pubspec.yaml
         // Start from a red seed, then force all background/surface colors to white
@@ -139,7 +138,7 @@ class MyApp extends StatelessWidget {
         ),
         dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
       ),
-      home: const HomePage(), // Changed from SplashScreen to HomePage
+      home: const HomePage(),
     );
   }
 }

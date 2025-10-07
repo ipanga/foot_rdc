@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/presentation/providers/ranking_provider.dart';
 import 'package:foot_rdc/features/domain/entities/ranking.dart';
+import 'package:foot_rdc/l10n/app_localizations.dart';
 
 class TableLeague extends ConsumerStatefulWidget {
   const TableLeague({super.key});
@@ -60,11 +61,12 @@ class _TableLeagueState extends ConsumerState<TableLeague>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '|  CLASSEMENT LINAFOOT',
-          style: TextStyle(
+        title: Text(
+          '|  ${l10n.leagueTable}',
+          style: const TextStyle(
             color: Color(0xFFec3535),
             fontSize: 20,
             fontWeight: FontWeight.w500,
@@ -114,6 +116,7 @@ class _TableLeagueState extends ConsumerState<TableLeague>
   }
 
   Widget _buildRankingTab(String groupName) {
+    final l10n = AppLocalizations.of(context)!;
     return Consumer(
       builder: (context, ref, child) {
         final rankingState = ref.watch(rankingNotifierProvider);
@@ -134,7 +137,7 @@ class _TableLeagueState extends ConsumerState<TableLeague>
                 Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                 const SizedBox(height: 16),
                 Text(
-                  'Erreur de chargement',
+                  l10n.error,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -157,7 +160,7 @@ class _TableLeagueState extends ConsumerState<TableLeague>
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Réessayer'),
+                  child: Text(l10n.retry),
                 ),
               ],
             ),
@@ -179,7 +182,7 @@ class _TableLeagueState extends ConsumerState<TableLeague>
               ),
               const SizedBox(height: 16),
               Text(
-                'Aucune donnée disponible',
+                l10n.noDataAvailable,
                 style: TextStyle(fontSize: 18, color: Colors.grey[600]),
               ),
             ],
@@ -190,12 +193,13 @@ class _TableLeagueState extends ConsumerState<TableLeague>
   }
 
   Widget _buildRankingTable(Ranking ranking) {
+    final l10n = AppLocalizations.of(context)!;
     final teams = ranking.teams;
     final headers = ranking.headers;
 
     if (teams.isEmpty) {
-      return const Center(
-        child: Text('Aucune équipe trouvée', style: TextStyle(fontSize: 16)),
+      return Center(
+        child: Text(l10n.noTeamsFound, style: TextStyle(fontSize: 16)),
       );
     }
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
+import 'package:foot_rdc/features/presentation/providers/locale_provider.dart';
+import 'package:foot_rdc/l10n/app_localizations.dart';
 import 'package:foot_rdc/main.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 
@@ -72,7 +74,11 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
       // Handle error silently or show a snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load more articles: $error')),
+          SnackBar(
+            content: Text(
+              '${AppLocalizations.of(context)!.failedToLoadMoreArticles}: $error',
+            ),
+          ),
         );
       }
     }
@@ -102,14 +108,146 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
       // Handle error silently or show a snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to refresh articles: $error')),
+          SnackBar(
+            content: Text(
+              '${AppLocalizations.of(context)!.failedToRefreshArticles}: $error',
+            ),
+          ),
         );
       }
     }
   }
 
+  void _changeLanguage(String languageCode) {
+    // Use the locale provider to change language
+    ref.read(localeNotifierProvider.notifier).changeLocale(languageCode);
+    Navigator.pop(context);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          languageCode == 'en'
+              ? 'Language changed to English'
+              : 'Langue changée en Français',
+        ),
+      ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Image.asset(
+            'assets/images/logo_splash_footrdc.png',
+            height: 50,
+            fit: BoxFit.contain,
+          ),
+          const Text(
+            'FOOTRDC.COM',
+            style: TextStyle(
+              color: Color(0xFFec3535),
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Oswald',
+              letterSpacing: 1.5,
+            ),
+          ),
+        ],
+      ),
+      elevation: 4.0,
+      shadowColor: Colors.black26,
+      iconTheme: const IconThemeData(color: Color(0xFFec3535)),
+    );
+  }
+
+  Widget _buildDrawer() {
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = ref.watch(localeNotifierProvider); // Watch the locale
+
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Color(0xFFec3535)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'assets/images/logo_splash_footrdc.png',
+                  height: 60,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'FOOTRDC.COM',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Oswald',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.language),
+            title: Text(l10n.language ?? 'Language'),
+            subtitle: Text(
+              l10n.selectLanguage ?? 'Select your preferred language',
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  title: const Text('English'),
+                  value: 'en',
+                  groupValue:
+                      currentLocale.languageCode, // Use currentLocale instead
+                  onChanged: (String? value) {
+                    if (value != null) {
+                      _changeLanguage(value);
+                    }
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Français'),
+                  value: 'fr',
+                  groupValue:
+                      currentLocale.languageCode, // Use currentLocale instead
+                  onChanged: (String? value) {
+                    if (value != null) {
+                      _changeLanguage(value);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: Text(l10n.about ?? 'About'),
+            onTap: () {
+              Navigator.pop(context);
+              // Add navigation to about page if needed
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     // Only watch the provider for the first page load when _allArticles is empty
     if (_allArticles.isEmpty) {
       // Query string passed to the provider to fetch the first page of articles.
@@ -120,35 +258,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
       final articlesAsync = ref.watch(fetchArticlesProvider(input));
 
       return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Image.asset(
-                'assets/images/logo_splash_footrdc.png',
-                height: 50, // Set a specific height for the logo
-                fit: BoxFit.contain,
-              ),
-              // const SizedBox(width: 2),
-              const Text(
-                'FOOTRDC.COM',
-                style: TextStyle(
-                  color: Color(0xFFec3535),
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Oswald',
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(icon: const Icon(Icons.refresh), onPressed: _onRefresh),
-          ],
-          elevation: 4.0,
-          shadowColor: Colors.black26,
-        ),
+        appBar: _buildAppBar(),
+        drawer: _buildDrawer(),
         // Use AsyncValue.when to handle loading, data and error states cleanly.
         body: articlesAsync.when(
           data: (articles) {
@@ -165,7 +276,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
 
             // If the list is empty show a placeholder message.
             if (articles.isEmpty) {
-              return const Center(child: Text('No articles'));
+              return Center(child: Text(l10n.noArticles));
             }
 
             // Build a scrollable list of articles.
@@ -214,33 +325,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
 
     // Once we have articles loaded, render them independently of the provider
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Image.asset(
-              'assets/images/logo_splash_footrdc.png',
-              height: 50, // Set a specific height for the logo
-              fit: BoxFit.contain,
-            ),
-            // const SizedBox(width: 2),
-            const Text(
-              'FOOTRDC.COM',
-              style: TextStyle(
-                color: Color(0xFFec3535),
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Oswald',
-                letterSpacing: 1.5,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _onRefresh),
-        ],
-      ),
+      appBar: _buildAppBar(),
+      drawer: _buildDrawer(),
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         child: ListView.separated(

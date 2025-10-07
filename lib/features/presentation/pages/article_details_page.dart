@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_html/flutter_html.dart'; // Add this import
+import 'package:flutter_html/flutter_html.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/providers/article_provider.dart';
+import 'package:foot_rdc/l10n/app_localizations.dart';
 import 'package:foot_rdc/utils/date_utils.dart';
 import 'package:foot_rdc/utils/string_utils.dart';
 import 'package:share_plus/share_plus.dart';
@@ -27,6 +28,7 @@ class ArticleDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!; // Add this line
     final imageUrl = _imageUrl();
     final date = _dateText();
     final category = _categoryText();
@@ -95,19 +97,59 @@ class ArticleDetailsPage extends ConsumerWidget {
                             icon: const Icon(Icons.bookmark_border),
                             color: Colors.black87,
                             onPressed: () async {
-                              // Save article into database using provider
-                              await ref
-                                  .read(
-                                    articleSavedListNotifierProvider.notifier,
-                                  )
-                                  .addNewArticle(article);
+                              try {
+                                // Save article into database using provider
+                                await ref
+                                    .read(
+                                      articleSavedListNotifierProvider.notifier,
+                                    )
+                                    .addNewArticle(article);
 
-                              // Show confirmation
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Article saved successfully!'),
-                                ),
-                              );
+                                // Show confirmation
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.bookmark_added,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            l10n.articleSavedSuccessfully, // Translated
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      backgroundColor:
+                                          Colors.yellowAccent.shade700,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      margin: const EdgeInsets.all(16),
+                                      duration: const Duration(seconds: 2),
+                                      elevation: 6,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Failed to save article: ${e.toString()}',
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
                             },
 
                             // After onPressed, change icon to filled bookmark
@@ -128,14 +170,41 @@ class ArticleDetailsPage extends ConsumerWidget {
                                     defaultTargetPlatform ==
                                         TargetPlatform.linux) {
                                   // For unsupported platforms, show a message
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Share not supported on this platform',
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.info_outline,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                l10n.shareNotSupportedOnThisPlatform, // Translated
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        backgroundColor: Colors.orange.shade600,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        margin: const EdgeInsets.all(16),
+                                        duration: const Duration(seconds: 4),
+                                        elevation: 6,
                                       ),
-                                      backgroundColor: Colors.orange,
-                                    ),
-                                  );
+                                    );
+                                  }
                                   return;
                                 }
 
@@ -147,65 +216,162 @@ class ArticleDetailsPage extends ConsumerWidget {
                                   shareText,
                                   subject: article.title,
                                 );
+                                // No SnackBar shown on successful share
                               } catch (e) {
-                                // Handle specific share_plus errors
-                                String errorMessage = 'Failed to share article';
+                                if (context.mounted) {
+                                  // Handle specific share_plus errors
+                                  String errorMessage =
+                                      'Failed to share article';
 
-                                if (e.toString().contains(
-                                  'No implementation found',
-                                )) {
-                                  errorMessage =
-                                      'Share feature not available on this device. Please try copying the link instead.';
-                                } else {
-                                  errorMessage =
-                                      'Failed to share: ${e.toString()}';
-                                }
+                                  if (e.toString().contains(
+                                    'No implementation found',
+                                  )) {
+                                    errorMessage =
+                                        'Share feature not available on this device. Please try copying the link instead.';
+                                  } else {
+                                    errorMessage =
+                                        'Failed to share: ${e.toString()}';
+                                  }
 
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(errorMessage),
-                                    backgroundColor: const Color(0xFFec3535),
-                                    duration: const Duration(seconds: 4),
-                                    action: SnackBarAction(
-                                      label: 'Copy Link',
-                                      textColor: Colors.white,
-                                      onPressed: () async {
-                                        // Copy to clipboard as fallback
-                                        try {
-                                          await Clipboard.setData(
-                                            ClipboardData(
-                                              text:
-                                                  '${article.title}\n\n${article.link}',
-                                            ),
-                                          );
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Article link copied to clipboard!',
-                                              ),
-                                              backgroundColor: Colors.green,
-                                            ),
-                                          );
-                                        } catch (_) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Unable to copy link',
-                                              ),
-                                              backgroundColor: Color(
-                                                0xFFec3535,
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.error_outline,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              errorMessage,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 15,
                                               ),
                                             ),
-                                          );
-                                        }
-                                      },
+                                          ),
+                                        ],
+                                      ),
+                                      backgroundColor: const Color(0xFFec3535),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      margin: const EdgeInsets.all(16),
+                                      duration: const Duration(seconds: 4),
+                                      elevation: 6,
+                                      action: SnackBarAction(
+                                        label: l10n.copyLink, // Translated
+                                        textColor: Colors.white,
+                                        backgroundColor: Colors.white
+                                            .withOpacity(0.2),
+                                        onPressed: () async {
+                                          // Copy to clipboard as fallback
+                                          try {
+                                            await Clipboard.setData(
+                                              ClipboardData(
+                                                text:
+                                                    '${article.title}\n\n${article.link}',
+                                              ),
+                                            );
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons
+                                                            .check_circle_outline,
+                                                        color: Colors.white,
+                                                        size: 20,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        l10n.articleLinkCopiedToClipboard, // Translated
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontSize: 15,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  backgroundColor: Colors
+                                                      .yellowAccent
+                                                      .shade700,
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                  margin: const EdgeInsets.all(
+                                                    16,
+                                                  ),
+                                                  duration: const Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                  elevation: 6,
+                                                ),
+                                              );
+                                            }
+                                          } catch (_) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.error_outline,
+                                                        color: Colors.white,
+                                                        size: 20,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        l10n.unableToCopyLink, // Translated
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontSize: 15,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  backgroundColor: const Color(
+                                                    0xFFec3535,
+                                                  ),
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                  margin: const EdgeInsets.all(
+                                                    16,
+                                                  ),
+                                                  duration: const Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                  elevation: 6,
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                }
                               }
                             },
                           ),
@@ -261,7 +427,7 @@ class ArticleDetailsPage extends ConsumerWidget {
 
                     // Title
                     Text(
-                      title.isEmpty ? 'Article details' : title,
+                      title.isEmpty ? l10n.articleDetails : title, // Translated
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         height: 1.18,
@@ -273,7 +439,7 @@ class ArticleDetailsPage extends ConsumerWidget {
                     // Excerpt / content preview
                     Html(
                       data: content.isEmpty
-                          ? '<p>No content available.</p>'
+                          ? '<p>${l10n.noContentAvailable}</p>' // Translated
                           : content,
                       style: {
                         "body": Style(
