@@ -148,3 +148,23 @@ flutter:
           weight: 600
         - asset: assets/fonts/Oswald-Bold.ttf
           weight: 700
+    - family: OpenSans
+      fonts:
+        - asset: assets/fonts/OpenSans-Light.ttf
+        - asset: assets/fonts/OpenSans-Regular.ttf
+        - asset: assets/fonts/OpenSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/OpenSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/OpenSans-Bold.ttf
+          weight: 700
+    - family: OpenSans_SemiCondensed
+      fonts:
+        - asset: assets/fonts/OpenSans_SemiCondensed-Light.ttf
+        - asset: assets/fonts/OpenSans_SemiCondensed-Regular.ttf
+        - asset: assets/fonts/OpenSans_SemiCondensed-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/OpenSans_SemiCondensed-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/OpenSans_SemiCondensed-Bold.ttf
+          weight: 700

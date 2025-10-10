@@ -29,12 +29,15 @@ class ArticleSavedItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return GestureDetector(
       // Handle tap events (e.g., navigation to details)
       onTap: onTap,
       child: Card(
-        // Card styling with rounded corners and elevation
-        color: Colors.white,
+        // Card styling with rounded corners and elevation - uses theme surface color
+        color: colorScheme.surface,
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 2,
@@ -43,7 +46,7 @@ class ArticleSavedItem extends ConsumerWidget {
           child: Row(
             children: [
               // Article image section
-              _buildArticleImage(),
+              _buildArticleImage(context),
               const SizedBox(width: 12),
 
               // Article content section (title, date, actions)
@@ -56,7 +59,10 @@ class ArticleSavedItem extends ConsumerWidget {
   }
 
   /// Builds the article image with loading and error states
-  Widget _buildArticleImage() {
+  Widget _buildArticleImage(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: SizedBox(
@@ -70,26 +76,33 @@ class ArticleSavedItem extends ConsumerWidget {
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                    color: colorScheme.surfaceVariant,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colorScheme.primary,
+                      ),
                     ),
                   );
                 },
                 // Show broken image icon on error
                 errorBuilder: (context, error, stackTrace) => Container(
-                  color: Colors.grey[200],
-                  child: const Icon(
+                  color: colorScheme.surfaceVariant,
+                  child: Icon(
                     Icons.broken_image,
                     size: 36,
-                    color: Colors.grey,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               )
             // Show placeholder when no image URL
             : Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.image, size: 36, color: Colors.grey),
+                color: colorScheme.surfaceVariant,
+                child: Icon(
+                  Icons.image,
+                  size: 36,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
       ),
     );
@@ -134,11 +147,14 @@ class ArticleSavedItem extends ConsumerWidget {
 
   /// Builds the delete button with async delete handling
   Widget _buildDeleteButton(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Material(
       type: MaterialType.transparency,
       child: IconButton(
-        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-        tooltip: 'Delete',
+        icon: Icon(Icons.delete_outline, color: colorScheme.error),
+        tooltip: 'Supprimer',
         onPressed: () async {
           // Capture messenger before async operation to avoid context issues
           final messenger = ScaffoldMessenger.of(context);
@@ -152,14 +168,14 @@ class ArticleSavedItem extends ConsumerWidget {
             // Show success feedback
             messenger.showSnackBar(
               SnackBar(
-                content: const Text(
-                  'Article deleted',
+                content: Text(
+                  'Article supprimé',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colorScheme.onError,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                backgroundColor: Colors.redAccent,
+                backgroundColor: colorScheme.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -168,7 +184,7 @@ class ArticleSavedItem extends ConsumerWidget {
                 duration: const Duration(seconds: 2),
                 action: SnackBarAction(
                   label: 'OK',
-                  textColor: Colors.white,
+                  textColor: colorScheme.onError,
                   onPressed: () {
                     messenger.hideCurrentSnackBar();
                   },
@@ -180,13 +196,13 @@ class ArticleSavedItem extends ConsumerWidget {
             messenger.showSnackBar(
               SnackBar(
                 content: Text(
-                  'Delete failed: $err',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  'Échec de la suppression: $err',
+                  style: TextStyle(
+                    color: colorScheme.onError,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                backgroundColor: Colors.red[700],
+                backgroundColor: colorScheme.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -194,8 +210,8 @@ class ArticleSavedItem extends ConsumerWidget {
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 3),
                 action: SnackBarAction(
-                  label: 'RETRY',
-                  textColor: Colors.white,
+                  label: 'RÉESSAYER',
+                  textColor: colorScheme.onError,
                   onPressed: () {
                     messenger.hideCurrentSnackBar();
                   },

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/custom_search_bar.dart';
-import 'package:foot_rdc/l10n/app_localizations.dart';
 import 'package:foot_rdc/main.dart';
 
 class ArticleSearchList extends ConsumerStatefulWidget {
@@ -87,10 +86,8 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
       // Handle error silently or show a snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.failedToLoadMoreArticles,
-            ),
+          const SnackBar(
+            content: Text('Échec du chargement d\'articles supplémentaires'),
           ),
         );
       }
@@ -121,10 +118,8 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
       // Handle error silently or show a snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.failedToRefreshArticles,
-            ),
+          const SnackBar(
+            content: Text('Échec de l\'actualisation des articles'),
           ),
         );
       }
@@ -155,22 +150,20 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    // Get theme data for color adaptation
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     // Only watch the provider after a search has been submitted.
-    // When _query is null, we intentionally do not call ref.watch so the
-    // provider is not invoked and the UI shows the prior-empty state.
     final searchArticlesAsync = _query != null
         ? ref.watch(searchArticlesProvider(_query!))
         : null;
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(
-          l10n.searchArticles,
-          style: const TextStyle(
-            color: Color(0xFFec3535),
+        title: const Text(
+          '|  RECHERCHER DES ARTICLES',
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w500,
             fontFamily: 'Oswald',
@@ -179,22 +172,24 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
         ),
         centerTitle: false,
         elevation: 4.0,
-        shadowColor: Colors.black26,
+        shadowColor: theme.brightness == Brightness.light
+            ? Colors.black26
+            : Colors.white24,
       ),
       body: Column(
         children: [
           // Search input area with validation and submit button.
           Padding(
-            padding: const EdgeInsets.all(12.0), // Space around the search bar
+            padding: const EdgeInsets.all(12.0),
             child: Form(
               key: _formKey,
               child: CustomSearchBar(
                 controller: _controller,
-                hintText: l10n.searchHintText,
+                hintText: 'Saisir les termes de recherche...',
                 onSubmitted: _submitSearch,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
-                    return l10n.searchValidationError;
+                    return 'Veuillez saisir un terme de recherche';
                   }
                   return null;
                 },
@@ -202,15 +197,18 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
             ),
           ),
 
-          // Results area:
-          // - If no search has been performed yet, show an empty-message.
-          // - Otherwise use AsyncValue.when to render loading/error/data.
+          // Results area
           Expanded(
             child: Builder(
               builder: (context) {
                 // Prior to searching we show an empty list (friendly message).
                 if (searchArticlesAsync == null) {
-                  return Center(child: Text(l10n.noArticles));
+                  return Center(
+                    child: Text(
+                      'Aucun article trouvé',
+                      style: TextStyle(color: colorScheme.onSurface),
+                    ),
+                  );
                 }
 
                 // Handle provider states.
@@ -231,6 +229,8 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                     if (_allArticles.isNotEmpty) {
                       return RefreshIndicator(
                         onRefresh: _onRefresh,
+                        color: colorScheme.primary,
+                        backgroundColor: colorScheme.surface,
                         child: ListView.separated(
                           controller: _scrollController,
                           itemCount:
@@ -249,9 +249,9 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.grey.shade200,
-                                    Colors.grey.shade300,
-                                    Colors.grey.shade200,
+                                    colorScheme.outline.withOpacity(0.3),
+                                    colorScheme.outline.withOpacity(0.6),
+                                    colorScheme.outline.withOpacity(0.3),
                                   ],
                                 ),
                               ),
@@ -260,10 +260,12 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                           itemBuilder: (context, index) {
                             // Show loading indicator at the bottom
                             if (index == _allArticles.length) {
-                              return const Padding(
-                                padding: EdgeInsets.all(16.0),
+                              return Padding(
+                                padding: const EdgeInsets.all(16.0),
                                 child: Center(
-                                  child: CircularProgressIndicator(),
+                                  child: CircularProgressIndicator(
+                                    color: colorScheme.primary,
+                                  ),
                                 ),
                               );
                             }
@@ -288,12 +290,19 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
 
                     // If the list is empty show a placeholder message.
                     if (articles.isEmpty) {
-                      return Center(child: Text(l10n.noArticles));
+                      return Center(
+                        child: Text(
+                          'Aucun article trouvé',
+                          style: TextStyle(color: colorScheme.onSurface),
+                        ),
+                      );
                     }
 
                     // Build a scrollable list of articles (initial load).
                     return RefreshIndicator(
                       onRefresh: _onRefresh,
+                      color: colorScheme.primary,
+                      backgroundColor: colorScheme.surface,
                       child: ListView.separated(
                         controller: _scrollController,
                         itemCount: articles.length,
@@ -303,9 +312,9 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Colors.grey.shade200,
-                                Colors.grey.shade300,
-                                Colors.grey.shade200,
+                                colorScheme.outline.withOpacity(0.3),
+                                colorScheme.outline.withOpacity(0.6),
+                                colorScheme.outline.withOpacity(0.3),
                               ],
                             ),
                           ),
@@ -328,10 +337,17 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                       ),
                     );
                   },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) =>
-                      Center(child: Text('${l10n.error}: $error')),
+                  loading: () => Center(
+                    child: CircularProgressIndicator(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  error: (error, stack) => Center(
+                    child: Text(
+                      'Une erreur s\'est produite: $error',
+                      style: TextStyle(color: colorScheme.error),
+                    ),
+                  ),
                 );
               },
             ),

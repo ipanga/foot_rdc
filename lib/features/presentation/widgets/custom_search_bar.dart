@@ -31,32 +31,42 @@ class CustomSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       //margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
+            color: colorScheme.shadow.withOpacity(0.1),
             spreadRadius: 2,
             blurRadius: 5,
             offset: const Offset(0, 3),
           ),
         ],
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.search, color: Colors.grey),
+          Icon(Icons.search, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: 10),
           Expanded(
             child: TextFormField(
               controller: controller,
               textInputAction: TextInputAction.search,
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: hintText,
                 labelText: labelText,
+                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                 border: InputBorder.none,
               ),
               validator: validator,
@@ -70,7 +80,10 @@ class CustomSearchBar extends StatelessWidget {
             builder: (context, value, child) {
               return value.text.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.grey),
+                      icon: Icon(
+                        Icons.clear,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                       onPressed: () {
                         controller.clear();
                       },

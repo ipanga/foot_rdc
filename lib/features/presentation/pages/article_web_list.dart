@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
-import 'package:foot_rdc/features/presentation/providers/locale_provider.dart';
-import 'package:foot_rdc/l10n/app_localizations.dart';
+import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
 import 'package:foot_rdc/main.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
+import 'package:foot_rdc/features/presentation/widgets/app_drawer.dart';
 
 /// A page that shows a list of articles fetched via a Riverpod provider.
 class ArticleWebList extends ConsumerStatefulWidget {
@@ -76,7 +76,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppLocalizations.of(context)!.failedToLoadMoreArticles}: $error',
+              'Échec du chargement d\'articles supplémentaires: $error',
             ),
           ),
         );
@@ -109,34 +109,15 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${AppLocalizations.of(context)!.failedToRefreshArticles}: $error',
-            ),
+            content: Text('Échec de l\'actualisation des articles: $error'),
           ),
         );
       }
     }
   }
 
-  void _changeLanguage(String languageCode) {
-    // Use the locale provider to change language
-    ref.read(localeNotifierProvider.notifier).changeLocale(languageCode);
-    Navigator.pop(context);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          languageCode == 'en'
-              ? 'Language changed to English'
-              : 'Langue changée en Français',
-        ),
-      ),
-    );
-  }
-
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -145,99 +126,9 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
             height: 50,
             fit: BoxFit.contain,
           ),
-          const Text(
+          Text(
             'FOOTRDC.COM',
-            style: TextStyle(
-              color: Color(0xFFec3535),
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Oswald',
-              letterSpacing: 1.5,
-            ),
-          ),
-        ],
-      ),
-      elevation: 4.0,
-      shadowColor: Colors.black26,
-      iconTheme: const IconThemeData(color: Color(0xFFec3535)),
-    );
-  }
-
-  Widget _buildDrawer() {
-    final l10n = AppLocalizations.of(context)!;
-    final currentLocale = ref.watch(localeNotifierProvider); // Watch the locale
-
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFFec3535)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset(
-                  'assets/images/logo_splash_footrdc.png',
-                  height: 60,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'FOOTRDC.COM',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Oswald',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: Text(l10n.language ?? 'Language'),
-            subtitle: Text(
-              l10n.selectLanguage ?? 'Select your preferred language',
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              children: [
-                RadioListTile<String>(
-                  title: const Text('English'),
-                  value: 'en',
-                  groupValue:
-                      currentLocale.languageCode, // Use currentLocale instead
-                  onChanged: (String? value) {
-                    if (value != null) {
-                      _changeLanguage(value);
-                    }
-                  },
-                ),
-                RadioListTile<String>(
-                  title: const Text('Français'),
-                  value: 'fr',
-                  groupValue:
-                      currentLocale.languageCode, // Use currentLocale instead
-                  onChanged: (String? value) {
-                    if (value != null) {
-                      _changeLanguage(value);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(l10n.about ?? 'About'),
-            onTap: () {
-              Navigator.pop(context);
-              // Add navigation to about page if needed
-            },
+            style: Theme.of(context).appBarTheme.titleTextStyle,
           ),
         ],
       ),
@@ -246,24 +137,16 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     // Only watch the provider for the first page load when _allArticles is empty
     if (_allArticles.isEmpty) {
-      // Query string passed to the provider to fetch the first page of articles.
       const input = "page=1&per_page=15";
-
-      // Watch the provider that returns an AsyncValue<List<Article>>.
-      // The UI will rebuild when the provider's state changes.
       final articlesAsync = ref.watch(fetchArticlesProvider(input));
 
       return Scaffold(
         appBar: _buildAppBar(),
-        drawer: _buildDrawer(),
-        // Use AsyncValue.when to handle loading, data and error states cleanly.
+        drawer: const AppDrawer(),
         body: articlesAsync.when(
           data: (articles) {
-            // Update _allArticles with the first page
             if (articles.isNotEmpty) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
@@ -274,34 +157,27 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
               });
             }
 
-            // If the list is empty show a placeholder message.
             if (articles.isEmpty) {
-              return Center(child: Text(l10n.noArticles));
+              return Center(child: Text('Aucun article trouvé'));
             }
 
-            // Build a scrollable list of articles.
             return RefreshIndicator(
               onRefresh: _onRefresh,
+              color: Theme.of(context).colorScheme.primary,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              edgeOffset: 8,
               child: ListView.separated(
                 controller: _scrollController,
-                itemCount: articles.length,
-                separatorBuilder: (context, index) => Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.grey.shade200,
-                        Colors.grey.shade300,
-                        Colors.grey.shade200,
-                      ],
-                    ),
-                  ),
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
                 ),
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                itemCount: articles.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 0),
                 itemBuilder: (context, index) {
                   final article = articles[index];
-                  // Navigate to ArticleDetailsPage when tapping an item.
-                  return InkWell(
+                  return ArticleListItem(
+                    article: article,
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -309,16 +185,13 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
                         ),
                       );
                     },
-                    child: ArticleListItem(article: article),
                   );
                 },
               ),
             );
           },
-          // Show a spinner while loading.
           loading: () => const Center(child: CircularProgressIndicator()),
-          // Render a simple error message on failure.
-          error: (error, stack) => Center(child: Text('Error: $error')),
+          error: (error, stack) => Center(child: Text('Erreur: $error')),
         ),
       );
     }
@@ -326,33 +199,21 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
     // Once we have articles loaded, render them independently of the provider
     return Scaffold(
       appBar: _buildAppBar(),
-      drawer: _buildDrawer(),
+      drawer: const AppDrawer(),
       body: RefreshIndicator(
         onRefresh: _onRefresh,
+        color: Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        edgeOffset: 8,
         child: ListView.separated(
           controller: _scrollController,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           itemCount: _allArticles.length + (_isLoadingMore ? 1 : 0),
-          separatorBuilder: (context, index) {
-            // Don't show separator before the loading indicator
-            if (index == _allArticles.length - 1 && _isLoadingMore) {
-              return const SizedBox.shrink();
-            }
-            return Container(
-              height: 1,
-              margin: const EdgeInsets.symmetric(horizontal: 16.0),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.grey.shade200,
-                    Colors.grey.shade300,
-                    Colors.grey.shade200,
-                  ],
-                ),
-              ),
-            );
-          },
+          separatorBuilder: (context, index) => const SizedBox(height: 0),
           itemBuilder: (context, index) {
-            // Show loading indicator at the bottom
             if (index == _allArticles.length) {
               return const Padding(
                 padding: EdgeInsets.all(16.0),
@@ -361,8 +222,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
             }
 
             final article = _allArticles[index];
-            // Navigate to ArticleDetailsPage when tapping an item.
-            return InkWell(
+            return ArticleListItem(
+              article: article,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -370,7 +231,6 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
                   ),
                 );
               },
-              child: ArticleListItem(article: article),
             );
           },
         ),

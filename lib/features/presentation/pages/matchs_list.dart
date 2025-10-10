@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/match.dart';
 import 'package:foot_rdc/features/presentation/widgets/match_list_item.dart';
-import 'package:foot_rdc/l10n/app_localizations.dart';
 import 'package:foot_rdc/main.dart';
 import 'dart:async';
 
@@ -22,6 +21,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
   bool _isLoadingMore = false;
   bool _hasReachedEnd = false;
   bool _isRefreshing = false;
+  bool _hasInitialLoaded = false;
   String? _lastError;
   final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
@@ -84,11 +84,10 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       });
       // Handle error silently or show a snackbar
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.failedToLoadMoreMatches(error.toString())),
-            action: SnackBarAction(label: l10n.retry, onPressed: _loadMore),
+            content: Text('Échec du chargement de plus de matchs : $error'),
+            action: SnackBarAction(label: 'Réessayer', onPressed: _loadMore),
           ),
         );
       }
@@ -109,18 +108,14 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         _currentPage = 1;
         _hasReachedEnd = false;
         _isLoadingMore = false;
+        _hasInitialLoaded = false;
         _allMatches = []; // Clear the matches to trigger provider reload
       });
 
       // Invalidate the provider to force a fresh fetch
       ref.invalidate(fetchMatchesProvider);
 
-      // Fetch fresh data from the first page
-      const input = "leagues=552&seasons=553&page=1&per_page=10";
-      final newMatches = await ref.read(fetchMatchesProvider(input).future);
-
       setState(() {
-        _allMatches = newMatches;
         _isRefreshing = false;
       });
     } catch (error) {
@@ -130,11 +125,10 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       });
       // Handle error silently or show a snackbar
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.failedToRefreshMatches(error.toString())),
-            action: SnackBarAction(label: l10n.retry, onPressed: _onRefresh),
+            content: Text('Échec de l\'actualisation des matchs : $error'),
+            action: SnackBarAction(label: 'Réessayer', onPressed: _onRefresh),
           ),
         );
       }
@@ -143,97 +137,96 @@ class _MatchsListState extends ConsumerState<MatchsList> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    const input = "leagues=552&seasons=553&page=1&per_page=10";
+    final matchesAsync = ref.watch(fetchMatchesProvider(input));
 
-    // Only watch the provider for the first page load when _allMatches is empty
-    if (_allMatches.isEmpty && !_isLoadingMore) {
-      // Query string passed to the provider to fetch the first page of matches.
-      const input = "leagues=552&seasons=553&page=1&per_page=10";
-
-      // Watch the provider that returns an AsyncValue<List<Match>>.
-      // The UI will rebuild when the provider's state changes.
-      final matchesAsync = ref.watch(fetchMatchesProvider(input));
-
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: Text('|  ${l10n.matchResults}'),
-          centerTitle: false,
-          elevation: 4.0,
-          shadowColor: Colors.black26,
-        ),
-        body: matchesAsync.when(
-          data: (matches) {
-            _allMatches = matches;
-            return _buildMatchesList();
-          },
-          loading: () => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(l10n.loadingMatches),
-              ],
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          '|  RÉSULTATS MATCHS',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Oswald',
+            letterSpacing: 1.5,
           ),
-          error: (error, stackTrace) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error, size: 64, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.failedToLoadMatches,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    error.toString(),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        centerTitle: false,
+        elevation: 4.0,
+        shadowColor: Colors.black26,
+      ),
+      body: matchesAsync.when(
+        data: (matches) {
+          // Only update _allMatches if we haven't loaded initial data yet or if refreshing
+          if (!_hasInitialLoaded || _isRefreshing) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {
+                  _allMatches = matches;
+                  _hasInitialLoaded = true;
+                  _isRefreshing = false;
+                });
+              }
+            });
+          }
+
+          return _buildMatchesList();
+        },
+        loading: () {
+          // Show loading only if we don't have initial data
+          if (!_hasInitialLoaded) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Chargement des matchs...'),
+                ],
+              ),
+            );
+          }
+          return _buildMatchesList();
+        },
+        error: (error, stackTrace) {
+          // Show error only if we don't have initial data
+          if (!_hasInitialLoaded) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Échec du chargement des matchs',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: _onRefresh,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(l10n.retry),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } else {
-      // If we already have matches, just build the list without watching the provider
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: Text(
-            '|  ${l10n.matchResults}',
-            style: const TextStyle(
-              color: Color(0xFFec3535),
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Oswald',
-              letterSpacing: 1.5,
-            ),
-          ),
-          centerTitle: false,
-          elevation: 4.0,
-          shadowColor: Colors.black26,
-        ),
-        body: _buildMatchesList(),
-      );
-    }
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      error.toString(),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _onRefresh,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Réessayer'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return _buildMatchesList();
+        },
+      ),
+    );
   }
 
   Widget _buildMatchesList() {
-    final l10n = AppLocalizations.of(context)!;
-
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: Column(
@@ -250,29 +243,28 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      l10n.connectionProblem,
+                      'Problème de connexion. Tirez pour actualiser ou appuyez sur réessayer.',
                       style: TextStyle(color: Colors.red.shade700),
                     ),
                   ),
-                  TextButton(onPressed: _onRefresh, child: Text(l10n.retry)),
+                  TextButton(
+                    onPressed: _onRefresh,
+                    child: const Text('Réessayer'),
+                  ),
                 ],
               ),
             ),
           Expanded(
             child: _allMatches.isEmpty && !_isLoadingMore
-                ? Center(
+                ? const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.sports_soccer,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(l10n.noMatchesFound),
-                        const SizedBox(height: 8),
-                        Text(l10n.pullToRefresh),
+                        Icon(Icons.sports_soccer, size: 64, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text('Aucun match trouvé'),
+                        SizedBox(height: 8),
+                        Text('Tirez vers le bas pour actualiser'),
                       ],
                     ),
                   )
@@ -291,14 +283,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                       if (index < _allMatches.length) {
                         return MatchListItem(
                           match: _allMatches[index],
-                          onTap: () {
-                            // Navigate to match details if needed
-                            // Navigator.of(context).push(
-                            //   MaterialPageRoute(
-                            //     builder: (context) => MatchDetailsPage(match: _allMatches[index]),
-                            //   ),
-                            // );
-                          },
+                          onTap: () {},
                         );
                       } else if (_isLoadingMore) {
                         // Loading indicator at the bottom
@@ -316,7 +301,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                l10n.loadingMoreMatches,
+                                'Chargement de plus de matchs...',
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(color: Colors.grey[600]),
                               ),
@@ -329,7 +314,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                           padding: const EdgeInsets.all(16.0),
                           child: Center(
                             child: Text(
-                              l10n.scrollForMoreMatches,
+                              'Faites défiler vers le bas pour plus de matchs',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: Colors.grey[500]),
                             ),

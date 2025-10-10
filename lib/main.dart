@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core_error/logger_riverpod.dart';
 import 'package:foot_rdc/features/data/models/article_model.dart';
@@ -10,8 +8,8 @@ import 'package:foot_rdc/features/domain/repositories/article_web_repository.dar
 import 'package:foot_rdc/features/domain/repositories/article_search_repository.dart';
 import 'package:foot_rdc/features/domain/repositories/match_repository.dart';
 import 'package:foot_rdc/features/presentation/pages/home_page.dart';
-import 'package:foot_rdc/features/presentation/providers/locale_provider.dart';
-import 'package:foot_rdc/l10n/app_localizations.dart';
+import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
+import 'package:foot_rdc/utils/app_theme.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -62,83 +60,17 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(localeNotifierProvider);
+    ref.watch(themeCustomNotifierProvider);
 
     return MaterialApp(
       title: 'FootRDC',
-      locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      theme: ThemeData(
-        fontFamily: 'Poppins', // Use the custom font defined in pubspec.yaml
-        // Start from a red seed, then force all background/surface colors to white
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFec3535))
-            .copyWith(
-              surface: Colors.white,
-              primary: const Color(0xFFec3535),
-              secondary: const Color(0xFFec3535),
-              brightness: Brightness.light,
-            ),
-        scaffoldBackgroundColor: Colors.white,
-
-        // App bar (top) white
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          foregroundColor: Color(0xFFec3535),
-          elevation: 6,
-          iconTheme: IconThemeData(color: Color(0xFFec3535)),
-          titleTextStyle: TextStyle(
-            color: Color(0xFFec3535),
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.light,
-          ),
-        ),
-
-        // Bottom app bar & BottomNavigation white
-        bottomAppBarTheme: const BottomAppBarThemeData(color: Colors.white),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.white,
-          selectedItemColor: Color(0xFFec3535),
-          unselectedItemColor: Colors.black,
-        ),
-
-        // Material 3 NavigationBar (if used) white
-        navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.white,
-          indicatorColor: Color(0xFFec3535).withValues(alpha: 0.2),
-          labelTextStyle: WidgetStateProperty.all(
-            const TextStyle(color: Color(0xFFec3535)),
-          ),
-        ),
-        cardColor: Colors.white,
-        popupMenuTheme: const PopupMenuThemeData(color: Colors.white),
-
-        // SnackBar on white background (floating to keep contrast)
-        snackBarTheme: const SnackBarThemeData(
-          backgroundColor: Colors.white,
-          contentTextStyle: TextStyle(color: Colors.black),
-          behavior: SnackBarBehavior.floating,
-        ),
-
-        // Controls keep red as primary accent
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFFec3535),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFec3535)),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: Color(0xFFec3535)),
-        ),
-        dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ref
+          .read(themeCustomNotifierProvider.notifier)
+          .getFlutterThemeMode(context),
       home: const HomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
