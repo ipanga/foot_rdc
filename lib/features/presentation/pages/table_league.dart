@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/presentation/providers/ranking_provider.dart';
 import 'package:foot_rdc/features/domain/entities/ranking.dart';
-import 'dart:ui' show FontFeature;
 
 class TableLeague extends ConsumerStatefulWidget {
   const TableLeague({super.key});
@@ -80,6 +79,45 @@ class _TableLeagueState extends ConsumerState<TableLeague>
         .fetchRanking(leagueId: leagueId, seasonId: seasonId);
   }
 
+  // Friendly error helpers (URL-free detection from message text)
+  bool _looksNoInternet(String message) {
+    final m = message.toLowerCase();
+    return m.contains('socketexception') ||
+        m.contains('failed host lookup') ||
+        m.contains('network is unreachable') ||
+        m.contains('internet') ||
+        m.contains('network') ||
+        m.contains('connection refused');
+  }
+
+  bool _looksTimeout(String message) {
+    final m = message.toLowerCase();
+    return m.contains('timeoutexception') ||
+        m.contains('timeout') ||
+        m.contains('délai');
+  }
+
+  String _friendlyTitleFrom(String message) {
+    if (_looksNoInternet(message)) return 'Pas de connexion internet';
+    return 'Oups, un problème est survenu';
+  }
+
+  String _friendlyMessageFrom(String message) {
+    if (_looksNoInternet(message)) {
+      return 'Vérifiez votre connexion et réessayez.';
+    }
+    if (_looksTimeout(message)) {
+      return 'Le serveur met trop de temps à répondre. Réessayez.';
+    }
+    return 'Impossible de charger le classement. Veuillez réessayer.';
+  }
+
+  IconData _friendlyIconFrom(String message) {
+    if (_looksNoInternet(message)) return Icons.wifi_off_rounded;
+    if (_looksTimeout(message)) return Icons.schedule_rounded;
+    return Icons.error_outline_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -152,46 +190,59 @@ class _TableLeagueState extends ConsumerState<TableLeague>
         }
 
         if (rankingState is RankingError) {
+          // Use friendly, URL-free error messaging and design
+          final title = _friendlyTitleFrom(rankingState.message);
+          final message = _friendlyMessageFrom(rankingState.message);
+          final icon = _friendlyIconFrom(rankingState.message);
+
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: colorScheme.error.withOpacity(0.7),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Erreur',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Text(
-                    rankingState.message,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colorScheme.onSurface.withOpacity(0.7),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: colorScheme.secondaryContainer.withOpacity(0.35),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 36,
+                      color: colorScheme.onSecondaryContainer,
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () => _loadRankingForTab(_tabController.index),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
+                  const SizedBox(height: 14),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
-                  child: const Text('Réessayer'),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: colorScheme.onSurface.withOpacity(0.8),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => _loadRankingForTab(_tabController.index),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Réessayer'),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -290,8 +341,8 @@ class _TableLeagueState extends ConsumerState<TableLeague>
                   ),
 
                   // Layout
-                  columnSpacing: 12, // was 18
-                  horizontalMargin: 10, // was 14
+                  columnSpacing: 12,
+                  horizontalMargin: 10,
                   border: TableBorder(
                     horizontalInside: BorderSide(
                       color: colorScheme.outline.withOpacity(0.25),
@@ -341,9 +392,9 @@ class _TableLeagueState extends ConsumerState<TableLeague>
                         : colorScheme.surface;
 
                     return DataRow(
-                      color: MaterialStateProperty.resolveWith((states) {
-                        if (states.contains(MaterialState.hovered) ||
-                            states.contains(MaterialState.focused)) {
+                      color: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.hovered) ||
+                            states.contains(WidgetState.focused)) {
                           return colorScheme.secondaryContainer.withOpacity(
                             0.18,
                           );
@@ -384,10 +435,10 @@ class _TableLeagueState extends ConsumerState<TableLeague>
                           ),
                         ),
 
-                        // Club name (no initial avatar) with tighter width
+                        // Club name
                         DataCell(
                           SizedBox(
-                            width: 135, // reduced to help the table fit
+                            width: 135,
                             child: Text(
                               team.name,
                               maxLines: 1,
@@ -400,7 +451,7 @@ class _TableLeagueState extends ConsumerState<TableLeague>
                           ),
                         ),
 
-                        // Numeric stats (right-aligned by numeric: true)
+                        // Numeric stats
                         DataCell(Text(team.pts ?? '0')),
                         DataCell(Text(team.p ?? '0')),
                         DataCell(Text(team.w ?? '0')),

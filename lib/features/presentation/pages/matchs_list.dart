@@ -1,9 +1,11 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/match.dart';
 import 'package:foot_rdc/features/presentation/widgets/match_list_item.dart';
 import 'package:foot_rdc/main.dart';
-import 'dart:async';
 
 /// A page that shows a list of matches fetched via a Riverpod provider.
 class MatchsList extends ConsumerStatefulWidget {
@@ -22,9 +24,11 @@ class _MatchsListState extends ConsumerState<MatchsList> {
   bool _hasReachedEnd = false;
   bool _isRefreshing = false;
   bool _hasInitialLoaded = false;
-  String? _lastError;
   final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
+
+  // Inline load-more error flag + retry
+  bool _loadMoreError = false;
 
   @override
   void initState() {
@@ -45,7 +49,8 @@ class _MatchsListState extends ConsumerState<MatchsList> {
             _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
         !_hasReachedEnd &&
-        !_isRefreshing) {
+        !_isRefreshing &&
+        !_loadMoreError) {
       // Debounce rapid scroll events
       _debounceTimer?.cancel();
       _debounceTimer = Timer(const Duration(milliseconds: 200), () {
@@ -59,7 +64,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
 
     setState(() {
       _isLoadingMore = true;
-      _lastError = null;
+      _loadMoreError = false;
     });
 
     try {
@@ -76,19 +81,16 @@ class _MatchsListState extends ConsumerState<MatchsList> {
           _currentPage = nextPage;
         }
         _isLoadingMore = false;
+        _loadMoreError = false;
       });
     } catch (error) {
       setState(() {
         _isLoadingMore = false;
-        _lastError = error.toString();
+        _loadMoreError = true;
       });
-      // Handle error silently or show a snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Échec du chargement de plus de matchs : $error'),
-            action: SnackBarAction(label: 'Réessayer', onPressed: _loadMore),
-          ),
+          SnackBar(content: Text(_friendlyLoadMoreMessage(error))),
         );
       }
     }
@@ -100,44 +102,66 @@ class _MatchsListState extends ConsumerState<MatchsList> {
     try {
       setState(() {
         _isRefreshing = true;
-        _lastError = null;
-      });
-
-      // Reset pagination state
-      setState(() {
         _currentPage = 1;
         _hasReachedEnd = false;
         _isLoadingMore = false;
+        _loadMoreError = false;
         _hasInitialLoaded = false;
-        _allMatches = []; // Clear the matches to trigger provider reload
+        _allMatches = []; // Clear to trigger provider reload
       });
 
       // Invalidate the provider to force a fresh fetch
       ref.invalidate(fetchMatchesProvider);
-
-      setState(() {
-        _isRefreshing = false;
-      });
     } catch (error) {
-      setState(() {
-        _isRefreshing = false;
-        _lastError = error.toString();
-      });
-      // Handle error silently or show a snackbar
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Échec de l\'actualisation des matchs : $error'),
-            action: SnackBarAction(label: 'Réessayer', onPressed: _onRefresh),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error))));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
       }
     }
   }
 
+  // Friendly helpers (no URLs exposed)
+  bool _isNoInternet(Object error) => error is SocketException;
+  bool _isTimeout(Object error) => error is TimeoutException;
+
+  String _friendlyTitle(Object error) {
+    if (_isNoInternet(error)) return 'Pas de connexion internet';
+    return 'Oups, un problème est survenu';
+  }
+
+  String _friendlyGenericMessage(Object error) {
+    if (_isNoInternet(error)) {
+      return 'Vérifiez votre connexion et réessayez.';
+    }
+    if (_isTimeout(error)) {
+      return 'Le serveur met trop de temps à répondre. Réessayez.';
+    }
+    return 'Impossible de charger les matchs. Veuillez réessayer.';
+  }
+
+  String _friendlyLoadMoreMessage(Object error) {
+    if (_isNoInternet(error)) return 'Connexion absente. Réessayez.';
+    if (_isTimeout(error)) return 'Délai dépassé. Réessayez.';
+    return 'Impossible de charger plus de matchs.';
+  }
+
+  IconData _friendlyIcon(Object error) {
+    if (_isNoInternet(error)) return Icons.wifi_off_rounded;
+    if (_isTimeout(error)) return Icons.schedule_rounded;
+    return Icons.error_outline_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
-    const input = "leagues=552&seasons=553&page=1&per_page=10";
+    final colorScheme = Theme.of(context).colorScheme;
+    final input = "leagues=552&seasons=553&page=1&per_page=$_perPage";
     final matchesAsync = ref.watch(fetchMatchesProvider(input));
 
     return Scaffold(
@@ -153,7 +177,9 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         ),
         centerTitle: false,
         elevation: 4.0,
-        shadowColor: Colors.black26,
+        shadowColor: Theme.of(context).brightness == Brightness.light
+            ? Colors.black26
+            : Colors.white24,
       ),
       body: matchesAsync.when(
         data: (matches) {
@@ -164,168 +190,176 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                 setState(() {
                   _allMatches = matches;
                   _hasInitialLoaded = true;
-                  _isRefreshing = false;
                 });
               }
             });
           }
 
-          return _buildMatchesList();
+          return _buildMatchesList(colorScheme);
         },
         loading: () {
-          // Show loading only if we don't have initial data
-          if (!_hasInitialLoaded) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Chargement des matchs...'),
-                ],
-              ),
-            );
-          }
-          return _buildMatchesList();
-        },
-        error: (error, stackTrace) {
-          // Show error only if we don't have initial data
           if (!_hasInitialLoaded) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Échec du chargement des matchs',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      error.toString(),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
+              child: CircularProgressIndicator(color: colorScheme.primary),
+            );
+          }
+          return _buildMatchesList(colorScheme);
+        },
+        error: (error, stackTrace) {
+          if (!_hasInitialLoaded) {
+            final title = _friendlyTitle(error);
+            final message = _friendlyGenericMessage(error);
+            final icon = _friendlyIcon(error);
+
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondaryContainer.withOpacity(0.35),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 36,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: _onRefresh,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Réessayer'),
-                  ),
-                ],
+                    const SizedBox(height: 14),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withOpacity(0.8),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        ref.invalidate(fetchMatchesProvider(input));
+                      },
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Réessayer'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
-          return _buildMatchesList();
+          return _buildMatchesList(colorScheme);
         },
       ),
     );
   }
 
-  Widget _buildMatchesList() {
+  Widget _buildMatchesList(ColorScheme colorScheme) {
     return RefreshIndicator(
       onRefresh: _onRefresh,
-      child: Column(
-        children: [
-          // Show error banner if there's a persistent error
-          if (_lastError != null)
-            Container(
-              width: double.infinity,
-              color: Colors.red.shade50,
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Icon(Icons.warning, color: Colors.red.shade700, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Problème de connexion. Tirez pour actualiser ou appuyez sur réessayer.',
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _onRefresh,
-                    child: const Text('Réessayer'),
-                  ),
-                ],
+      color: colorScheme.primary,
+      backgroundColor: colorScheme.surface,
+      child: _allMatches.isEmpty && !_isLoadingMore
+          ? Center(
+              child: Text(
+                'Aucun match trouvé',
+                style: TextStyle(color: colorScheme.onSurface),
               ),
-            ),
-          Expanded(
-            child: _allMatches.isEmpty && !_isLoadingMore
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.sports_soccer, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text('Aucun match trouvé'),
-                        SizedBox(height: 8),
-                        Text('Tirez vers le bas pour actualiser'),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount:
-                        _allMatches.length +
-                        (_isLoadingMore ? 1 : 0) +
-                        (!_hasReachedEnd &&
-                                !_isLoadingMore &&
-                                _allMatches.isNotEmpty
-                            ? 1
-                            : 0),
-                    itemBuilder: (context, index) {
-                      if (index < _allMatches.length) {
-                        return MatchListItem(
-                          match: _allMatches[index],
-                          onTap: () {},
-                        );
-                      } else if (_isLoadingMore) {
-                        // Loading indicator at the bottom
-                        return Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+            )
+          : ListView.separated(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              itemCount:
+                  _allMatches.length +
+                  ((_isLoadingMore || _loadMoreError) ? 1 : 0),
+              separatorBuilder: (context, index) => const SizedBox(height: 0),
+              itemBuilder: (context, index) {
+                // Bottom loading/error row
+                if (index == _allMatches.length) {
+                  if (_isLoadingMore) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    );
+                  }
+                  if (_loadMoreError) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 12,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colorScheme.outline),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.wifi_off_rounded,
+                              color: colorScheme.error,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Impossible de charger plus de matchs',
+                                style: TextStyle(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Chargement de plus de matchs...',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: Colors.grey[600]),
-                              ),
-                            ],
-                          ),
-                        );
-                      } else {
-                        // "Load more" hint at the bottom
-                        return Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Center(
-                            child: Text(
-                              'Faites défiler vers le bas pour plus de matchs',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[500]),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-          ),
-        ],
-      ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: _loadMore,
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: const Text('Réessayer'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                }
+
+                final match = _allMatches[index];
+                return MatchListItem(match: match, onTap: () {});
+              },
+            ),
     );
   }
 }

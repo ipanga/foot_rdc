@@ -1,8 +1,10 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
-import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
 import 'package:foot_rdc/main.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/app_drawer.dart';
@@ -24,6 +26,9 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
   bool _hasReachedEnd = false;
   final ScrollController _scrollController = ScrollController();
 
+  // Load-more error flag to show inline retry at bottom
+  bool _loadMoreError = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +46,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
-        !_hasReachedEnd) {
+        !_hasReachedEnd &&
+        !_loadMoreError) {
       _loadMoreArticles();
     }
   }
@@ -51,6 +57,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
 
     setState(() {
       _isLoadingMore = true;
+      _loadMoreError = false;
     });
 
     try {
@@ -66,19 +73,16 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
           _currentPage = nextPage;
         }
         _isLoadingMore = false;
+        _loadMoreError = false;
       });
     } catch (error) {
       setState(() {
         _isLoadingMore = false;
+        _loadMoreError = true;
       });
-      // Handle error silently or show a snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Échec du chargement d\'articles supplémentaires: $error',
-            ),
-          ),
+          SnackBar(content: Text(_friendlyLoadMoreMessage(error))),
         );
       }
     }
@@ -91,6 +95,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
         _currentPage = 1;
         _hasReachedEnd = false;
         _isLoadingMore = false;
+        _loadMoreError = false;
         _allArticles = []; // Clear the articles to trigger provider reload
       });
 
@@ -98,22 +103,50 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
       ref.invalidate(fetchArticlesProvider);
 
       // Fetch fresh data from the first page
-      const input = "page=1&per_page=15";
+      final input = "page=1&per_page=$_perPage";
       final newArticles = await ref.read(fetchArticlesProvider(input).future);
 
       setState(() {
         _allArticles = newArticles;
       });
     } catch (error) {
-      // Handle error silently or show a snackbar
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Échec de l\'actualisation des articles: $error'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error))));
       }
     }
+  }
+
+  // Friendly helpers (no URLs exposed)
+  bool _isNoInternet(Object error) => error is SocketException;
+  bool _isTimeout(Object error) => error is TimeoutException;
+
+  String _friendlyTitle(Object error) {
+    if (_isNoInternet(error)) return 'Pas de connexion internet';
+    return 'Oups, un problème est survenu';
+  }
+
+  String _friendlyGenericMessage(Object error) {
+    if (_isNoInternet(error)) {
+      return 'Vérifiez votre connexion et réessayez.';
+    }
+    if (_isTimeout(error)) {
+      return 'Le serveur met trop de temps à répondre. Réessayez.';
+    }
+    return 'Impossible de charger les articles. Veuillez réessayer.';
+  }
+
+  String _friendlyLoadMoreMessage(Object error) {
+    if (_isNoInternet(error)) return 'Connexion absente. Réessayez.';
+    if (_isTimeout(error)) return 'Délai dépassé. Réessayez.';
+    return 'Impossible de charger plus d’articles.';
+  }
+
+  IconData _friendlyIcon(Object error) {
+    if (_isNoInternet(error)) return Icons.wifi_off_rounded;
+    if (_isTimeout(error)) return Icons.schedule_rounded;
+    return Icons.error_outline_rounded;
   }
 
   AppBar _buildAppBar() {
@@ -137,9 +170,11 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     // Only watch the provider for the first page load when _allArticles is empty
     if (_allArticles.isEmpty) {
-      const input = "page=1&per_page=15";
+      final input = "page=1&per_page=$_perPage";
       final articlesAsync = ref.watch(fetchArticlesProvider(input));
 
       return Scaffold(
@@ -158,13 +193,18 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
             }
 
             if (articles.isEmpty) {
-              return Center(child: Text('Aucun article trouvé'));
+              return Center(
+                child: Text(
+                  'Aucun article trouvé',
+                  style: TextStyle(color: colorScheme.onSurface),
+                ),
+              );
             }
 
             return RefreshIndicator(
               onRefresh: _onRefresh,
-              color: Theme.of(context).colorScheme.primary,
-              backgroundColor: Theme.of(context).colorScheme.surface,
+              color: colorScheme.primary,
+              backgroundColor: colorScheme.surface,
               edgeOffset: 8,
               child: ListView.separated(
                 controller: _scrollController,
@@ -190,8 +230,80 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(child: Text('Erreur: $error')),
+          loading: () => Center(
+            child: CircularProgressIndicator(color: colorScheme.primary),
+          ),
+          error: (error, stack) {
+            final title = _friendlyTitle(error);
+            final message = _friendlyGenericMessage(error);
+            final icon = _friendlyIcon(error);
+
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondaryContainer.withOpacity(0.35),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 36,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Retry loading more articles
+                        _loadMoreArticles();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Réessayer'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       );
     }

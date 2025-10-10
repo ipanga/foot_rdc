@@ -4,6 +4,8 @@ import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/custom_search_bar.dart';
 import 'package:foot_rdc/main.dart';
+import 'dart:async';
+import 'dart:io';
 
 class ArticleSearchList extends ConsumerStatefulWidget {
   const ArticleSearchList({super.key});
@@ -32,6 +34,9 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
   final ScrollController _scrollController = ScrollController();
   String? _currentSearchTerm;
 
+  // Indicates bottom "load more" failed and offers retry action.
+  bool _loadMoreError = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +57,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
             _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
         !_hasReachedEnd &&
+        !_loadMoreError &&
         _currentSearchTerm != null) {
       _loadMoreArticles();
     }
@@ -62,6 +68,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
 
     setState(() {
       _isLoadingMore = true;
+      _loadMoreError = false;
     });
 
     try {
@@ -78,17 +85,17 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
           _currentPage = nextPage;
         }
         _isLoadingMore = false;
+        _loadMoreError = false;
       });
     } catch (error) {
       setState(() {
         _isLoadingMore = false;
+        _loadMoreError = true;
       });
-      // Handle error silently or show a snackbar
+      // Optional: you can still show a lightweight snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Échec du chargement d\'articles supplémentaires'),
-          ),
+          SnackBar(content: Text(_friendlyLoadMoreMessage(error))),
         );
       }
     }
@@ -103,6 +110,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
         _currentPage = 1;
         _hasReachedEnd = false;
         _isLoadingMore = false;
+        _loadMoreError = false;
       });
 
       // Fetch fresh data from the first page
@@ -115,13 +123,10 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
         _query = input; // Update query to trigger UI refresh
       });
     } catch (error) {
-      // Handle error silently or show a snackbar
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Échec de l\'actualisation des articles'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error))));
       }
     }
   }
@@ -139,6 +144,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
           _currentPage = 1;
           _hasReachedEnd = false;
           _isLoadingMore = false;
+          _loadMoreError = false;
           _allArticles = [];
           _currentSearchTerm = term;
           // Build the query exactly as the provider expects.
@@ -146,6 +152,37 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
         });
       }
     }
+  }
+
+  // Friendly messages (no URLs exposed)
+  bool _isNoInternet(Object error) => error is SocketException;
+  bool _isTimeout(Object error) => error is TimeoutException;
+
+  String _friendlyTitle(Object error) {
+    if (_isNoInternet(error)) return 'Pas de connexion internet';
+    return 'Oups, un problème est survenu';
+  }
+
+  String _friendlyGenericMessage(Object error) {
+    if (_isNoInternet(error)) {
+      return 'Vérifiez votre connexion et réessayez.';
+    }
+    if (_isTimeout(error)) {
+      return 'Le serveur met trop de temps à répondre. Réessayez.';
+    }
+    return 'Impossible de charger les articles. Veuillez réessayer.';
+  }
+
+  String _friendlyLoadMoreMessage(Object error) {
+    if (_isNoInternet(error)) return 'Connexion absente. Réessayez.';
+    if (_isTimeout(error)) return 'Délai dépassé. Réessayez.';
+    return 'Impossible de charger plus d’articles.';
+  }
+
+  IconData _friendlyIcon(Object error) {
+    if (_isNoInternet(error)) return Icons.wifi_off_rounded;
+    if (_isTimeout(error)) return Icons.schedule_rounded;
+    return Icons.error_outline_rounded;
   }
 
   @override
@@ -234,11 +271,12 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                         child: ListView.separated(
                           controller: _scrollController,
                           itemCount:
-                              _allArticles.length + (_isLoadingMore ? 1 : 0),
+                              _allArticles.length +
+                              ((_isLoadingMore || _loadMoreError) ? 1 : 0),
                           separatorBuilder: (context, index) {
-                            // Don't show separator before the loading indicator
+                            // Don't show separator before the loading/error indicator
                             if (index == _allArticles.length - 1 &&
-                                _isLoadingMore) {
+                                (_isLoadingMore || _loadMoreError)) {
                               return const SizedBox.shrink();
                             }
                             return Container(
@@ -258,16 +296,75 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                             );
                           },
                           itemBuilder: (context, index) {
-                            // Show loading indicator at the bottom
+                            // Show loading or error indicator at the bottom
                             if (index == _allArticles.length) {
-                              return Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: colorScheme.primary,
+                              if (_isLoadingMore) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: colorScheme.primary,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
+                              // Load-more error row with retry
+                              if (_loadMoreError) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                    vertical: 12.0,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.surface,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: colorScheme.outline,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.wifi_off_rounded,
+                                          color: colorScheme.error,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            'Impossible de charger plus d’articles',
+                                            style: TextStyle(
+                                              color: colorScheme.onSurface,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        OutlinedButton.icon(
+                                          onPressed: _loadMoreArticles,
+                                          icon: const Icon(
+                                            Icons.refresh_rounded,
+                                            size: 18,
+                                          ),
+                                          label: const Text('Réessayer'),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 8,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
                             }
 
                             final article = _allArticles[index];
@@ -342,12 +439,68 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                       color: colorScheme.primary,
                     ),
                   ),
-                  error: (error, stack) => Center(
-                    child: Text(
-                      'Une erreur s\'est produite: $error',
-                      style: TextStyle(color: colorScheme.error),
-                    ),
-                  ),
+                  error: (error, stack) {
+                    final title = _friendlyTitle(error);
+                    final message = _friendlyGenericMessage(error);
+                    final icon = _friendlyIcon(error);
+
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 16.0,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: colorScheme.secondaryContainer
+                                    .withOpacity(0.35),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                icon,
+                                size: 36,
+                                color: colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              message,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withOpacity(0.8),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                if (_query != null) {
+                                  ref.invalidate(
+                                    searchArticlesProvider(_query!),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.refresh_rounded),
+                              label: const Text('Réessayer'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
