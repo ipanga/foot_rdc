@@ -27,6 +27,10 @@ class _MatchsListState extends ConsumerState<MatchsList> {
   final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
 
+  // Cache management
+  DateTime? _lastFetchTime;
+  static const Duration _cacheValidDuration = Duration(minutes: 2);
+
   // Inline load-more error flag + retry
   bool _loadMoreError = false;
 
@@ -42,6 +46,35 @@ class _MatchsListState extends ConsumerState<MatchsList> {
     _scrollController.dispose();
     _debounceTimer?.cancel();
     super.dispose();
+  }
+
+  // Check if cache is still valid
+  bool _isCacheValid() {
+    if (_lastFetchTime == null || !_hasInitialLoaded) return false;
+    return DateTime.now().difference(_lastFetchTime!) < _cacheValidDuration;
+  }
+
+  // Method to be called from parent when tab is switched back to
+  void checkAndRefreshIfNeeded() {
+    if (!_isCacheValid() && _hasInitialLoaded) {
+      _forceRefresh();
+    }
+  }
+
+  // Force refresh the data
+  void _forceRefresh() {
+    setState(() {
+      _currentPage = 1;
+      _hasReachedEnd = false;
+      _isLoadingMore = false;
+      _loadMoreError = false;
+      _hasInitialLoaded = false;
+      _allMatches = [];
+      _lastFetchTime = null;
+    });
+
+    // Invalidate the provider to force a fresh fetch
+    ref.invalidate(fetchMatchesProvider);
   }
 
   void _onScroll() {
@@ -108,6 +141,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         _loadMoreError = false;
         _hasInitialLoaded = false;
         _allMatches = []; // Clear to trigger provider reload
+        _lastFetchTime = null; // Reset cache timestamp
       });
 
       // Invalidate the provider to force a fresh fetch
@@ -190,6 +224,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                 setState(() {
                   _allMatches = matches;
                   _hasInitialLoaded = true;
+                  _lastFetchTime = DateTime.now(); // Set cache timestamp
                 });
               }
             });

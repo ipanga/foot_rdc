@@ -7,11 +7,46 @@ import 'package:foot_rdc/features/presentation/pages/article_search_list.dart';
 import 'package:foot_rdc/features/presentation/pages/matchs_list.dart';
 import 'package:foot_rdc/features/presentation/pages/table_league.dart';
 import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
+import 'package:foot_rdc/features/presentation/providers/article_cache_provider.dart';
 
 final currentPageProvider = StateProvider<int>((ref) => 0);
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
+
+  @override
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    // Add lifecycle observer to detect app foreground/background
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // When app comes back to foreground, check if articles cache needs refresh
+    if (state == AppLifecycleState.resumed) {
+      final currentPage = ref.read(currentPageProvider);
+
+      // Only check cache if user is currently on articles tab (index 0)
+      if (currentPage == 0) {
+        _checkAndRefreshArticlesIfNeeded();
+      }
+    }
+  }
 
   void _changeTheme(
     BuildContext context,
@@ -39,8 +74,20 @@ class HomePage extends ConsumerWidget {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _checkAndRefreshArticlesIfNeeded() {
+    final cacheState = ref.read(articleCacheProvider);
+
+    // Check if cache has expired (2 minutes)
+    if (cacheState.articles.isNotEmpty &&
+        !cacheState.isCacheValid(validDuration: const Duration(minutes: 2))) {
+      // Trigger a refresh by clearing the cache
+      // The ArticleWebList will automatically reload when it detects empty cache
+      ref.read(articleCacheProvider.notifier).clearCache();
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final currentPage = ref.watch(currentPageProvider);
     final theme = Theme.of(context);
 
@@ -69,6 +116,11 @@ class HomePage extends ConsumerWidget {
           elevation: 0,
           currentIndex: currentPage,
           onTap: (value) {
+            // Check if user is switching to articles tab (index 0)
+            if (value == 0 && currentPage != 0) {
+              _checkAndRefreshArticlesIfNeeded();
+            }
+
             ref.read(currentPageProvider.notifier).state = value;
           },
           items: [

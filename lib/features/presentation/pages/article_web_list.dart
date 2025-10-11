@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
+import 'package:foot_rdc/features/presentation/providers/article_cache_provider.dart';
 import 'package:foot_rdc/main.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/app_drawer.dart';
@@ -17,23 +18,47 @@ class ArticleWebList extends ConsumerStatefulWidget {
   ConsumerState<ConsumerStatefulWidget> createState() => _ArticleListState();
 }
 
-class _ArticleListState extends ConsumerState<ArticleWebList> {
+class _ArticleListState extends ConsumerState<ArticleWebList>
+    with AutomaticKeepAliveClientMixin {
   // State management for pagination
-  int _currentPage = 1;
   final int _perPage = 15;
-  List<Article> _allArticles = [];
   bool _isLoadingMore = false;
-  bool _hasReachedEnd = false;
   final ScrollController _scrollController = ScrollController();
 
   // Load-more error flag to show inline retry at bottom
   bool _loadMoreError = false;
+
+  // Track if we're currently fetching to prevent multiple simultaneous requests
+  bool _isFetching = false;
+
+  static const Duration _cacheValidDuration = Duration(minutes: 15);
+
+  // Track if this is the first time the widget is being built
+  bool _hasInitialized = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     // Add scroll listener to detect when user reaches bottom
     _scrollController.addListener(_onScroll);
+
+    // Load initial data with cache check
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialDataWithCacheCheck();
+      _hasInitialized = true;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // This is called when the widget becomes visible
+    if (_hasInitialized) {
+      _checkCacheOnTabSwitch();
+    }
   }
 
   @override
@@ -42,18 +67,196 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
     super.dispose();
   }
 
+  // Check cache when user switches back to this tab
+  void _checkCacheOnTabSwitch() {
+    final cacheState = ref.read(articleCacheProvider);
+
+    // If cache has expired, refresh automatically
+    if (cacheState.articles.isNotEmpty &&
+        !cacheState.isCacheValid(validDuration: _cacheValidDuration)) {
+      // Add a small delay to ensure the tab switch is complete
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _forceRefresh();
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final cacheState = ref.watch(articleCacheProvider);
+
+    // If cache is empty but we were initialized, reload data
+    if (cacheState.articles.isEmpty && _hasInitialized && !_isFetching) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadInitialData();
+      });
+    }
+
+    // Show cached data if available
+    if (cacheState.articles.isNotEmpty) {
+      return Scaffold(
+        appBar: _buildAppBar(),
+        drawer: const AppDrawer(),
+        body: RefreshIndicator(
+          onRefresh: _onRefresh,
+          color: colorScheme.primary,
+          backgroundColor: colorScheme.surface,
+          edgeOffset: 8,
+          child: ListView.separated(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            itemCount:
+                cacheState.articles.length +
+                (_isLoadingMore ? 1 : 0) +
+                (_loadMoreError ? 1 : 0),
+            separatorBuilder: (context, index) => const SizedBox(height: 0),
+            itemBuilder: (context, index) {
+              // Loading indicator at the bottom
+              if (index == cacheState.articles.length && _isLoadingMore) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              // Error retry button at the bottom
+              if (index == cacheState.articles.length && _loadMoreError) {
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _loadMoreError = false;
+                        });
+                        _loadMoreArticles();
+                      },
+                      child: const Text('Réessayer'),
+                    ),
+                  ),
+                );
+              }
+
+              final article = cacheState.articles[index];
+              return ArticleListItem(
+                article: article,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ArticleDetailsPage(article: article),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    // Show loading state when fetching
+    if (_isFetching) {
+      return Scaffold(
+        appBar: _buildAppBar(),
+        drawer: const AppDrawer(),
+        body: Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
+        ),
+      );
+    }
+
+    // Show empty state if no articles
+    return Scaffold(
+      appBar: _buildAppBar(),
+      drawer: const AppDrawer(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Aucun article trouvé',
+              style: TextStyle(color: colorScheme.onSurface),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadInitialData,
+              child: const Text('Recharger'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // New method to check cache validity before loading
+  Future<void> _loadInitialDataWithCacheCheck() async {
+    final cacheState = ref.read(articleCacheProvider);
+
+    // If we have cached data and it's still valid, don't refresh
+    if (cacheState.articles.isNotEmpty &&
+        cacheState.isCacheValid(validDuration: _cacheValidDuration)) {
+      return;
+    }
+
+    // Otherwise, load fresh data
+    await _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    if (_isFetching) return;
+
+    setState(() {
+      _isFetching = true;
+    });
+
+    try {
+      final input = "page=1&per_page=$_perPage";
+      final articles = await ref.read(fetchArticlesProvider(input).future);
+
+      if (mounted) {
+        // Update cache through provider
+        ref
+            .read(articleCacheProvider.notifier)
+            .updateArticles(articles, isFirstPage: true);
+
+        setState(() {
+          _isFetching = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _isFetching = false;
+        });
+      }
+    }
+  }
+
   void _onScroll() {
+    final cacheState = ref.read(articleCacheProvider);
+
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
-        !_hasReachedEnd &&
-        !_loadMoreError) {
+        !cacheState.hasReachedEnd &&
+        !_loadMoreError &&
+        !_isFetching) {
       _loadMoreArticles();
     }
   }
 
   void _loadMoreArticles() async {
-    if (_isLoadingMore || _hasReachedEnd) return;
+    final cacheState = ref.read(articleCacheProvider);
+
+    if (_isLoadingMore || cacheState.hasReachedEnd || _isFetching) return;
 
     setState(() {
       _isLoadingMore = true;
@@ -61,26 +264,27 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
     });
 
     try {
-      final nextPage = _currentPage + 1;
+      final nextPage = cacheState.currentPage + 1;
       final input = "page=$nextPage&per_page=$_perPage";
       final newArticles = await ref.read(fetchArticlesProvider(input).future);
 
-      setState(() {
-        if (newArticles.isEmpty) {
-          _hasReachedEnd = true;
-        } else {
-          _allArticles.addAll(newArticles);
-          _currentPage = nextPage;
-        }
-        _isLoadingMore = false;
-        _loadMoreError = false;
-      });
-    } catch (error) {
-      setState(() {
-        _isLoadingMore = false;
-        _loadMoreError = true;
-      });
       if (mounted) {
+        // Update cache through provider
+        ref
+            .read(articleCacheProvider.notifier)
+            .updateArticles(newArticles, isFirstPage: false);
+
+        setState(() {
+          _isLoadingMore = false;
+          _loadMoreError = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+          _loadMoreError = true;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_friendlyLoadMoreMessage(error))),
         );
@@ -89,14 +293,17 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
   }
 
   Future<void> _onRefresh() async {
+    await _forceRefresh();
+  }
+
+  Future<void> _forceRefresh() async {
+    if (_isFetching) return;
+
     try {
-      // Reset pagination state
       setState(() {
-        _currentPage = 1;
-        _hasReachedEnd = false;
+        _isFetching = true;
         _isLoadingMore = false;
         _loadMoreError = false;
-        _allArticles = []; // Clear the articles to trigger provider reload
       });
 
       // Invalidate the provider to force a fresh fetch
@@ -106,11 +313,21 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
       final input = "page=1&per_page=$_perPage";
       final newArticles = await ref.read(fetchArticlesProvider(input).future);
 
-      setState(() {
-        _allArticles = newArticles;
-      });
+      if (mounted) {
+        // Update cache through provider
+        ref
+            .read(articleCacheProvider.notifier)
+            .updateArticles(newArticles, isFirstPage: true);
+
+        setState(() {
+          _isFetching = false;
+        });
+      }
     } catch (error) {
       if (mounted) {
+        setState(() {
+          _isFetching = false;
+        });
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error))));
@@ -140,7 +357,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
   String _friendlyLoadMoreMessage(Object error) {
     if (_isNoInternet(error)) return 'Connexion absente. Réessayez.';
     if (_isTimeout(error)) return 'Délai dépassé. Réessayez.';
-    return 'Impossible de charger plus d’articles.';
+    return 'Impossible de charger plus d\'articles.';
   }
 
   IconData _friendlyIcon(Object error) {
@@ -164,188 +381,6 @@ class _ArticleListState extends ConsumerState<ArticleWebList> {
             style: Theme.of(context).appBarTheme.titleTextStyle,
           ),
         ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    // Only watch the provider for the first page load when _allArticles is empty
-    if (_allArticles.isEmpty) {
-      final input = "page=1&per_page=$_perPage";
-      final articlesAsync = ref.watch(fetchArticlesProvider(input));
-
-      return Scaffold(
-        appBar: _buildAppBar(),
-        drawer: const AppDrawer(),
-        body: articlesAsync.when(
-          data: (articles) {
-            if (articles.isNotEmpty) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  setState(() {
-                    _allArticles = articles;
-                  });
-                }
-              });
-            }
-
-            if (articles.isEmpty) {
-              return Center(
-                child: Text(
-                  'Aucun article trouvé',
-                  style: TextStyle(color: colorScheme.onSurface),
-                ),
-              );
-            }
-
-            return RefreshIndicator(
-              onRefresh: _onRefresh,
-              color: colorScheme.primary,
-              backgroundColor: colorScheme.surface,
-              edgeOffset: 8,
-              child: ListView.separated(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                itemCount: articles.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 0),
-                itemBuilder: (context, index) {
-                  final article = articles[index];
-                  return ArticleListItem(
-                    article: article,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ArticleDetailsPage(article: article),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            );
-          },
-          loading: () => Center(
-            child: CircularProgressIndicator(color: colorScheme.primary),
-          ),
-          error: (error, stack) {
-            final title = _friendlyTitle(error);
-            final message = _friendlyGenericMessage(error);
-            final icon = _friendlyIcon(error);
-
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 16,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: colorScheme.secondaryContainer.withOpacity(0.35),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        icon,
-                        size: 36,
-                        color: colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Retry loading more articles
-                        _loadMoreArticles();
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Réessayer'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    }
-
-    // Once we have articles loaded, render them independently of the provider
-    return Scaffold(
-      appBar: _buildAppBar(),
-      drawer: const AppDrawer(),
-      body: RefreshIndicator(
-        onRefresh: _onRefresh,
-        color: Theme.of(context).colorScheme.primary,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        edgeOffset: 8,
-        child: ListView.separated(
-          controller: _scrollController,
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          itemCount: _allArticles.length + (_isLoadingMore ? 1 : 0),
-          separatorBuilder: (context, index) => const SizedBox(height: 0),
-          itemBuilder: (context, index) {
-            if (index == _allArticles.length) {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            final article = _allArticles[index];
-            return ArticleListItem(
-              article: article,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ArticleDetailsPage(article: article),
-                  ),
-                );
-              },
-            );
-          },
-        ),
       ),
     );
   }
