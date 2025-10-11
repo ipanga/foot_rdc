@@ -191,11 +191,6 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Only watch the provider after a search has been submitted.
-    final searchArticlesAsync = _query != null
-        ? ref.watch(searchArticlesProvider(_query!))
-        : null;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -238,15 +233,44 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
           Expanded(
             child: Builder(
               builder: (context) {
-                // Prior to searching we show an empty list (friendly message).
-                if (searchArticlesAsync == null) {
+                // Prior to searching we show an empty state message.
+                if (_query == null) {
                   return Center(
-                    child: Text(
-                      'Aucun article trouvé',
-                      style: TextStyle(color: colorScheme.onSurface),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_rounded,
+                          size: 64,
+                          color: colorScheme.outline.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Rechercher des articles',
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Saisissez un terme de recherche ci-dessus\npour commencer',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withOpacity(0.7),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }
+
+                // Only watch the provider AFTER a search has been submitted.
+                final searchArticlesAsync = ref.watch(
+                  searchArticlesProvider(_query!),
+                );
 
                 // Handle provider states.
                 return searchArticlesAsync.when(
@@ -338,7 +362,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                                         const SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
-                                            'Impossible de charger plus d’articles',
+                                            'Impossible de charger plus d\'articles',
                                             style: TextStyle(
                                               color: colorScheme.onSurface,
                                               fontWeight: FontWeight.w600,
@@ -385,12 +409,35 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                       );
                     }
 
-                    // If the list is empty show a placeholder message.
+                    // If the search returned no results
                     if (articles.isEmpty) {
                       return Center(
-                        child: Text(
-                          'Aucun article trouvé',
-                          style: TextStyle(color: colorScheme.onSurface),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off_rounded,
+                              size: 64,
+                              color: colorScheme.outline.withOpacity(0.5),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Aucun article trouvé',
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Essayez avec d\'autres termes de recherche',
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withOpacity(0.7),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }
