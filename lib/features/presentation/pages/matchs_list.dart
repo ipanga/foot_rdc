@@ -72,7 +72,9 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         currentCache.isEmpty &&
         _hasInitialLoaded &&
         !_isRefreshing &&
-        !_isBackgroundRefreshing) {
+        !_isBackgroundRefreshing &&
+        mounted) {
+      // Add mounted check here
       // Cache was cleared from outside (likely from HomePage), reload data
       _loadInitialData(isBackgroundRefresh: true);
     }
@@ -82,7 +84,8 @@ class _MatchsListState extends ConsumerState<MatchsList> {
 
   Future<void> _loadInitialData({bool isBackgroundRefresh = false}) async {
     try {
-      if (isBackgroundRefresh) {
+      if (isBackgroundRefresh && mounted) {
+        // Add mounted check
         setState(() {
           _isBackgroundRefreshing = true;
         });
@@ -91,22 +94,27 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       final input = "leagues=552&seasons=553&page=1&per_page=$_perPage";
       final matches = await ref.read(fetchMatchesProvider(input).future);
 
-      ref.read(matchCacheProvider.notifier).updateMatches(matches);
-
-      setState(() {
-        _hasInitialLoaded = true;
-        if (isBackgroundRefresh) {
-          _isBackgroundRefreshing = false;
-        }
-      });
-    } catch (error) {
-      setState(() {
-        _hasInitialLoaded = true;
-        if (isBackgroundRefresh) {
-          _isBackgroundRefreshing = false;
-        }
-      });
       if (mounted) {
+        // Add mounted check before updating state
+        ref.read(matchCacheProvider.notifier).updateMatches(matches);
+
+        setState(() {
+          _hasInitialLoaded = true;
+          if (isBackgroundRefresh) {
+            _isBackgroundRefreshing = false;
+          }
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        // Add mounted check
+        setState(() {
+          _hasInitialLoaded = true;
+          if (isBackgroundRefresh) {
+            _isBackgroundRefreshing = false;
+          }
+        });
+
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error))));
@@ -115,6 +123,8 @@ class _MatchsListState extends ConsumerState<MatchsList> {
   }
 
   void _onScroll() {
+    if (!mounted) return; // Add mounted check at the beginning
+
     final cacheState = ref.read(matchCacheProvider);
 
     if (_scrollController.position.pixels >=
@@ -126,40 +136,53 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       // Debounce rapid scroll events
       _debounceTimer?.cancel();
       _debounceTimer = Timer(const Duration(milliseconds: 200), () {
-        _loadMore();
+        if (mounted) {
+          // Add mounted check in timer callback
+          _loadMore();
+        }
       });
     }
   }
 
   Future<void> _loadMore() async {
+    if (!mounted) return; // Add mounted check at the beginning
+
     final cacheState = ref.read(matchCacheProvider);
 
     if (_isLoadingMore || cacheState.hasReachedEnd || _isRefreshing) return;
 
-    setState(() {
-      _isLoadingMore = true;
-      _loadMoreError = false;
-    });
+    if (mounted) {
+      // Add mounted check
+      setState(() {
+        _isLoadingMore = true;
+        _loadMoreError = false;
+      });
+    }
 
     try {
       final nextPage = cacheState.currentPage + 1;
       final input = "leagues=552&seasons=553&page=$nextPage&per_page=$_perPage";
       final newMatches = await ref.read(fetchMatchesProvider(input).future);
 
-      ref
-          .read(matchCacheProvider.notifier)
-          .updateMatches(newMatches, isLoadMore: true);
-
-      setState(() {
-        _isLoadingMore = false;
-        _loadMoreError = false;
-      });
-    } catch (error) {
-      setState(() {
-        _isLoadingMore = false;
-        _loadMoreError = true;
-      });
       if (mounted) {
+        // Add mounted check before updating state
+        ref
+            .read(matchCacheProvider.notifier)
+            .updateMatches(newMatches, isLoadMore: true);
+
+        setState(() {
+          _isLoadingMore = false;
+          _loadMoreError = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        // Add mounted check
+        setState(() {
+          _isLoadingMore = false;
+          _loadMoreError = true;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_friendlyLoadMoreMessage(error))),
         );

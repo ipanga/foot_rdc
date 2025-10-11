@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/presentation/providers/ranking_provider.dart';
+import 'package:foot_rdc/features/presentation/providers/ranking_cache_provider.dart';
 import 'package:foot_rdc/features/domain/entities/ranking.dart';
 
 class TableLeague extends ConsumerStatefulWidget {
   const TableLeague({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _TableLeagueState();
+  ConsumerState<ConsumerStatefulWidget> createState() => TableLeagueState();
 }
 
-class _TableLeagueState extends ConsumerState<TableLeague>
+class TableLeagueState extends ConsumerState<TableLeague>
     with TickerProviderStateMixin {
   late TabController _tabController;
 
@@ -53,12 +54,24 @@ class _TableLeagueState extends ConsumerState<TableLeague>
         leagueId = groupeALeagueId;
     }
 
-    ref
-        .read(rankingNotifierProvider.notifier)
-        .fetchRanking(leagueId: leagueId, seasonId: seasonId);
+    final cacheState = ref.read(rankingCacheProvider);
+
+    // Check if we have valid cached data
+    if (cacheState.isCacheValid(leagueId, seasonId) &&
+        cacheState.hasCachedData(leagueId, seasonId)) {
+      // Load from cache immediately
+      ref
+          .read(rankingNotifierProvider.notifier)
+          .loadFromCacheIfAvailable(leagueId: leagueId, seasonId: seasonId);
+    } else {
+      // Fetch from network
+      ref
+          .read(rankingNotifierProvider.notifier)
+          .fetchRanking(leagueId: leagueId, seasonId: seasonId);
+    }
   }
 
-  // Pull-to-refresh helper
+  // Pull-to-refresh helper - always force refresh
   Future<void> _refreshRankingForCurrentTab() {
     int leagueId;
     switch (_tabController.index) {
@@ -76,7 +89,42 @@ class _TableLeagueState extends ConsumerState<TableLeague>
     }
     return ref
         .read(rankingNotifierProvider.notifier)
-        .fetchRanking(leagueId: leagueId, seasonId: seasonId);
+        .fetchRanking(
+          leagueId: leagueId,
+          seasonId: seasonId,
+          forceRefresh: true,
+        );
+  }
+
+  // Check and refresh cache if needed (called from HomePage)
+  void checkAndRefreshIfNeeded() {
+    final currentTabIndex = _tabController.index;
+    int leagueId;
+    switch (currentTabIndex) {
+      case 0:
+        leagueId = groupeALeagueId;
+        break;
+      case 1:
+        leagueId = groupeBLeagueId;
+        break;
+      case 2:
+        leagueId = playOffLeagueId;
+        break;
+      default:
+        leagueId = groupeALeagueId;
+    }
+
+    final cacheState = ref.read(rankingCacheProvider);
+
+    // If cache is invalid and we have cached data, clear it
+    if (cacheState.hasCachedData(leagueId, seasonId) &&
+        !cacheState.isCacheValid(leagueId, seasonId)) {
+      ref
+          .read(rankingCacheProvider.notifier)
+          .clearCacheForLeague(leagueId, seasonId);
+      // Trigger a fresh fetch
+      _loadRankingForTab(currentTabIndex);
+    }
   }
 
   // Friendly error helpers (URL-free detection from message text)

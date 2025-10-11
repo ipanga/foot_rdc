@@ -4,6 +4,7 @@ import 'package:foot_rdc/features/data/repositories/ranking_repository_impl.dart
 import 'package:foot_rdc/features/domain/entities/ranking.dart';
 import 'package:foot_rdc/features/domain/repositories/ranking_repository.dart';
 import 'package:foot_rdc/features/domain/usecases/get_ranking.dart';
+import 'package:foot_rdc/features/presentation/providers/ranking_cache_provider.dart';
 import 'package:http/http.dart' as http;
 
 // Provider for HTTP client
@@ -31,24 +32,57 @@ final getRankingProvider = Provider<GetRanking>((ref) {
   return GetRanking(repository);
 });
 
-// State notifier for managing rankings
+// State notifier for managing rankings with caching
 class RankingNotifier extends StateNotifier<RankingState> {
   final GetRanking getRanking;
+  final Ref ref;
 
-  RankingNotifier(this.getRanking) : super(const RankingState.initial());
+  RankingNotifier(this.getRanking, this.ref)
+    : super(const RankingState.initial());
 
   Future<void> fetchRanking({
     required int leagueId,
     required int seasonId,
+    bool forceRefresh = false,
   }) async {
+    final cacheState = ref.read(rankingCacheProvider);
+
+    // Check if we have valid cached data and no force refresh
+    if (!forceRefresh &&
+        cacheState.isCacheValid(leagueId, seasonId) &&
+        cacheState.hasCachedData(leagueId, seasonId)) {
+      final cachedRanking = cacheState.getCachedRanking(leagueId, seasonId);
+      if (cachedRanking != null) {
+        state = RankingState.loaded(cachedRanking);
+        return;
+      }
+    }
+
     state = const RankingState.loading();
 
     final result = await getRanking(leagueId: leagueId, seasonId: seasonId);
 
-    result.fold(
-      (failure) => state = RankingState.error(failure.message),
-      (ranking) => state = RankingState.loaded(ranking),
-    );
+    result.fold((failure) => state = RankingState.error(failure.message), (
+      ranking,
+    ) {
+      // Cache the successful result
+      ref
+          .read(rankingCacheProvider.notifier)
+          .cacheRanking(leagueId, seasonId, ranking);
+      state = RankingState.loaded(ranking);
+    });
+  }
+
+  void loadFromCacheIfAvailable({
+    required int leagueId,
+    required int seasonId,
+  }) {
+    final cacheState = ref.read(rankingCacheProvider);
+    final cachedRanking = cacheState.getCachedRanking(leagueId, seasonId);
+
+    if (cachedRanking != null) {
+      state = RankingState.loaded(cachedRanking);
+    }
   }
 }
 
@@ -56,7 +90,7 @@ class RankingNotifier extends StateNotifier<RankingState> {
 final rankingNotifierProvider =
     StateNotifierProvider<RankingNotifier, RankingState>((ref) {
       final getRanking = ref.read(getRankingProvider);
-      return RankingNotifier(getRanking);
+      return RankingNotifier(getRanking, ref);
     });
 
 // Ranking state classes

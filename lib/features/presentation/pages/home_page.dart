@@ -9,6 +9,7 @@ import 'package:foot_rdc/features/presentation/pages/table_league.dart';
 import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
 import 'package:foot_rdc/features/presentation/providers/article_cache_provider.dart';
 import 'package:foot_rdc/features/presentation/providers/match_cache_provider.dart';
+import 'package:foot_rdc/features/presentation/providers/ranking_cache_provider.dart';
 
 final currentPageProvider = StateProvider<int>((ref) => 0);
 
@@ -21,6 +22,9 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage>
     with WidgetsBindingObserver {
+  final GlobalKey<TableLeagueState> _tableLeagueKey =
+      GlobalKey<TableLeagueState>();
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,8 @@ class _HomePageState extends ConsumerState<HomePage>
         _checkAndRefreshArticlesIfNeeded();
       } else if (currentPage == 1) {
         _checkAndRefreshMatchesIfNeeded();
+      } else if (currentPage == 2) {
+        _checkAndRefreshRankingsIfNeeded();
       }
     }
   }
@@ -100,6 +106,11 @@ class _HomePageState extends ConsumerState<HomePage>
     }
   }
 
+  void _checkAndRefreshRankingsIfNeeded() {
+    // Check if the TableLeague widget needs cache refresh
+    _tableLeagueKey.currentState?.checkAndRefreshIfNeeded();
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentPage = ref.watch(currentPageProvider);
@@ -108,7 +119,7 @@ class _HomePageState extends ConsumerState<HomePage>
     List<Widget> pages = [
       const ArticleWebList(),
       const MatchsList(),
-      const TableLeague(),
+      TableLeague(key: _tableLeagueKey),
       const ArticleSavedList(),
       const ArticleSearchList(),
     ];
@@ -135,6 +146,8 @@ class _HomePageState extends ConsumerState<HomePage>
               _checkAndRefreshArticlesIfNeeded();
             } else if (value == 1 && currentPage != 1) {
               _checkAndRefreshMatchesIfNeeded();
+            } else if (value == 2 && currentPage != 2) {
+              _checkAndRefreshRankingsIfNeeded();
             }
 
             ref.read(currentPageProvider.notifier).state = value;
