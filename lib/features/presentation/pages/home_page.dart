@@ -8,6 +8,7 @@ import 'package:foot_rdc/features/presentation/pages/matchs_list.dart';
 import 'package:foot_rdc/features/presentation/pages/table_league.dart';
 import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
 import 'package:foot_rdc/features/presentation/providers/article_cache_provider.dart';
+import 'package:foot_rdc/features/presentation/providers/match_cache_provider.dart';
 
 final currentPageProvider = StateProvider<int>((ref) => 0);
 
@@ -37,13 +38,15 @@ class _HomePageState extends ConsumerState<HomePage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    // When app comes back to foreground, check if articles cache needs refresh
+    // When app comes back to foreground, check if cache needs refresh
     if (state == AppLifecycleState.resumed) {
       final currentPage = ref.read(currentPageProvider);
 
-      // Only check cache if user is currently on articles tab (index 0)
+      // Check cache based on current tab
       if (currentPage == 0) {
         _checkAndRefreshArticlesIfNeeded();
+      } else if (currentPage == 1) {
+        _checkAndRefreshMatchesIfNeeded();
       }
     }
   }
@@ -86,17 +89,28 @@ class _HomePageState extends ConsumerState<HomePage>
     }
   }
 
+  void _checkAndRefreshMatchesIfNeeded() {
+    final cacheState = ref.read(matchCacheProvider);
+
+    // Check if cache has expired (2 minutes)
+    if (cacheState.matches.isNotEmpty &&
+        !cacheState.isCacheValid(validDuration: const Duration(minutes: 2))) {
+      // Clear cache and the MatchsList will handle the refresh automatically
+      ref.read(matchCacheProvider.notifier).clearCache();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentPage = ref.watch(currentPageProvider);
     final theme = Theme.of(context);
 
-    List<Widget> pages = const [
-      ArticleWebList(),
-      MatchsList(),
-      TableLeague(),
-      ArticleSavedList(),
-      ArticleSearchList(),
+    List<Widget> pages = [
+      const ArticleWebList(),
+      const MatchsList(),
+      const TableLeague(),
+      const ArticleSavedList(),
+      const ArticleSearchList(),
     ];
 
     return Scaffold(
@@ -116,9 +130,11 @@ class _HomePageState extends ConsumerState<HomePage>
           elevation: 0,
           currentIndex: currentPage,
           onTap: (value) {
-            // Check if user is switching to articles tab (index 0)
+            // Check if user is switching to specific tabs
             if (value == 0 && currentPage != 0) {
               _checkAndRefreshArticlesIfNeeded();
+            } else if (value == 1 && currentPage != 1) {
+              _checkAndRefreshMatchesIfNeeded();
             }
 
             ref.read(currentPageProvider.notifier).state = value;
