@@ -16,8 +16,6 @@ class MatchRepository {
 
   /// Fetch matches from the FootRDC API.
   ///
-  /// The `pagination` parameter should be a query string containing
-  /// pagination parameters, e.g. "leagues=552&seasons=553&page=1&per_page=10".
   Future<List<Match>> fetchMatchesData(String pagination) async {
     final url = 'https://footrdc.com/wp-json/sportspress/v2/events?$pagination';
 

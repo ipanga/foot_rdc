@@ -16,7 +16,7 @@ class TableLeagueState extends ConsumerState<TableLeague>
   late TabController _tabController;
 
   // League and Season IDs from the API URLs
-  static const int seasonId = 553;
+  static const int seasonId = 821;
   static const int groupeALeagueId = 546;
   static const int groupeBLeagueId = 547;
   static const int playOffLeagueId = 552;

@@ -91,7 +91,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         });
       }
 
-      final input = "leagues=552&seasons=553&page=1&per_page=$_perPage";
+      final input = "leagues=552&seasons=821&page=1&per_page=$_perPage";
       final matches = await ref.read(fetchMatchesProvider(input).future);
 
       if (mounted) {
