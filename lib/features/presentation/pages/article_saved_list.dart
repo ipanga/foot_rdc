@@ -21,6 +21,10 @@ class ArticleSavedList extends ConsumerWidget {
     // This will rebuild the widget when the list changes
     final savedArticles = ref.watch(articleSavedListNotifierProvider);
 
+    // Get theme data for color adaptation
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       // App bar with French title
       appBar: AppBar(
@@ -34,6 +38,10 @@ class ArticleSavedList extends ConsumerWidget {
           ),
         ),
         centerTitle: false,
+        elevation: 4.0,
+        shadowColor: theme.brightness == Brightness.light
+            ? Colors.black26
+            : Colors.white24,
       ),
 
       // Main body content
@@ -42,21 +50,67 @@ class ArticleSavedList extends ConsumerWidget {
           ? const Center(child: Text('Aucun article enregistré'))
           // Display articles in a scrollable list
           : ListView.builder(
+              physics: const BouncingScrollPhysics(),
               itemCount: savedArticles.length,
               itemBuilder: (context, index) {
                 final article = savedArticles[index];
 
-                // Use the custom ArticleSavedItem widget for each article
-                return ArticleSavedItem(
-                  article: article,
-                  // Handle tap to navigate to article details
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ArticleDetailsPage(article: article),
+                return Dismissible(
+                  key: ValueKey('saved-${article.imageUrl}-${article.title}'),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.error,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 24),
+                    child: Icon(
+                      Icons.delete_forever_rounded,
+                      size: 28,
+                      color: colorScheme.onError,
+                    ),
+                  ),
+                  onDismissed: (_) async {
+                    await ref
+                        .read(articleSavedListNotifierProvider.notifier)
+                        .removeArticle(article);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Article supprimé'),
+                        backgroundColor: colorScheme.error,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        margin: const EdgeInsets.all(16),
+                        duration: const Duration(seconds: 2),
+                        action: SnackBarAction(
+                          label: 'Annuler',
+                          textColor: colorScheme.onError,
+                          onPressed: () {
+                            // Optional: re-add if you keep history elsewhere
+                          },
+                        ),
                       ),
                     );
                   },
+                  child: ArticleSavedItem(
+                    article: article,
+                    // Handle tap to navigate to article details
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ArticleDetailsPage(article: article),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),

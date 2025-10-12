@@ -16,9 +16,10 @@ class AppTheme {
       onSurface: const Color(0xFF101828),
       background: Colors.white,
       onBackground: const Color(0xFF101828),
-      secondaryContainer: const Color(0xFFFDECEC), // soft red tint
+      secondaryContainer: const Color(0xFFFDECEC),
       onSecondaryContainer: const Color(0xFF7A1E1E),
       outline: const Color(0xFFE5E7EB),
+      outlineVariant: const Color(0xFFE7E9EE), // crisper card borders
     );
 
     return ThemeData(
@@ -121,8 +122,9 @@ class AppTheme {
       // Cards
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 1,
+        elevation: 2,
         shadowColor: Colors.black.withOpacity(0.06),
+        surfaceTintColor: Colors.transparent, // remove M3 tint for cleaner look
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.all(8),
       ),
@@ -210,9 +212,10 @@ class AppTheme {
       onSurface: Colors.white,
       background: const Color(0xFF0B0F14),
       onBackground: Colors.white,
-      secondaryContainer: const Color(0xFF2A0E0E), // deep red tint
+      secondaryContainer: const Color(0xFF2A0E0E),
       onSecondaryContainer: const Color(0xFFF6BEBE),
       outline: const Color(0xFF2A2F36),
+      outlineVariant: const Color(0xFF313741), // subtle border contrast
     );
 
     return ThemeData(
@@ -310,8 +313,9 @@ class AppTheme {
 
       cardTheme: CardThemeData(
         color: scheme.surface,
-        elevation: 1,
+        elevation: 2,
         shadowColor: Colors.black.withOpacity(0.4),
+        surfaceTintColor: Colors.transparent, // remove M3 tint
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.all(8),
       ),

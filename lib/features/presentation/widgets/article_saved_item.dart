@@ -31,27 +31,36 @@ class ArticleSavedItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final tileColor = Color.alphaBlend(
+      (isDark ? Colors.white : Colors.black).withOpacity(0.04),
+      colorScheme.surface,
+    );
 
-    return GestureDetector(
-      // Handle tap events (e.g., navigation to details)
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Card(
-        // Card styling with rounded corners and elevation - uses theme surface color
-        color: colorScheme.surface,
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              // Article image section
-              _buildArticleImage(context),
-              const SizedBox(width: 12),
-
-              // Article content section (title, date, actions)
-              Expanded(child: _buildArticleContent(context, ref)),
-            ],
+        clipBehavior: Clip.antiAlias,
+        elevation: 3, // subtle depth
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.outlineVariant.withOpacity(.6)),
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: tileColor),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                // Article image section
+                _buildArticleImage(context),
+                const SizedBox(width: 12),
+                // Article content section (title, date, actions)
+                Expanded(child: _buildArticleContent(context, ref)),
+              ],
+            ),
           ),
         ),
       ),
@@ -64,12 +73,15 @@ class ArticleSavedItem extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: SizedBox(
-        width: 96,
-        height: 72,
-        child: article.imageUrl.isNotEmpty
-            ? Image.network(
+        width: 112,
+        height: 84,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (article.imageUrl.isNotEmpty)
+              Image.network(
                 article.imageUrl,
                 fit: BoxFit.cover,
                 // Show loading indicator while image loads
@@ -95,8 +107,8 @@ class ArticleSavedItem extends ConsumerWidget {
                   ),
                 ),
               )
-            // Show placeholder when no image URL
-            : Container(
+            else
+              Container(
                 color: colorScheme.surfaceVariant,
                 child: Icon(
                   Icons.image,
@@ -104,12 +116,34 @@ class ArticleSavedItem extends ConsumerWidget {
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
+
+            // Subtle gradient overlay for depth
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.18),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   /// Builds the article content (title, date) and actions (delete button)
   Widget _buildArticleContent(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -123,9 +157,11 @@ class ArticleSavedItem extends ConsumerWidget {
                 article.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: .2,
+                  height: 1.15,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -136,10 +172,18 @@ class ArticleSavedItem extends ConsumerWidget {
         ),
         const SizedBox(height: 6),
 
-        // Formatted publication date
-        Text(
-          formatArticleDate(article.dateGmt), // Uses project's date utility
-          style: Theme.of(context).textTheme.bodySmall,
+        Row(
+          children: [
+            Icon(Icons.event, size: 16, color: colorScheme.onSurfaceVariant),
+            const SizedBox(width: 6),
+            Text(
+              formatArticleDate(article.dateGmt),
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                letterSpacing: .3,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -152,74 +196,73 @@ class ArticleSavedItem extends ConsumerWidget {
 
     return Material(
       type: MaterialType.transparency,
-      child: IconButton(
-        icon: Icon(Icons.delete_outline, color: colorScheme.error),
-        tooltip: 'Supprimer',
-        onPressed: () async {
-          // Capture messenger before async operation to avoid context issues
-          final messenger = ScaffoldMessenger.of(context);
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.error.withOpacity(0.08),
+          shape: BoxShape.circle,
+        ),
+        child: IconButton(
+          tooltip: 'Supprimer',
+          icon: Icon(Icons.delete_outline, color: colorScheme.error),
+          onPressed: () async {
+            // Capture messenger before async operation to avoid context issues
+            final messenger = ScaffoldMessenger.of(context);
 
-          try {
-            // Remove article from saved list via provider
-            await ref
-                .read(articleSavedListNotifierProvider.notifier)
-                .removeArticle(article);
+            try {
+              await ref
+                  .read(articleSavedListNotifierProvider.notifier)
+                  .removeArticle(article);
 
-            // Show success feedback
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Article supprimé',
-                  style: TextStyle(
-                    color: colorScheme.onError,
-                    fontWeight: FontWeight.w500,
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Article supprimé',
+                    style: TextStyle(
+                      color: colorScheme.onError,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  backgroundColor: colorScheme.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: const EdgeInsets.all(16),
+                  duration: const Duration(seconds: 2),
+                  action: SnackBarAction(
+                    label: 'OK',
+                    textColor: colorScheme.onError,
+                    onPressed: messenger.hideCurrentSnackBar,
                   ),
                 ),
-                backgroundColor: colorScheme.error,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 2),
-                action: SnackBarAction(
-                  label: 'OK',
-                  textColor: colorScheme.onError,
-                  onPressed: () {
-                    messenger.hideCurrentSnackBar();
-                  },
-                ),
-              ),
-            );
-          } catch (err) {
-            // Show error feedback
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Échec de la suppression: $err',
-                  style: TextStyle(
-                    color: colorScheme.onError,
-                    fontWeight: FontWeight.w500,
+              );
+            } catch (err) {
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Échec de la suppression',
+                    style: TextStyle(
+                      color: colorScheme.onError,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  backgroundColor: colorScheme.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: const EdgeInsets.all(16),
+                  duration: const Duration(seconds: 3),
+                  action: SnackBarAction(
+                    label: 'Fermer',
+                    textColor: colorScheme.onError,
+                    onPressed: messenger.hideCurrentSnackBar,
                   ),
                 ),
-                backgroundColor: colorScheme.error,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 3),
-                action: SnackBarAction(
-                  label: 'RÉESSAYER',
-                  textColor: colorScheme.onError,
-                  onPressed: () {
-                    messenger.hideCurrentSnackBar();
-                  },
-                ),
-              ),
-            );
-          }
-        },
+              );
+            }
+          },
+        ),
       ),
     );
   }

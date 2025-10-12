@@ -108,7 +108,7 @@ class AppDrawer extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              '© ${DateTime.now().year} FOOTRDC',
+              '© ${DateTime.now().year} FOOTRDC.COM',
               style: TextStyle(
                 color: scheme.onSurface.withOpacity(0.6),
                 fontSize: 12,
