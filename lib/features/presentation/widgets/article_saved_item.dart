@@ -155,12 +155,11 @@ class ArticleSavedItem extends ConsumerWidget {
             Expanded(
               child: Text(
                 article.title,
-                maxLines: 2,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: .2,
-                  height: 1.15,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
                 ),
               ),
             ),
