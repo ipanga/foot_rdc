@@ -9,7 +9,6 @@ import 'package:foot_rdc/features/presentation/pages/table_league.dart';
 import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
 import 'package:foot_rdc/features/presentation/providers/article_cache_provider.dart';
 import 'package:foot_rdc/features/presentation/providers/match_cache_provider.dart';
-import 'package:foot_rdc/features/presentation/providers/ranking_cache_provider.dart';
 
 final currentPageProvider = StateProvider<int>((ref) => 0);
 

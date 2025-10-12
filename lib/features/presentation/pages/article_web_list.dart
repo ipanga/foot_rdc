@@ -3,12 +3,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/providers/article_cache_provider.dart';
 import 'package:foot_rdc/main.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/app_drawer.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// A page that shows a list of articles fetched via a Riverpod provider.
 class ArticleWebList extends ConsumerStatefulWidget {
@@ -367,7 +367,21 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
   }
 
   AppBar _buildAppBar() {
+    final scheme = Theme.of(context).colorScheme;
+
     return AppBar(
+      leading: Builder(
+        builder: (context) => IconButton(
+          tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+          onPressed: () => Scaffold.of(context).openDrawer(),
+          icon: SvgPicture.asset(
+            'assets/images/menu-icon.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(scheme.onSurface, BlendMode.srcIn),
+          ),
+        ),
+      ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
