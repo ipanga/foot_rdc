@@ -26,7 +26,7 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
   // Admob state
   BannerAd? _bannerAd;
   final List<Object> _listItems = [];
-  static const int _adFrequency = 10;
+  static const int _adFrequency = 9;
   bool _isAdLoaded = false;
 
   final String _bannerAdUnitId = Platform.isAndroid

@@ -41,7 +41,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
 
   // Admob state
   BannerAd? _bannerAd;
-  static const int _adFrequency = 10;
+  static const int _adFrequency = 9;
   bool _isAdLoaded = false;
 
   final String _bannerAdUnitId = Platform.isAndroid
