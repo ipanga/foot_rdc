@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/custom_search_bar.dart';
 import 'package:foot_rdc/main.dart';
 import 'dart:async';
 import 'dart:io';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class ArticleSearchList extends ConsumerStatefulWidget {
   const ArticleSearchList({super.key});
@@ -28,7 +30,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
   // State management for pagination
   int _currentPage = 1;
   final int _perPage = 15;
-  List<dynamic> _allArticles = [];
+  final List<Object> _listItems = [];
   bool _isLoadingMore = false;
   bool _hasReachedEnd = false;
   final ScrollController _scrollController = ScrollController();
@@ -37,11 +39,27 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
   // Indicates bottom "load more" failed and offers retry action.
   bool _loadMoreError = false;
 
+  // Admob state
+  BannerAd? _bannerAd;
+  static const int _adFrequency = 10;
+  bool _isAdLoaded = false;
+
+  final String _bannerAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-8433726715962091/9671028035'
+      // iOS Banner Ad ID
+      : 'ca-app-pub-8433726715962091/6360777917';
+
+  final String _nativeAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-8433726715962091/5762012110'
+      // iOS Native Ad ID
+      : 'ca-app-pub-8433726715962091/8196603768';
+
   @override
   void initState() {
     super.initState();
     // Add scroll listener to detect when user reaches bottom
     _scrollController.addListener(_onScroll);
+    _loadBannerAd();
   }
 
   @override
@@ -49,7 +67,65 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
     // Dispose the controller to avoid memory leaks.
     _controller.dispose();
     _scrollController.dispose();
+    _bannerAd?.dispose();
+    _disposeNativeAds();
     super.dispose();
+  }
+
+  void _disposeNativeAds() {
+    for (var item in _listItems) {
+      if (item is NativeAd) {
+        item.dispose();
+      }
+    }
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: _bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isAdLoaded = true;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  void _updateListWithAds(List<Article> articles) {
+    _disposeNativeAds();
+    _listItems.clear();
+    for (int i = 0; i < articles.length; i++) {
+      _listItems.add(articles[i]);
+      if ((i + 1) % _adFrequency == 0 && i < articles.length - 1) {
+        final nativeAd = NativeAd(
+          adUnitId: _nativeAdUnitId,
+          listener: NativeAdListener(
+            onAdLoaded: (ad) {
+              if (mounted) {
+                setState(() {});
+              }
+            },
+            onAdFailedToLoad: (ad, error) {
+              ad.dispose();
+            },
+          ),
+          request: const AdRequest(),
+          nativeTemplateStyle: NativeTemplateStyle(
+            templateType: TemplateType.medium,
+          ),
+        )..load();
+        _listItems.insert(i + 1, nativeAd);
+      }
+    }
   }
 
   void _onScroll() {
@@ -81,7 +157,10 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
         if (newArticles.isEmpty) {
           _hasReachedEnd = true;
         } else {
-          _allArticles.addAll(newArticles);
+          final currentArticles = _listItems.whereType<Article>().toList(
+            growable: false,
+          );
+          _updateListWithAds(currentArticles + newArticles);
           _currentPage = nextPage;
         }
         _isLoadingMore = false;
@@ -119,7 +198,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
       final newArticles = await ref.read(searchArticlesProvider(input).future);
 
       setState(() {
-        _allArticles = newArticles;
+        _updateListWithAds(newArticles);
         _query = input; // Update query to trigger UI refresh
       });
     } catch (error) {
@@ -145,7 +224,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
           _hasReachedEnd = false;
           _isLoadingMore = false;
           _loadMoreError = false;
-          _allArticles = [];
+          _listItems.clear();
           _currentSearchTerm = term;
           // Build the query exactly as the provider expects.
           _query = "page=1&per_page=$_perPage&search=$encoded";
@@ -275,19 +354,19 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                 // Handle provider states.
                 return searchArticlesAsync.when(
                   data: (articles) {
-                    // Update _allArticles with the first page if we don't have any articles yet
-                    if (articles.isNotEmpty && _allArticles.isEmpty) {
+                    // Update _listItems with the first page if we don't have any items yet
+                    if (articles.isNotEmpty && _listItems.isEmpty) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted) {
                           setState(() {
-                            _allArticles = articles;
+                            _updateListWithAds(articles);
                           });
                         }
                       });
                     }
 
                     // If we have paginated articles, show them
-                    if (_allArticles.isNotEmpty) {
+                    if (_listItems.isNotEmpty) {
                       return RefreshIndicator(
                         onRefresh: _onRefresh,
                         color: colorScheme.primary,
@@ -295,11 +374,11 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                         child: ListView.separated(
                           controller: _scrollController,
                           itemCount:
-                              _allArticles.length +
+                              _listItems.length +
                               ((_isLoadingMore || _loadMoreError) ? 1 : 0),
                           separatorBuilder: (context, index) {
                             // Don't show separator before the loading/error indicator
-                            if (index == _allArticles.length - 1 &&
+                            if (index == _listItems.length - 1 &&
                                 (_isLoadingMore || _loadMoreError)) {
                               return const SizedBox.shrink();
                             }
@@ -321,7 +400,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                           },
                           itemBuilder: (context, index) {
                             // Show loading or error indicator at the bottom
-                            if (index == _allArticles.length) {
+                            if (index == _listItems.length) {
                               if (_isLoadingMore) {
                                 return Padding(
                                   padding: const EdgeInsets.all(16.0),
@@ -391,7 +470,19 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                               }
                             }
 
-                            final article = _allArticles[index];
+                            final item = _listItems[index];
+
+                            if (item is NativeAd) {
+                              return Container(
+                                height: 320,
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                ),
+                                child: AdWidget(ad: item),
+                              );
+                            }
+
+                            final article = item as Article;
                             // Navigate to ArticleDetailsPage when tapping an item.
                             return InkWell(
                               onTap: () {
@@ -449,7 +540,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                       backgroundColor: colorScheme.surface,
                       child: ListView.separated(
                         controller: _scrollController,
-                        itemCount: articles.length,
+                        itemCount: _listItems.length,
                         separatorBuilder: (context, index) => Container(
                           height: 1,
                           margin: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -464,7 +555,17 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                           ),
                         ),
                         itemBuilder: (context, index) {
-                          final article = articles[index];
+                          final item = _listItems[index];
+
+                          if (item is NativeAd) {
+                            return Container(
+                              height: 320,
+                              margin: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: AdWidget(ad: item),
+                            );
+                          }
+
+                          final article = item as Article;
                           // Navigate to ArticleDetailsPage when tapping an item.
                           return InkWell(
                             onTap: () {
@@ -554,6 +655,13 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
           ),
         ],
       ),
+      bottomNavigationBar: _isAdLoaded && _bannerAd != null
+          ? SizedBox(
+              width: _bannerAd!.size.width.toDouble(),
+              height: _bannerAd!.size.height.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            )
+          : const SizedBox.shrink(),
     );
   }
 }

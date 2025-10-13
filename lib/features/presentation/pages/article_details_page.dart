@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -7,26 +9,104 @@ import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/utils/date_utils.dart';
 import 'package:foot_rdc/utils/string_utils.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ArticleDetailsPage extends ConsumerWidget {
+class ArticleDetailsPage extends ConsumerStatefulWidget {
   final Article article;
 
   const ArticleDetailsPage({super.key, required this.article});
 
-  String? _imageUrl() => article.imageUrl;
+  @override
+  ConsumerState<ArticleDetailsPage> createState() => _ArticleDetailsPageState();
+}
 
-  String _dateText() => formatArticleDate(article.dateGmt);
+class _ArticleDetailsPageState extends ConsumerState<ArticleDetailsPage> {
+  // Admob state
+  BannerAd? _bannerAd;
+  NativeAd? _nativeAd;
+  bool _isBannerAdLoaded = false;
+  bool _isNativeAdLoaded = false;
 
-  String _categoryText() => article.category;
+  final String _bannerAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-8433726715962091/9671028035'
+      // iOS Banner Ad ID
+      : 'ca-app-pub-8433726715962091/6360777917';
 
-  String _contentText() => article.content;
-
-  String _titleText() => article.title;
+  final String _nativeAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-8433726715962091/5762012110'
+      // iOS Native Ad ID
+      : 'ca-app-pub-8433726715962091/8196603768';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+    _loadNativeAd();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    _nativeAd?.dispose();
+    super.dispose();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: _bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isBannerAdLoaded = true;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  void _loadNativeAd() {
+    _nativeAd = NativeAd(
+      adUnitId: _nativeAdUnitId,
+      listener: NativeAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isNativeAdLoaded = true;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+      request: const AdRequest(),
+      nativeTemplateStyle: NativeTemplateStyle(
+        templateType: TemplateType.medium,
+      ),
+    )..load();
+  }
+
+  String? _imageUrl() => widget.article.imageUrl;
+
+  String _dateText() => formatArticleDate(widget.article.dateGmt);
+
+  String _categoryText() => widget.article.category;
+
+  String _contentText() => widget.article.content;
+
+  String _titleText() => widget.article.title;
+
+  @override
+  Widget build(BuildContext context) {
     final imageUrl = _imageUrl();
     final date = _dateText();
     final category = _categoryText();
@@ -34,6 +114,10 @@ class ArticleDetailsPage extends ConsumerWidget {
     final title = _titleText();
 
     final theme = Theme.of(context);
+
+    // Watch saved articles to update bookmark icon
+    final savedArticles = ref.watch(articleSavedListNotifierProvider);
+    final isSaved = savedArticles.any((a) => a.id == widget.article.id);
 
     // allow the top content to extend under the status bar
     final double topPadding = MediaQuery.of(context).padding.top;
@@ -104,71 +188,62 @@ class ArticleDetailsPage extends ConsumerWidget {
                             radius: 22,
                             backgroundColor: overlayBg,
                             child: IconButton(
-                              icon: const Icon(Icons.bookmark_border),
+                              icon: Icon(
+                                isSaved
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                              ),
                               color: theme.colorScheme.onSurface,
                               onPressed: () async {
-                                try {
-                                  // Save article into database using provider
-                                  await ref
-                                      .read(
-                                        articleSavedListNotifierProvider
-                                            .notifier,
-                                      )
-                                      .addNewArticle(article);
+                                final notifier = ref.read(
+                                  articleSavedListNotifierProvider.notifier,
+                                );
+                                String message;
+                                IconData icon;
 
-                                  // Show confirmation
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.bookmark_added,
-                                              color: theme
-                                                  .colorScheme
-                                                  .onSecondaryContainer,
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            const Text(
-                                              'Article sauvegardé avec succès',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w500,
-                                                fontSize: 15,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        backgroundColor: theme
-                                            .colorScheme
-                                            .secondaryContainer,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
+                                if (isSaved) {
+                                  await notifier.removeArticle(widget.article);
+                                  message = 'Article retiré des favoris';
+                                  icon = Icons.bookmark_remove;
+                                } else {
+                                  await notifier.addNewArticle(widget.article);
+                                  message = 'Article sauvegardé avec succès';
+                                  icon = Icons.bookmark_added;
+                                }
+
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Row(
+                                        children: [
+                                          Icon(
+                                            icon,
+                                            color: theme
+                                                .colorScheme
+                                                .onSecondaryContainer,
+                                            size: 20,
                                           ),
-                                        ),
-                                        margin: const EdgeInsets.all(16),
-                                        duration: const Duration(seconds: 2),
-                                        elevation: 6,
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Échec de la sauvegarde de l\'article: ${e.toString()}',
-                                          style: TextStyle(
-                                            color: theme.colorScheme.onError,
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            message,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 15,
+                                            ),
                                           ),
-                                        ),
-                                        backgroundColor:
-                                            theme.colorScheme.error,
+                                        ],
                                       ),
-                                    );
-                                  }
+                                      backgroundColor:
+                                          theme.colorScheme.secondaryContainer,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      margin: const EdgeInsets.all(16),
+                                      duration: const Duration(seconds: 2),
+                                      elevation: 6,
+                                    ),
+                                  );
                                 }
                               },
 
@@ -238,12 +313,12 @@ class ArticleDetailsPage extends ConsumerWidget {
                                   }
 
                                   final String shareText =
-                                      '${article.title}\n\n${article.link}';
+                                      '${widget.article.title}\n\n${widget.article.link}';
 
                                   // Use Share.share with better error handling
                                   await Share.share(
                                     shareText,
-                                    subject: article.title,
+                                    subject: widget.article.title,
                                   );
                                   // No SnackBar shown on successful share
                                 } catch (e) {
@@ -305,7 +380,7 @@ class ArticleDetailsPage extends ConsumerWidget {
                                               await Clipboard.setData(
                                                 ClipboardData(
                                                   text:
-                                                      '${article.title}\n\n${article.link}',
+                                                      '${widget.article.title}\n\n${widget.article.link}',
                                                 ),
                                               );
                                               if (context.mounted) {
@@ -528,7 +603,15 @@ class ArticleDetailsPage extends ConsumerWidget {
                       },
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 24),
+
+                    // Native Ad
+                    if (_isNativeAdLoaded && _nativeAd != null)
+                      Container(
+                        height: 320,
+                        margin: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: AdWidget(ad: _nativeAd!),
+                      ),
 
                     const SizedBox(height: 6),
                   ],
@@ -541,6 +624,13 @@ class ArticleDetailsPage extends ConsumerWidget {
           ),
         ),
       ),
+      bottomNavigationBar: _isBannerAdLoaded && _bannerAd != null
+          ? SizedBox(
+              width: _bannerAd!.size.width.toDouble(),
+              height: _bannerAd!.size.height.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            )
+          : const SizedBox.shrink(),
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:foot_rdc/features/domain/entities/match.dart';
 import 'package:foot_rdc/features/presentation/widgets/match_list_item.dart';
 import 'package:foot_rdc/features/presentation/providers/match_cache_provider.dart';
 import 'package:foot_rdc/main.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// A page that shows a list of matches fetched via a Riverpod provider.
 class MatchsList extends ConsumerStatefulWidget {
@@ -32,10 +33,28 @@ class _MatchsListState extends ConsumerState<MatchsList> {
   // Track previous cache state to detect when cache is cleared
   MatchCacheState? _previousCacheState;
 
+  // Admob state
+  BannerAd? _bannerAd;
+  final List<Object> _listItems = [];
+  static const int _adFrequency = 10;
+  bool _isAdLoaded = false;
+
+  final String _bannerAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-8433726715962091/9671028035'
+      // iOS Banner Ad ID
+      : 'ca-app-pub-8433726715962091/6360777917';
+
+  final String _nativeAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-8433726715962091/5762012110'
+      // iOS Native Ad ID
+      : 'ca-app-pub-8433726715962091/8196603768';
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    _loadBannerAd();
 
     // Check if we should load initial data
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -48,7 +67,65 @@ class _MatchsListState extends ConsumerState<MatchsList> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _debounceTimer?.cancel();
+    _bannerAd?.dispose();
+    _disposeNativeAds();
     super.dispose();
+  }
+
+  void _disposeNativeAds() {
+    for (var item in _listItems) {
+      if (item is NativeAd) {
+        item.dispose();
+      }
+    }
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: _bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isAdLoaded = true;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  void _updateListWithAds(List<Match> matches) {
+    _disposeNativeAds();
+    _listItems.clear();
+    for (int i = 0; i < matches.length; i++) {
+      _listItems.add(matches[i]);
+      if ((i + 1) % _adFrequency == 0 && i < matches.length - 1) {
+        final nativeAd = NativeAd(
+          adUnitId: _nativeAdUnitId,
+          listener: NativeAdListener(
+            onAdLoaded: (ad) {
+              if (mounted) {
+                setState(() {});
+              }
+            },
+            onAdFailedToLoad: (ad, error) {
+              ad.dispose();
+            },
+          ),
+          request: const AdRequest(),
+          nativeTemplateStyle: NativeTemplateStyle(
+            templateType: TemplateType.medium,
+          ),
+        )..load();
+        _listItems.insert(i + 1, nativeAd);
+      }
+    }
   }
 
   void _checkAndLoadInitialData() {
@@ -97,6 +174,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       if (mounted) {
         // Add mounted check before updating state
         ref.read(matchCacheProvider.notifier).updateMatches(matches);
+        _updateListWithAds(matches);
 
         setState(() {
           _hasInitialLoaded = true;
@@ -166,9 +244,11 @@ class _MatchsListState extends ConsumerState<MatchsList> {
 
       if (mounted) {
         // Add mounted check before updating state
+        final currentMatches = ref.read(matchCacheProvider).matches;
         ref
             .read(matchCacheProvider.notifier)
             .updateMatches(newMatches, isLoadMore: true);
+        _updateListWithAds(currentMatches + newMatches);
 
         setState(() {
           _isLoadingMore = false;
@@ -257,6 +337,14 @@ class _MatchsListState extends ConsumerState<MatchsList> {
     // Check if cache was cleared from outside
     _checkForCacheCleared(cacheState);
 
+    // Sync _listItems with cacheState.matches if needed
+    if (cacheState.matches.isNotEmpty &&
+        (_listItems.isEmpty ||
+            _listItems.where((e) => e is! NativeAd).length !=
+                cacheState.matches.length)) {
+      _updateListWithAds(cacheState.matches);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -275,6 +363,13 @@ class _MatchsListState extends ConsumerState<MatchsList> {
             : Colors.white24,
       ),
       body: _buildBody(colorScheme, cacheState),
+      bottomNavigationBar: _isAdLoaded && _bannerAd != null
+          ? SizedBox(
+              width: _bannerAd!.size.width.toDouble(),
+              height: _bannerAd!.size.height.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -359,7 +454,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       onRefresh: _onRefresh,
       color: colorScheme.primary,
       backgroundColor: colorScheme.surface,
-      child: matches.isEmpty && !_isLoadingMore && !_isBackgroundRefreshing
+      child: _listItems.isEmpty && !_isLoadingMore && !_isBackgroundRefreshing
           ? Center(
               child: Text(
                 'Aucun match trouvé',
@@ -373,11 +468,12 @@ class _MatchsListState extends ConsumerState<MatchsList> {
               ),
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount:
-                  matches.length + ((_isLoadingMore || _loadMoreError) ? 1 : 0),
+                  _listItems.length +
+                  ((_isLoadingMore || _loadMoreError) ? 1 : 0),
               separatorBuilder: (context, index) => const SizedBox(height: 0),
               itemBuilder: (context, index) {
                 // Bottom loading/error row
-                if (index == matches.length) {
+                if (index == _listItems.length) {
                   if (_isLoadingMore) {
                     return Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -439,7 +535,17 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                   }
                 }
 
-                final match = matches[index];
+                final item = _listItems[index];
+
+                if (item is NativeAd) {
+                  return Container(
+                    height: 320,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: AdWidget(ad: item),
+                  );
+                }
+
+                final match = item as Match;
                 return MatchListItem(match: match, onTap: () {});
               },
             ),

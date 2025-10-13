@@ -9,6 +9,7 @@ import 'package:foot_rdc/main.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/app_drawer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// A page that shows a list of articles fetched via a Riverpod provider.
 class ArticleWebList extends ConsumerStatefulWidget {
@@ -36,6 +37,22 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
   // Track if this is the first time the widget is being built
   bool _hasInitialized = false;
 
+  // Admob state
+  BannerAd? _bannerAd;
+  final List<Object> _listItems = [];
+  static const int _adFrequency = 10;
+  bool _isAdLoaded = false;
+
+  final String _bannerAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-8433726715962091/9671028035'
+      // iOS Banner Ad ID
+      : 'ca-app-pub-8433726715962091/6360777917';
+
+  final String _nativeAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-8433726715962091/5762012110'
+      // iOS Native Ad ID
+      : 'ca-app-pub-8433726715962091/8196603768';
+
   @override
   bool get wantKeepAlive => true;
 
@@ -44,6 +61,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
     super.initState();
     // Add scroll listener to detect when user reaches bottom
     _scrollController.addListener(_onScroll);
+
+    _loadBannerAd();
 
     // Load initial data with cache check
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -64,7 +83,63 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
   @override
   void dispose() {
     _scrollController.dispose();
+    _bannerAd?.dispose();
+    _disposeNativeAds();
     super.dispose();
+  }
+
+  void _disposeNativeAds() {
+    for (var item in _listItems) {
+      if (item is NativeAd) {
+        item.dispose();
+      }
+    }
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: _bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  void _updateListWithAds(List<dynamic> articles) {
+    _disposeNativeAds();
+    _listItems.clear();
+    for (int i = 0; i < articles.length; i++) {
+      _listItems.add(articles[i]);
+      if ((i + 1) % _adFrequency == 0 && i < articles.length - 1) {
+        final nativeAd = NativeAd(
+          adUnitId: _nativeAdUnitId,
+          listener: NativeAdListener(
+            onAdLoaded: (ad) {
+              if (mounted) {
+                setState(() {});
+              }
+            },
+            onAdFailedToLoad: (ad, error) {
+              ad.dispose();
+            },
+          ),
+          request: const AdRequest(),
+          nativeTemplateStyle: NativeTemplateStyle(
+            templateType: TemplateType.medium,
+          ),
+        )..load();
+        _listItems.insert(i + 1, nativeAd);
+      }
+    }
   }
 
   // Check cache when user switches back to this tab
@@ -90,6 +165,13 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
     final colorScheme = Theme.of(context).colorScheme;
     final cacheState = ref.watch(articleCacheProvider);
 
+    if (cacheState.articles.isNotEmpty &&
+        (_listItems.isEmpty ||
+            _listItems.where((e) => e is! NativeAd).length !=
+                cacheState.articles.length)) {
+      _updateListWithAds(cacheState.articles);
+    }
+
     // If cache is empty but we were initialized, reload data
     if (cacheState.articles.isEmpty && _hasInitialized && !_isFetching) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -98,7 +180,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
     }
 
     // Show cached data if available
-    if (cacheState.articles.isNotEmpty) {
+    if (_listItems.isNotEmpty) {
       return Scaffold(
         appBar: _buildAppBar(),
         drawer: const AppDrawer(),
@@ -114,13 +196,13 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
             ),
             padding: const EdgeInsets.symmetric(vertical: 4),
             itemCount:
-                cacheState.articles.length +
+                _listItems.length +
                 (_isLoadingMore ? 1 : 0) +
                 (_loadMoreError ? 1 : 0),
             separatorBuilder: (context, index) => const SizedBox(height: 0),
             itemBuilder: (context, index) {
               // Loading indicator at the bottom
-              if (index == cacheState.articles.length && _isLoadingMore) {
+              if (index == _listItems.length && _isLoadingMore) {
                 return const Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Center(child: CircularProgressIndicator()),
@@ -128,7 +210,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
               }
 
               // Error retry button at the bottom
-              if (index == cacheState.articles.length && _loadMoreError) {
+              if (index == _listItems.length && _loadMoreError) {
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Center(
@@ -145,7 +227,17 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
                 );
               }
 
-              final article = cacheState.articles[index];
+              final item = _listItems[index];
+
+              if (item is NativeAd) {
+                return Container(
+                  height: 320,
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: AdWidget(ad: item),
+                );
+              }
+
+              final article = item as dynamic;
               return ArticleListItem(
                 article: article,
                 onTap: () {
@@ -159,6 +251,13 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
             },
           ),
         ),
+        bottomNavigationBar: _isAdLoaded && _bannerAd != null
+            ? SizedBox(
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              )
+            : const SizedBox.shrink(),
       );
     }
 
@@ -227,6 +326,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
             .read(articleCacheProvider.notifier)
             .updateArticles(articles, isFirstPage: true);
 
+        _updateListWithAds(articles);
+
         setState(() {
           _isFetching = false;
         });
@@ -269,10 +370,13 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
       final newArticles = await ref.read(fetchArticlesProvider(input).future);
 
       if (mounted) {
+        final currentArticles = ref.read(articleCacheProvider).articles;
         // Update cache through provider
         ref
             .read(articleCacheProvider.notifier)
             .updateArticles(newArticles, isFirstPage: false);
+
+        _updateListWithAds(currentArticles + newArticles);
 
         setState(() {
           _isLoadingMore = false;
@@ -318,6 +422,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
         ref
             .read(articleCacheProvider.notifier)
             .updateArticles(newArticles, isFirstPage: true);
+
+        _updateListWithAds(newArticles);
 
         setState(() {
           _isFetching = false;

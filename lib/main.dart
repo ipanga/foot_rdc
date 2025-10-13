@@ -10,6 +10,7 @@ import 'package:foot_rdc/features/domain/repositories/match_repository.dart';
 import 'package:foot_rdc/features/presentation/pages/home_page.dart';
 import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
 import 'package:foot_rdc/utils/app_theme.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -36,6 +37,7 @@ Future<List<Match>> fetchMatches(Ref ref, String pagination) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MobileAds.instance.initialize();
 
   // This is required to store and retrieve trip data locally
   await Hive.initFlutter((await getApplicationDocumentsDirectory()).path);
