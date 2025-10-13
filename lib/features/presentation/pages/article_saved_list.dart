@@ -114,12 +114,16 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
     // This will rebuild the widget when the list changes
     final savedArticles = ref.watch(articleSavedListNotifierProvider);
 
+    // Sort articles by dateGmt from newest to oldest
+    final sortedArticles = List<Article>.from(savedArticles)
+      ..sort((a, b) => b.dateGmt.compareTo(a.dateGmt));
+
     // Get theme data for color adaptation
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     // When the saved articles list changes, update our list that includes ads
-    _updateListWithAds(savedArticles);
+    _updateListWithAds(sortedArticles);
 
     return Scaffold(
       // App bar with French title
