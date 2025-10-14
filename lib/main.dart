@@ -1,5 +1,4 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,18 +15,20 @@ import 'package:foot_rdc/utils/app_theme.dart';
 import 'package:foot_rdc/firebase_options.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'main.g.dart';
 
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  if (kDebugMode) {
-    print("Handling a background message: ${message.messageId}");
-  }
-}
+// This function is no longer needed as OneSignal will handle background notifications.
+// @pragma('vm:entry-point')
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+//   if (kDebugMode) {
+//     print("Handling a background message: ${message.messageId}");
+//   }
+// }
 
 @riverpod
 Future<List<Article>> fetchArticles(Ref ref, String input) {
@@ -50,8 +51,20 @@ Future<List<Match>> fetchMatches(Ref ref, String pagination) {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler); // OneSignal handles this now.
 
+  // OneSignal Initialization
+  if (kDebugMode) {
+    OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+  }
+  OneSignal.initialize("e9096906-f601-4639-93a7-de95eb3c1db5");
+
+  // The promptForPushNotificationsWithUserResponse function will show the iOS or Android push notification prompt.
+  // We recommend removing the following code and instead using an In-App Message to prompt for notification permission
+  OneSignal.Notifications.requestPermission(true);
+
+  // The Firebase Messaging listeners below are removed as OneSignal will handle notifications.
+  /*
   // Request permission and handle foreground messages
   final messaging = FirebaseMessaging.instance;
 
@@ -83,6 +96,7 @@ Future<void> main() async {
       }
     }
   });
+  */
 
   await MobileAds.instance.initialize();
 
