@@ -1,3 +1,6 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core_error/logger_riverpod.dart';
@@ -10,12 +13,21 @@ import 'package:foot_rdc/features/domain/repositories/match_repository.dart';
 import 'package:foot_rdc/features/presentation/pages/home_page.dart';
 import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
 import 'package:foot_rdc/utils/app_theme.dart';
+import 'package:foot_rdc/firebase_options.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'main.g.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (kDebugMode) {
+    print("Handling a background message: ${message.messageId}");
+  }
+}
 
 @riverpod
 Future<List<Article>> fetchArticles(Ref ref, String input) {
@@ -37,6 +49,41 @@ Future<List<Match>> fetchMatches(Ref ref, String pagination) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Request permission and handle foreground messages
+  final messaging = FirebaseMessaging.instance;
+
+  final settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+
+  if (kDebugMode) {
+    print('Permission granted: ${settings.authorizationStatus}');
+    final fcmToken = await messaging.getToken();
+    print("FCM Token: $fcmToken");
+  }
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    if (kDebugMode) {
+      print('Got a message whilst in the foreground!');
+      print('Message data: ${message.data}');
+    }
+
+    if (message.notification != null) {
+      if (kDebugMode) {
+        print('Message also contained a notification: ${message.notification}');
+      }
+    }
+  });
+
   await MobileAds.instance.initialize();
 
   // This is required to store and retrieve trip data locally

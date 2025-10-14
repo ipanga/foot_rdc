@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1061932281329",
+    "project_id": "foot-rdc-app",
+    "storage_bucket": "foot-rdc-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1061932281329:android:e7f19e0f0a809d0751e850",
+        "android_client_info": {
+          "package_name": "com.tootiyesolutions.footrdc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgCf6TZStGofZ6l2pEhpOLJPCvNkc5eec"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
