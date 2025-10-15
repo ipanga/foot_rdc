@@ -10,6 +10,8 @@ import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/app_drawer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// A page that shows a list of articles fetched via a Riverpod provider.
 class ArticleWebList extends ConsumerStatefulWidget {
@@ -52,6 +54,25 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
       ? 'ca-app-pub-8433726715962091/5762012110'
       // iOS Native Ad ID
       : 'ca-app-pub-8433726715962091/8196603768';
+
+  // Carousel state
+  final List<Map<String, String>> _carouselImages = [
+    {
+      'image': 'https://footrdc.com/image-sponsor-01',
+      'link': 'https://footrdc.com/sponsor-n01',
+    },
+    {
+      'image': 'https://footrdc.com/image-sponsor-02',
+      'link': 'https://footrdc.com/sponsor-n02',
+    },
+    {
+      'image': 'https://footrdc.com/image-sponsor-03',
+      'link': 'https://footrdc.com/sponsor-n03',
+    },
+  ];
+  int _currentCarouselIndex = 0;
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
 
   @override
   bool get wantKeepAlive => true;
@@ -158,9 +179,104 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
     }
   }
 
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impossible d\'ouvrir le lien')),
+        );
+      }
+    }
+  }
+
+  Widget _buildCarousel() {
+    return Column(
+      children: [
+        CarouselSlider(
+          carouselController: _carouselController,
+          options: CarouselOptions(
+            height: 130,
+            viewportFraction: 1.0,
+            autoPlay: true,
+            autoPlayInterval: const Duration(seconds: 3),
+            autoPlayAnimationDuration: const Duration(milliseconds: 800),
+            autoPlayCurve: Curves.fastOutSlowIn,
+            enlargeCenterPage: false,
+            onPageChanged: (index, reason) {
+              setState(() {
+                _currentCarouselIndex = index;
+              });
+            },
+          ),
+          items: _carouselImages.map((imageData) {
+            return Builder(
+              builder: (BuildContext context) {
+                return GestureDetector(
+                  onTap: () => _launchURL(imageData['link']!),
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        imageData['image']!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(Icons.error_outline, size: 48),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: _carouselImages.asMap().entries.map((entry) {
+            return Container(
+              width: 8.0,
+              height: 8.0,
+              margin: const EdgeInsets.symmetric(horizontal: 4.0),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _currentCarouselIndex == entry.key
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey.withOpacity(0.4),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    super.build(context);
 
     final colorScheme = Theme.of(context).colorScheme;
     final cacheState = ref.watch(articleCacheProvider);
@@ -197,12 +313,21 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
             padding: const EdgeInsets.symmetric(vertical: 4),
             itemCount:
                 _listItems.length +
+                1 + // Add 1 for carousel
                 (_isLoadingMore ? 1 : 0) +
                 (_loadMoreError ? 1 : 0),
             separatorBuilder: (context, index) => const SizedBox(height: 0),
             itemBuilder: (context, index) {
+              // Show carousel at the top
+              if (index == 0) {
+                return _buildCarousel();
+              }
+
+              // Adjust index for remaining items
+              final adjustedIndex = index - 1;
+
               // Loading indicator at the bottom
-              if (index == _listItems.length && _isLoadingMore) {
+              if (adjustedIndex == _listItems.length && _isLoadingMore) {
                 return const Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Center(child: CircularProgressIndicator()),
@@ -210,7 +335,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
               }
 
               // Error retry button at the bottom
-              if (index == _listItems.length && _loadMoreError) {
+              if (adjustedIndex == _listItems.length && _loadMoreError) {
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Center(
@@ -227,7 +352,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
                 );
               }
 
-              final item = _listItems[index];
+              final item = _listItems[adjustedIndex];
 
               if (item is NativeAd) {
                 return Container(

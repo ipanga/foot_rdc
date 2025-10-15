@@ -52,6 +52,8 @@ dependencies:
   firebase_core: ^3.0.0
   firebase_messaging: ^15.0.0
   onesignal_flutter: ^5.2.0
+  carousel_slider: ^5.0.0
+  
 
 dev_dependencies:
   flutter_test:
