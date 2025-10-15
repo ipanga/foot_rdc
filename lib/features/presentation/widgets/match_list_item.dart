@@ -262,7 +262,7 @@ class _TeamIconWidgetState extends State<_TeamIconWidget> {
   int _currentUrlIndex = 0;
 
   List<String> _generatePossibleUrls(String teamName) {
-    final baseUrl =
+    const baseUrl =
         "https://i0.wp.com/footrdc.com/wp-content/uploads/2021/10/Team-";
 
     return [
@@ -302,7 +302,6 @@ class _TeamIconWidgetState extends State<_TeamIconWidget> {
     }
 
     final currentUrl = possibleUrls[_currentUrlIndex];
-    print('Trying URL $_currentUrlIndex: $currentUrl');
 
     return Container(
       width: widget.size,

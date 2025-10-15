@@ -7,9 +7,7 @@ class LoggerRiverpod extends ProviderObserver {
     Object? previousValue,
     Object? newValue,
     ProviderContainer container,
-  ) {
-    print('$provider $previousValue $newValue $container');
-  }
+  ) {}
 
   @override
   void didAddProvider(
