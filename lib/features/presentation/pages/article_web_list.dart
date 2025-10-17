@@ -34,6 +34,9 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
   // Track if we're currently fetching to prevent multiple simultaneous requests
   bool _isFetching = false;
 
+  // Track initial load error to show friendly UI (no URLs exposed)
+  Object? _initialLoadError;
+
   static const Duration _cacheValidDuration = Duration(minutes: 15);
 
   // Track if this is the first time the widget is being built
@@ -289,7 +292,10 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
     }
 
     // If cache is empty but we were initialized, reload data
-    if (cacheState.articles.isEmpty && _hasInitialized && !_isFetching) {
+    if (cacheState.articles.isEmpty &&
+        _hasInitialized &&
+        !_isFetching &&
+        _initialLoadError == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadInitialData();
       });
@@ -397,6 +403,67 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
       );
     }
 
+    // Show friendly error state on initial load failures
+    if (_initialLoadError != null) {
+      final title = _friendlyTitle(_initialLoadError!);
+      final message = _friendlyGenericMessage(_initialLoadError!);
+      final icon = _friendlyIcon(_initialLoadError!);
+
+      return Scaffold(
+        appBar: _buildAppBar(),
+        drawer: const AppDrawer(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondaryContainer.withOpacity(0.35),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 36,
+                    color: colorScheme.onSecondaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colorScheme.onSurface.withOpacity(0.8),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _loadInitialData,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Réessayer'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Show empty state if no articles
     return Scaffold(
       appBar: _buildAppBar(),
@@ -439,6 +506,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
 
     setState(() {
       _isFetching = true;
+      _initialLoadError = null; // clear previous error
     });
 
     try {
@@ -455,12 +523,14 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
 
         setState(() {
           _isFetching = false;
+          _initialLoadError = null; // success
         });
       }
     } catch (error) {
       if (mounted) {
         setState(() {
           _isFetching = false;
+          _initialLoadError = error; // show friendly error UI
         });
       }
     }
@@ -514,9 +584,9 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
           _isLoadingMore = false;
           _loadMoreError = true;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
+        /* ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_friendlyLoadMoreMessage(error))),
-        );
+        ); */
       }
     }
   }
@@ -533,6 +603,7 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
         _isFetching = true;
         _isLoadingMore = false;
         _loadMoreError = false;
+        _initialLoadError = null; // clear error when user refreshes
       });
 
       // Invalidate the provider to force a fresh fetch
@@ -552,16 +623,18 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
 
         setState(() {
           _isFetching = false;
+          _initialLoadError = null;
         });
       }
     } catch (error) {
       if (mounted) {
         setState(() {
           _isFetching = false;
+          _initialLoadError = error; // keep error visible in UI
         });
-        ScaffoldMessenger.of(
+        /* ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error))));
+        ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error)))); */
       }
     }
   }

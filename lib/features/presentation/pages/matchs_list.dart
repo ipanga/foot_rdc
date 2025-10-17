@@ -29,9 +29,13 @@ class _MatchsListState extends ConsumerState<MatchsList> {
 
   // Inline load-more error flag + retry
   bool _loadMoreError = false;
+  Object? _loadMoreErrorDetails;
 
   // Track previous cache state to detect when cache is cleared
   MatchCacheState? _previousCacheState;
+
+  // Track initial load error to show friendly UI
+  Object? _initialLoadError;
 
   // Admob state
   BannerAd? _bannerAd;
@@ -138,6 +142,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       // Use cached data
       setState(() {
         _hasInitialLoaded = true;
+        _initialLoadError = null;
       });
     }
   }
@@ -160,9 +165,14 @@ class _MatchsListState extends ConsumerState<MatchsList> {
   }
 
   Future<void> _loadInitialData({bool isBackgroundRefresh = false}) async {
+    if (mounted && !isBackgroundRefresh) {
+      setState(() {
+        _initialLoadError = null;
+      });
+    }
+
     try {
       if (isBackgroundRefresh && mounted) {
-        // Add mounted check
         setState(() {
           _isBackgroundRefreshing = true;
         });
@@ -172,7 +182,6 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       final matches = await ref.read(fetchMatchesProvider(input).future);
 
       if (mounted) {
-        // Add mounted check before updating state
         ref.read(matchCacheProvider.notifier).updateMatches(matches);
         _updateListWithAds(matches);
 
@@ -181,21 +190,23 @@ class _MatchsListState extends ConsumerState<MatchsList> {
           if (isBackgroundRefresh) {
             _isBackgroundRefreshing = false;
           }
+          _initialLoadError = null;
         });
       }
     } catch (error) {
       if (mounted) {
-        // Add mounted check
         setState(() {
           _hasInitialLoaded = true;
           if (isBackgroundRefresh) {
             _isBackgroundRefreshing = false;
+          } else {
+            _initialLoadError = error;
           }
         });
 
-        ScaffoldMessenger.of(
+        /* ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error))));
+        ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error)))); */
       }
     }
   }
@@ -234,6 +245,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       setState(() {
         _isLoadingMore = true;
         _loadMoreError = false;
+        _loadMoreErrorDetails = null;
       });
     }
 
@@ -253,6 +265,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         setState(() {
           _isLoadingMore = false;
           _loadMoreError = false;
+          _loadMoreErrorDetails = null;
         });
       }
     } catch (error) {
@@ -261,11 +274,12 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         setState(() {
           _isLoadingMore = false;
           _loadMoreError = true;
+          _loadMoreErrorDetails = error;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        /* ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_friendlyLoadMoreMessage(error))),
-        );
+        ); */
       }
     }
   }
@@ -278,6 +292,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         _isRefreshing = true;
         _isLoadingMore = false;
         _loadMoreError = false;
+        _loadMoreErrorDetails = null;
       });
 
       // Clear cache and reload
@@ -374,30 +389,32 @@ class _MatchsListState extends ConsumerState<MatchsList> {
   }
 
   Widget _buildBody(ColorScheme colorScheme, MatchCacheState cacheState) {
-    // Show loading only for initial load when cache is empty AND not background refreshing
-    if (!_hasInitialLoaded && cacheState.isEmpty && !_isBackgroundRefreshing) {
-      return Center(
-        child: CircularProgressIndicator(color: colorScheme.primary),
-      );
-    }
+    if (cacheState.isEmpty) {
+      if (_isBackgroundRefreshing || _isRefreshing) {
+        return Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
+        );
+      }
 
-    // Show error only for initial load when cache is empty AND not background refreshing
-    if (!_hasInitialLoaded && cacheState.isEmpty && !_isBackgroundRefreshing) {
-      return _buildErrorState(colorScheme);
-    }
+      if (!_hasInitialLoaded) {
+        return Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
+        );
+      }
 
-    // If background refreshing and cache is empty, show loading
-    if (_isBackgroundRefreshing && cacheState.isEmpty) {
-      return Center(
-        child: CircularProgressIndicator(color: colorScheme.primary),
-      );
+      if (_initialLoadError != null) {
+        return _buildErrorState(colorScheme, _initialLoadError!);
+      }
     }
 
     return _buildMatchesList(colorScheme, cacheState.matches);
   }
 
-  Widget _buildErrorState(ColorScheme colorScheme) {
-    // This will only show if initial load fails and cache is empty
+  Widget _buildErrorState(ColorScheme colorScheme, Object error) {
+    final title = _friendlyTitle(error);
+    final message = _friendlyGenericMessage(error);
+    final icon = _friendlyIcon(error);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
@@ -411,14 +428,14 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.error_outline_rounded,
+                icon,
                 size: 36,
                 color: colorScheme.onSecondaryContainer,
               ),
             ),
             const SizedBox(height: 14),
             Text(
-              'Oups, un problème est survenu',
+              title,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: colorScheme.onSurface,
@@ -428,7 +445,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Impossible de charger les matchs. Veuillez réessayer.',
+              message,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: colorScheme.onSurface.withOpacity(0.8),
@@ -485,6 +502,14 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                     );
                   }
                   if (_loadMoreError) {
+                    final error = _loadMoreErrorDetails;
+                    final icon = error != null
+                        ? _friendlyIcon(error)
+                        : Icons.error_outline_rounded;
+                    final message = error != null
+                        ? _friendlyLoadMoreMessage(error)
+                        : 'Impossible de charger plus de matchs.';
+
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16.0,
@@ -502,14 +527,11 @@ class _MatchsListState extends ConsumerState<MatchsList> {
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.wifi_off_rounded,
-                              color: colorScheme.error,
-                            ),
+                            Icon(icon, color: colorScheme.error),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'Impossible de charger plus de matchs',
+                                message,
                                 style: TextStyle(
                                   color: colorScheme.onSurface,
                                   fontWeight: FontWeight.w600,

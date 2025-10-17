@@ -255,7 +255,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
   String _friendlyLoadMoreMessage(Object error) {
     if (_isNoInternet(error)) return 'Connexion absente. Réessayez.';
     if (_isTimeout(error)) return 'Délai dépassé. Réessayez.';
-    return 'Impossible de charger plus d’articles.';
+    return 'Impossible de charger plus d\'articles.';
   }
 
   IconData _friendlyIcon(Object error) {
