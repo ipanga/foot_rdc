@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
@@ -43,16 +44,24 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
   BannerAd? _bannerAd;
   static const int _adFrequency = 9;
   bool _isAdLoaded = false;
+  // Track native ad load state
+  final Map<NativeAd, bool> _nativeAdLoaded = {};
 
-  final String _bannerAdUnitId = Platform.isAndroid
-      ? 'ca-app-pub-8433726715962091/9671028035'
-      // iOS Banner Ad ID
-      : 'ca-app-pub-8433726715962091/6360777917';
+  final String _bannerAdUnitId = kReleaseMode
+      ? (Platform.isAndroid
+          ? 'ca-app-pub-8433726715962091/9671028035'
+          : 'ca-app-pub-8433726715962091/6360777917')
+      : (Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/6300978111'
+          : 'ca-app-pub-3940256099942544/2934735716');
 
-  final String _nativeAdUnitId = Platform.isAndroid
-      ? 'ca-app-pub-8433726715962091/5762012110'
-      // iOS Native Ad ID
-      : 'ca-app-pub-8433726715962091/8196603768';
+  final String _nativeAdUnitId = kReleaseMode
+      ? (Platform.isAndroid
+          ? 'ca-app-pub-8433726715962091/5762012110'
+          : 'ca-app-pub-8433726715962091/8196603768')
+      : (Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/2247696110'
+          : 'ca-app-pub-3940256099942544/3986624511');
 
   @override
   void initState() {
@@ -78,6 +87,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
         item.dispose();
       }
     }
+    _nativeAdLoaded.clear();
   }
 
   void _loadBannerAd() {
@@ -111,6 +121,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
           listener: NativeAdListener(
             onAdLoaded: (ad) {
               if (mounted) {
+                _nativeAdLoaded[ad as NativeAd] = true;
                 setState(() {});
               }
             },
@@ -123,6 +134,7 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
             templateType: TemplateType.medium,
           ),
         )..load();
+        _nativeAdLoaded[nativeAd] = false;
         _listItems.insert(i + 1, nativeAd);
       }
     }
@@ -473,6 +485,21 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                             final item = _listItems[index];
 
                             if (item is NativeAd) {
+                              final isLoaded = _nativeAdLoaded[item] == true;
+                              if (!isLoaded) {
+                                return Container(
+                                  height: 320,
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceVariant,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                );
+                              }
                               return Container(
                                 height: 320,
                                 margin: const EdgeInsets.symmetric(
@@ -558,9 +585,24 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                           final item = _listItems[index];
 
                           if (item is NativeAd) {
+                            final isLoaded = _nativeAdLoaded[item] == true;
+                            if (!isLoaded) {
+                              return Container(
+                                height: 320,
+                                margin:
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceVariant,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              );
+                            }
                             return Container(
                               height: 320,
-                              margin: const EdgeInsets.symmetric(vertical: 8.0),
+                              margin:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
                               child: AdWidget(ad: item),
                             );
                           }
