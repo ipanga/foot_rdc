@@ -52,6 +52,15 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
   void initState() {
     super.initState();
     _loadBannerAd();
+    // Initialize list with current saved articles after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final savedArticles = ref.read(articleSavedListNotifierProvider);
+      final sortedArticles = List<Article>.from(savedArticles)
+        ..sort((a, b) => b.dateGmt.compareTo(a.dateGmt));
+      _updateListWithAds(sortedArticles);
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -122,20 +131,19 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the saved articles list from the provider
-    // This will rebuild the widget when the list changes
-    final savedArticles = ref.watch(articleSavedListNotifierProvider);
-
-    // Sort articles by dateGmt from newest to oldest
-    final sortedArticles = List<Article>.from(savedArticles)
-      ..sort((a, b) => b.dateGmt.compareTo(a.dateGmt));
-
     // Get theme data for color adaptation
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // When the saved articles list changes, update our list that includes ads
-    _updateListWithAds(sortedArticles);
+    // Listen to changes in saved articles and update list with ads accordingly
+    ref.listen<List<Article>>(articleSavedListNotifierProvider,
+        (previous, next) {
+      if (!mounted) return;
+      final sorted = List<Article>.from(next)
+        ..sort((a, b) => b.dateGmt.compareTo(a.dateGmt));
+      _updateListWithAds(sorted);
+      setState(() {});
+    });
 
     return Scaffold(
       // App bar with French title
