@@ -48,11 +48,70 @@ Future<void> main() async {
   if (kDebugMode) {
     OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
   }
+
   OneSignal.initialize("e9096906-f601-4639-93a7-de95eb3c1db5");
+
+  // Add subscription change listener to debug
+  OneSignal.User.pushSubscription.addObserver((state) {
+    if (kDebugMode) {
+      print("🔔 OneSignal subscription changed:");
+      print("  - ID: ${state.current.id}");
+      print("  - Token: ${state.current.token}");
+      print("  - Opted In: ${state.current.optedIn}");
+    }
+  });
+
+  // Add permission change observer
+  OneSignal.Notifications.addPermissionObserver((permission) {
+    if (kDebugMode) {
+      print("🔔 OneSignal permission changed: $permission");
+    }
+  });
+
+  // Add foreground notification handler
+  OneSignal.Notifications.addForegroundWillDisplayListener((event) {
+    if (kDebugMode) {
+      print(
+        "🔔 OneSignal notification will display: ${event.notification.notificationId}",
+      );
+    }
+  });
+
+  // Add click listener
+  OneSignal.Notifications.addClickListener((event) {
+    if (kDebugMode) {
+      print(
+        "🔔 OneSignal notification clicked: ${event.notification.notificationId}",
+      );
+    }
+  });
 
   // The promptForPushNotificationsWithUserResponse function will show the iOS or Android push notification prompt.
   // We recommend removing the following code and instead using an In-App Message to prompt for notification permission
-  OneSignal.Notifications.requestPermission(true);
+  final permission = await OneSignal.Notifications.requestPermission(true);
+  if (kDebugMode) {
+    print("🔔 OneSignal permission result: $permission");
+  }
+
+  // Log initial subscription state
+  final subscriptionId = OneSignal.User.pushSubscription.id;
+  final token = OneSignal.User.pushSubscription.token;
+  final optedIn = OneSignal.User.pushSubscription.optedIn;
+  if (kDebugMode) {
+    print("🔔 OneSignal Initial State:");
+    print("  - Subscription ID: $subscriptionId");
+    print("  - Token: $token");
+    print("  - Opted In: $optedIn");
+  }
+
+  if (token == null || optedIn == false) {
+    if (kDebugMode) {
+      print("⚠️ WARNING: OneSignal subscription failed!");
+      print("  - Check iOS capabilities in Xcode");
+      print("  - Verify provisioning profile includes Push Notifications");
+      print("  - Check APNs configuration in OneSignal dashboard");
+    }
+  }
 
   await MobileAds.instance.initialize();
 

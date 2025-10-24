@@ -48,19 +48,19 @@ class _MatchsListState extends ConsumerState<MatchsList> {
 
   final String _bannerAdUnitId = kReleaseMode
       ? (Platform.isAndroid
-          ? 'ca-app-pub-8433726715962091/9671028035'
-          : 'ca-app-pub-8433726715962091/6360777917')
+            ? 'ca-app-pub-8433726715962091/9671028035'
+            : 'ca-app-pub-8433726715962091/6360777917')
       : (Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/6300978111'
-          : 'ca-app-pub-3940256099942544/2934735716');
+            ? 'ca-app-pub-3940256099942544/6300978111'
+            : 'ca-app-pub-3940256099942544/2934735716');
 
   final String _nativeAdUnitId = kReleaseMode
       ? (Platform.isAndroid
-          ? 'ca-app-pub-8433726715962091/5762012110'
-          : 'ca-app-pub-8433726715962091/8196603768')
+            ? 'ca-app-pub-8433726715962091/5762012110'
+            : 'ca-app-pub-8433726715962091/8196603768')
       : (Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/2247696110'
-          : 'ca-app-pub-3940256099942544/3986624511');
+            ? 'ca-app-pub-3940256099942544/2247696110'
+            : 'ca-app-pub-3940256099942544/3986624511');
 
   @override
   void initState() {
@@ -190,7 +190,8 @@ class _MatchsListState extends ConsumerState<MatchsList> {
         });
       }
 
-      final input = "leagues=552&seasons=821&page=1&per_page=$_perPage";
+      final input = "seasons=821&page=1&per_page=$_perPage";
+      //final input = "leagues=552&seasons=821&page=1&per_page=$_perPage";
       final matches = await ref.read(fetchMatchesProvider(input).future);
 
       if (mounted) {
