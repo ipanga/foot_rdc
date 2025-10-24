@@ -359,158 +359,240 @@ class TableLeagueState extends ConsumerState<TableLeague>
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                child: DataTable(
-                  // Header
-                  headingRowColor: MaterialStateProperty.all(
-                    colorScheme.secondaryContainer.withOpacity(0.45),
-                  ),
-                  headingRowHeight: 56,
-                  headingTextStyle: TextStyle(
-                    color: colorScheme.onSecondaryContainer,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    letterSpacing: 0.3,
-                  ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      switchInCurve: Curves.easeOut,
+                      switchOutCurve: Curves.easeIn,
+                      child: DataTable(
+                        // Header
+                        headingRowColor: MaterialStateProperty.all(
+                          colorScheme.secondaryContainer.withOpacity(0.45),
+                        ),
+                        headingRowHeight: 56,
+                        headingTextStyle: TextStyle(
+                          color: colorScheme.onSecondaryContainer,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          letterSpacing: 0.3,
+                        ),
 
-                  // Rows
-                  dataRowMinHeight: 52,
-                  dataRowMaxHeight: 60,
-                  dataTextStyle: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+                        // Rows
+                        dataRowMinHeight: 52,
+                        dataRowMaxHeight: 60,
+                        dataTextStyle: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
 
-                  // Layout
-                  columnSpacing: 12,
-                  horizontalMargin: 10,
-                  border: TableBorder(
-                    horizontalInside: BorderSide(
-                      color: colorScheme.outline.withOpacity(0.25),
-                      width: 1,
-                    ),
-                    top: BorderSide(
-                      color: colorScheme.outline.withOpacity(0.6),
-                      width: 2,
-                    ),
-                    bottom: BorderSide(
-                      color: colorScheme.outline.withOpacity(0.6),
-                      width: 2,
-                    ),
-                  ),
+                        // Layout
+                        columnSpacing: 12,
+                        horizontalMargin: 10,
+                        border: TableBorder(
+                          horizontalInside: BorderSide(
+                            color: colorScheme.outline.withOpacity(0.25),
+                            width: 1,
+                          ),
+                          top: BorderSide(
+                            color: colorScheme.outline.withOpacity(0.6),
+                            width: 2,
+                          ),
+                          bottom: BorderSide(
+                            color: colorScheme.outline.withOpacity(0.6),
+                            width: 2,
+                          ),
+                        ),
 
-                  columns: [
-                    const DataColumn(label: Text('Pos'), numeric: true),
-                    const DataColumn(label: Text('Club')),
-                    DataColumn(
-                      label: Text(headers?.pts ?? 'Pts'),
-                      numeric: true,
-                    ),
-                    DataColumn(label: Text(headers?.p ?? 'J'), numeric: true),
-                    DataColumn(label: Text(headers?.w ?? 'G'), numeric: true),
-                    DataColumn(label: Text(headers?.d ?? 'N'), numeric: true),
-                    DataColumn(
-                      label: Text(headers?.ptwo ?? 'D'),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Text(headers?.gd ?? 'DIF'),
-                      numeric: true,
-                    ),
-                  ],
-
-                  rows: teams.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final team = entry.value;
-
-                    final pos = team.pos is int
-                        ? team.pos as int
-                        : int.tryParse('${team.pos}') ?? 0;
-
-                    final isOdd = index.isOdd;
-                    final baseRowColor = isOdd
-                        ? colorScheme.secondaryContainer.withOpacity(0.08)
-                        : colorScheme.surface;
-
-                    return DataRow(
-                      color: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.hovered) ||
-                            states.contains(WidgetState.focused)) {
-                          return colorScheme.secondaryContainer.withOpacity(
-                            0.18,
-                          );
-                        }
-                        return baseRowColor;
-                      }),
-                      cells: [
-                        // Position badge
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
+                        columns: [
+                          const DataColumn(label: Text('Pos'), numeric: true),
+                          const DataColumn(label: Text('Club')),
+                          DataColumn(
+                            label: Center(
+                              child: Text(
+                                headers?.pts ?? 'Pts',
+                                textAlign: TextAlign.center,
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color: pos <= 3
-                                  ? colorScheme.primary.withOpacity(0.12)
-                                  : colorScheme.surfaceVariant.withOpacity(
-                                      0.36,
+                          ),
+                          DataColumn(
+                            label: Center(
+                              child: Text(
+                                headers?.p ?? 'J',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Center(
+                              child: Text(
+                                headers?.w ?? 'G',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Center(
+                              child: Text(
+                                headers?.d ?? 'N',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Center(
+                              child: Text(
+                                headers?.ptwo ?? 'D',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Center(
+                              child: Text(
+                                headers?.gd ?? 'DIF',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ],
+
+                        rows: teams.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final team = entry.value;
+
+                          final pos = team.pos is int
+                              ? team.pos as int
+                              : int.tryParse('${team.pos}') ?? 0;
+
+                          final isOdd = index.isOdd;
+                          final baseRowColor = isOdd
+                              ? colorScheme.secondaryContainer.withOpacity(0.08)
+                              : colorScheme.surface;
+
+                          return DataRow(
+                            color: WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.hovered) ||
+                                  states.contains(WidgetState.focused)) {
+                                return colorScheme.secondaryContainer
+                                    .withOpacity(0.18);
+                              }
+                              return baseRowColor;
+                            }),
+                            cells: [
+                              // Position badge
+                              DataCell(
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: pos <= 3
+                                        ? colorScheme.primary.withOpacity(0.12)
+                                        : colorScheme.surfaceVariant
+                                              .withOpacity(0.36),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: pos <= 3
+                                          ? colorScheme.primary
+                                          : colorScheme.outline.withOpacity(
+                                              0.5,
+                                            ),
+                                      width: 1,
                                     ),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: pos <= 3
-                                    ? colorScheme.primary
-                                    : colorScheme.outline.withOpacity(0.5),
-                                width: 1,
+                                  ),
+                                  child: Text(
+                                    '$pos',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: pos <= 3
+                                          ? colorScheme.primary
+                                          : colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              '$pos',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: pos <= 3
-                                    ? colorScheme.primary
-                                    : colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                        ),
 
-                        // Club name
-                        DataCell(
-                          SizedBox(
-                            width: 135,
-                            child: Text(
-                              team.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: colorScheme.onSurface,
+                              // Club name
+                              DataCell(
+                                SizedBox(
+                                  width: 135,
+                                  child: Text(
+                                    team.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
 
-                        // Numeric stats
-                        DataCell(Text(team.pts ?? '0')),
-                        DataCell(Text(team.p ?? '0')),
-                        DataCell(Text(team.w ?? '0')),
-                        DataCell(Text(team.d ?? '0')),
-                        DataCell(Text(team.ptwo ?? '0')),
-                        DataCell(Text(team.gd ?? '0')),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
+                              // Numeric stats
+                              DataCell(
+                                Center(
+                                  child: Text(
+                                    team.pts ?? '0',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Center(
+                                  child: Text(
+                                    team.p ?? '0',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Center(
+                                  child: Text(
+                                    team.w ?? '0',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Center(
+                                  child: Text(
+                                    team.d ?? '0',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Center(
+                                  child: Text(
+                                    team.ptwo ?? '0',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Center(
+                                  child: Text(
+                                    team.gd ?? '0',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
