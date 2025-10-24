@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/presentation/providers/theme_provider.dart';
+import 'package:foot_rdc/features/presentation/providers/notification_provider.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -13,10 +14,47 @@ class AppDrawer extends ConsumerWidget {
     ref.read(themeCustomNotifierProvider.notifier).setTheme(themeModeCustom);
   }
 
+  Future<void> _toggleNotifications(
+    BuildContext context,
+    WidgetRef ref,
+    bool value,
+  ) async {
+    final newState = await ref
+        .read(notificationNotifierProvider.notifier)
+        .toggleNotifications(value);
+    
+    if (!context.mounted) return;
+    
+    final hasPermission = newState.hasPermission;
+    final isSubscribed = newState.isSubscribed;
+    
+    String message;
+    if (!value) {
+      message = '🔕 Notifications désactivées. Vous ne recevrez plus de notifications.';
+    } else if (hasPermission && isSubscribed) {
+      message = '🔔 Notifications activées ! Vous recevrez les dernières actualités.';
+    } else if (!hasPermission) {
+      message = '⚠️ Veuillez autoriser les notifications dans les paramètres de votre appareil.';
+    } else if (hasPermission && !isSubscribed) {
+      message = '⏳ Activation en cours…';
+    } else {
+      message = '⚠️ Impossible de s\'abonner aux notifications. Veuillez réessayer.';
+    }
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final currentTheme = ref.watch(themeCustomNotifierProvider);
+    final notificationState = ref.watch(notificationNotifierProvider);
 
     return Drawer(
       child: Column(
@@ -87,6 +125,107 @@ class AppDrawer extends ConsumerWidget {
                         isSelected: currentTheme == ThemeModeCustom.dark,
                         onTap: () =>
                             _changeTheme(context, ref, ThemeModeCustom.dark),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Notification Section
+                _DrawerSection(
+                  title: 'Notifications',
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: notificationState.enabled
+                              ? scheme.primaryContainer.withOpacity(0.3)
+                              : scheme.surfaceContainerHighest.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: notificationState.enabled
+                                ? scheme.primary.withOpacity(0.3)
+                                : scheme.outline.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  notificationState.enabled
+                                      ? Icons.notifications_active
+                                      : Icons.notifications_off,
+                                  color: notificationState.enabled
+                                      ? scheme.primary
+                                      : scheme.onSurface.withOpacity(0.6),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    notificationState.enabled
+                                        ? 'Notifications activées'
+                                        : 'Notifications désactivées',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: scheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+                                Switch(
+                                  value: notificationState.enabled,
+                                  onChanged: (value) =>
+                                      _toggleNotifications(context, ref, value),
+                                  activeColor: scheme.primary,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Divider(
+                              color: scheme.outline.withOpacity(0.2),
+                              height: 1,
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(
+                                  notificationState.enabled
+                                      ? (notificationState.hasPermission &&
+                                              notificationState.isSubscribed)
+                                          ? Icons.check_circle
+                                          : Icons.warning_amber_rounded
+                                      : Icons.info_outline,
+                                  size: 16,
+                                  color: notificationState.enabled
+                                      ? (notificationState.hasPermission &&
+                                              notificationState.isSubscribed)
+                                          ? scheme.primary
+                                          : Colors.orange
+                                      : scheme.onSurface.withOpacity(0.6),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    notificationState.enabled
+                                        ? (notificationState.hasPermission &&
+                                                notificationState.isSubscribed)
+                                            ? 'Vous êtes abonné aux notifications'
+                                            : 'Autorisez les notifications dans les paramètres'
+                                        : 'Vous ne recevrez pas de notifications',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: scheme.onSurface.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

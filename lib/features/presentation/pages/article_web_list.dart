@@ -53,19 +53,19 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
 
   final String _bannerAdUnitId = kReleaseMode
       ? (Platform.isAndroid
-          ? 'ca-app-pub-8433726715962091/9671028035'
-          : 'ca-app-pub-8433726715962091/6360777917')
+            ? 'ca-app-pub-8433726715962091/9671028035'
+            : 'ca-app-pub-8433726715962091/6360777917')
       : (Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/6300978111'
-          : 'ca-app-pub-3940256099942544/2934735716');
+            ? 'ca-app-pub-3940256099942544/6300978111'
+            : 'ca-app-pub-3940256099942544/2934735716');
 
   final String _nativeAdUnitId = kReleaseMode
       ? (Platform.isAndroid
-          ? 'ca-app-pub-8433726715962091/5762012110'
-          : 'ca-app-pub-8433726715962091/8196603768')
+            ? 'ca-app-pub-8433726715962091/5762012110'
+            : 'ca-app-pub-8433726715962091/8196603768')
       : (Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/2247696110'
-          : 'ca-app-pub-3940256099942544/3986624511');
+            ? 'ca-app-pub-3940256099942544/2247696110'
+            : 'ca-app-pub-3940256099942544/3986624511');
 
   // Carousel state
   final List<Map<String, String>> _carouselImages = [
@@ -335,7 +335,28 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
                 1 + // Add 1 for carousel
                 (_isLoadingMore ? 1 : 0) +
                 (_loadMoreError ? 1 : 0),
-            separatorBuilder: (context, index) => const SizedBox(height: 0),
+            separatorBuilder: (context, index) {
+              // account for the carousel at index 0 by using an adjusted index
+              final adjustedIndex = index - 1;
+              // don't show separator just before the bottom loading/error indicator
+              if (adjustedIndex == _listItems.length - 1 &&
+                  (_isLoadingMore || _loadMoreError)) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                height: 1,
+                margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colorScheme.outline.withOpacity(0.3),
+                      colorScheme.outline.withOpacity(0.6),
+                      colorScheme.outline.withOpacity(0.3),
+                    ],
+                  ),
+                ),
+              );
+            },
             itemBuilder: (context, index) {
               // Show carousel at the top
               if (index == 0) {
