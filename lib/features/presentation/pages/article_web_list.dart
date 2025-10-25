@@ -746,8 +746,10 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
           ),
         ),
       ),
+      centerTitle: true,
       title: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
             'assets/images/logo_splash_footrdc.png',
