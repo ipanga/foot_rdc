@@ -47,14 +47,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark
-                ? [
-                    colorScheme.surface,
-                    colorScheme.surface.withOpacity(0.95),
-                  ]
-                : [
-                    colorScheme.surface,
-                    colorScheme.surface.withOpacity(0.98),
-                  ],
+                ? [colorScheme.surface, colorScheme.surface.withOpacity(0.95)]
+                : [colorScheme.surface, colorScheme.surface.withOpacity(0.98)],
           ),
         ),
       ),
@@ -91,11 +85,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ],
             ),
-            child: Icon(
-              icon,
-              color: colorScheme.primary,
-              size: 22,
-            ),
+            child: Icon(icon, color: colorScheme.primary, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -104,22 +94,20 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      colorScheme.primary,
-                      colorScheme.secondary,
-                    ],
-                    stops: const [0.3, 0.9],
-                  ).createShader(
-                    Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-                  ),
+                  shaderCallback: (bounds) =>
+                      LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [colorScheme.primary, colorScheme.secondary],
+                        stops: const [0.3, 0.9],
+                      ).createShader(
+                        Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                      ),
                   blendMode: BlendMode.srcIn,
                   child: Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 21,
+                      fontSize: 17,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Oswald',
                       letterSpacing: 1.8,
