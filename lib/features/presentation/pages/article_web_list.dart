@@ -758,14 +758,6 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
           ),
           Text(
             'FOOTRDC.COM',
-            /* style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Oswald',
-              letterSpacing: 1.5,
-              height: 1.2,
-              //color: Colors.white, // color is replaced by shader
-            ), */
             style: Theme.of(context).appBarTheme.titleTextStyle,
           ),
         ],

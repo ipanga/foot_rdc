@@ -130,18 +130,27 @@ class _HomePageState extends ConsumerState<HomePage>
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 8, left: 12, right: 12),
+          padding: const EdgeInsets.only(bottom: 0, left: 0, right: 0),
           child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            //borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
                 decoration: BoxDecoration(
-                  color: (Theme.of(context).bottomNavigationBarTheme.backgroundColor ?? theme.scaffoldBackgroundColor).withOpacity(0.85),
-                  border: const Border(top: BorderSide(color: Colors.grey, width: 0.2)),
+                  color:
+                      (Theme.of(
+                                context,
+                              ).bottomNavigationBarTheme.backgroundColor ??
+                              theme.scaffoldBackgroundColor)
+                          .withOpacity(0.85),
+                  border: const Border(
+                    top: BorderSide(color: Colors.grey, width: 0.2),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.2 : 0.06),
+                      color: Colors.black.withOpacity(
+                        theme.brightness == Brightness.dark ? 0.2 : 0.06,
+                      ),
                       blurRadius: 20,
                       offset: const Offset(0, -6),
                     ),
@@ -150,12 +159,20 @@ class _HomePageState extends ConsumerState<HomePage>
                 child: BottomNavigationBar(
                   backgroundColor: Colors.transparent,
                   type: BottomNavigationBarType.fixed,
-                  selectedItemColor: theme.bottomNavigationBarTheme.selectedItemColor ?? theme.colorScheme.primary,
-                  unselectedItemColor: theme.bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey,
+                  selectedItemColor:
+                      theme.bottomNavigationBarTheme.selectedItemColor ??
+                      theme.colorScheme.primary,
+                  unselectedItemColor:
+                      theme.bottomNavigationBarTheme.unselectedItemColor ??
+                      Colors.grey,
                   selectedFontSize: 11,
                   unselectedFontSize: 10,
-                  selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-                  unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
+                  selectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w400,
+                  ),
                   showUnselectedLabels: true,
                   elevation: 0,
                   currentIndex: currentPage,
@@ -177,7 +194,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey,
+                          theme.bottomNavigationBarTheme.unselectedItemColor ??
+                              Colors.grey,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -186,7 +204,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ?? theme.primaryColor,
+                          theme.bottomNavigationBarTheme.selectedItemColor ??
+                              theme.primaryColor,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -198,7 +217,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey,
+                          theme.bottomNavigationBarTheme.unselectedItemColor ??
+                              Colors.grey,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -207,7 +227,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ?? theme.primaryColor,
+                          theme.bottomNavigationBarTheme.selectedItemColor ??
+                              theme.primaryColor,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -219,7 +240,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey,
+                          theme.bottomNavigationBarTheme.unselectedItemColor ??
+                              Colors.grey,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -228,7 +250,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ?? theme.primaryColor,
+                          theme.bottomNavigationBarTheme.selectedItemColor ??
+                              theme.primaryColor,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -240,7 +263,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey,
+                          theme.bottomNavigationBarTheme.unselectedItemColor ??
+                              Colors.grey,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -249,7 +273,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ?? theme.primaryColor,
+                          theme.bottomNavigationBarTheme.selectedItemColor ??
+                              theme.primaryColor,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -261,7 +286,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey,
+                          theme.bottomNavigationBarTheme.unselectedItemColor ??
+                              Colors.grey,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -270,7 +296,8 @@ class _HomePageState extends ConsumerState<HomePage>
                         height: 26,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ?? theme.primaryColor,
+                          theme.bottomNavigationBarTheme.selectedItemColor ??
+                              theme.primaryColor,
                           BlendMode.srcIn,
                         ),
                       ),

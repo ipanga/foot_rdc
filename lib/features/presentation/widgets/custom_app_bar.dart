@@ -92,6 +92,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ShaderMask(
                   shaderCallback: (bounds) =>
