@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/presentation/providers/ranking_provider.dart';
 import 'package:foot_rdc/features/presentation/providers/ranking_cache_provider.dart';
 import 'package:foot_rdc/features/domain/entities/ranking.dart';
+import 'package:foot_rdc/features/presentation/widgets/custom_app_bar.dart';
 
 class TableLeague extends ConsumerStatefulWidget {
   const TableLeague({super.key});
@@ -180,42 +181,87 @@ class TableLeagueState extends ConsumerState<TableLeague>
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          '|  CLASSEMENT LINAFOOT',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Oswald',
-            letterSpacing: 1.5,
-          ),
-        ),
-        centerTitle: false,
+      appBar: CustomAppBar(
+        icon: Icons.emoji_events_rounded,
+        title: 'CLASSEMENT LINAFOOT',
+        subtitle: 'Classements des groupes et play-off',
         elevation: 2,
-        shadowColor: colorScheme.shadow,
-        iconTheme: IconThemeData(color: colorScheme.onSurface),
-        bottom: TabBar(
-          controller: _tabController,
-          onTap: _loadRankingForTab,
-          indicatorColor: colorScheme.primary,
-          indicatorWeight: 3,
-          labelColor: colorScheme.primary,
-          unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            fontFamily: 'Oswald',
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              onTap: _loadRankingForTab,
+              indicator: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelColor: colorScheme.onPrimary,
+              unselectedLabelColor: colorScheme.onSurface.withOpacity(0.65),
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                fontFamily: 'Oswald',
+                letterSpacing: 0.5,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontFamily: 'Oswald',
+                letterSpacing: 0.3,
+              ),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+              tabs: const [
+                Tab(
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.group, size: 18),
+                      SizedBox(width: 6),
+                      Text('Groupe A'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.groups, size: 18),
+                      SizedBox(width: 6),
+                      Text('Groupe B'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.emoji_events, size: 18),
+                      SizedBox(width: 6),
+                      Text('Play-off'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-            fontFamily: 'Oswald',
-          ),
-          tabs: const [
-            Tab(text: 'Groupe A'),
-            Tab(text: 'Groupe B'),
-            Tab(text: 'Play-off'),
-          ],
         ),
       ),
       backgroundColor: colorScheme.surface,

@@ -5,6 +5,7 @@ import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/custom_search_bar.dart';
+import 'package:foot_rdc/features/presentation/widgets/custom_app_bar.dart';
 import 'package:foot_rdc/main.dart';
 import 'dart:async';
 import 'dart:io';
@@ -283,21 +284,10 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          '|  RECHERCHER DES ARTICLES',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Oswald',
-            letterSpacing: 1.5,
-          ),
-        ),
-        centerTitle: false,
-        elevation: 4.0,
-        shadowColor: theme.brightness == Brightness.light
-            ? Colors.black26
-            : Colors.white24,
+      appBar: const CustomAppBar(
+        icon: Icons.search_rounded,
+        title: 'RECHERCHER DES ARTICLES',
+        subtitle: 'Trouvez vos articles préférés',
       ),
       body: Column(
         children: [

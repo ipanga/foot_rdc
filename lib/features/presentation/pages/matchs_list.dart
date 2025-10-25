@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/match.dart';
 import 'package:foot_rdc/features/presentation/widgets/match_list_item.dart';
 import 'package:foot_rdc/features/presentation/providers/match_cache_provider.dart';
+import 'package:foot_rdc/features/presentation/widgets/custom_app_bar.dart';
 import 'package:foot_rdc/main.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -373,21 +374,10 @@ class _MatchsListState extends ConsumerState<MatchsList> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          '|  RÉSULTATS MATCHS',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Oswald',
-            letterSpacing: 1.5,
-          ),
-        ),
-        centerTitle: false,
-        elevation: 4.0,
-        shadowColor: Theme.of(context).brightness == Brightness.light
-            ? Colors.black26
-            : Colors.white24,
+      appBar: const CustomAppBar(
+        icon: Icons.sports_soccer_rounded,
+        title: 'RÉSULTATS MATCHS',
+        subtitle: 'Tous les résultats en direct',
       ),
       body: _buildBody(colorScheme, cacheState),
       bottomNavigationBar: _isAdLoaded && _bannerAd != null

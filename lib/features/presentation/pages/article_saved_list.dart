@@ -10,6 +10,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_saved_item.dart';
+import 'package:foot_rdc/features/presentation/widgets/custom_app_bar.dart';
 
 /// A page that displays a list of saved articles.
 ///
@@ -34,19 +35,19 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
 
   final String _bannerAdUnitId = kReleaseMode
       ? (Platform.isAndroid
-          ? 'ca-app-pub-8433726715962091/9671028035'
-          : 'ca-app-pub-8433726715962091/6360777917')
+            ? 'ca-app-pub-8433726715962091/9671028035'
+            : 'ca-app-pub-8433726715962091/6360777917')
       : (Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/6300978111'
-          : 'ca-app-pub-3940256099942544/2934735716');
+            ? 'ca-app-pub-3940256099942544/6300978111'
+            : 'ca-app-pub-3940256099942544/2934735716');
 
   final String _nativeAdUnitId = kReleaseMode
       ? (Platform.isAndroid
-          ? 'ca-app-pub-8433726715962091/5762012110'
-          : 'ca-app-pub-8433726715962091/8196603768')
+            ? 'ca-app-pub-8433726715962091/5762012110'
+            : 'ca-app-pub-8433726715962091/8196603768')
       : (Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/2247696110'
-          : 'ca-app-pub-3940256099942544/3986624511');
+            ? 'ca-app-pub-3940256099942544/2247696110'
+            : 'ca-app-pub-3940256099942544/3986624511');
 
   @override
   void initState() {
@@ -136,8 +137,10 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
     final colorScheme = theme.colorScheme;
 
     // Listen to changes in saved articles and update list with ads accordingly
-    ref.listen<List<Article>>(articleSavedListNotifierProvider,
-        (previous, next) {
+    ref.listen<List<Article>>(articleSavedListNotifierProvider, (
+      previous,
+      next,
+    ) {
       if (!mounted) return;
       final sorted = List<Article>.from(next)
         ..sort((a, b) => b.dateGmt.compareTo(a.dateGmt));
@@ -147,21 +150,10 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
 
     return Scaffold(
       // App bar with French title
-      appBar: AppBar(
-        title: const Text(
-          '|  ARTICLES ENREGISTRÉS',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Oswald',
-            letterSpacing: 1.5,
-          ),
-        ),
-        centerTitle: false,
-        elevation: 4.0,
-        shadowColor: theme.brightness == Brightness.light
-            ? Colors.black26
-            : Colors.white24,
+      appBar: const CustomAppBar(
+        icon: Icons.bookmark_rounded,
+        title: 'ARTICLES ENREGISTRÉS',
+        subtitle: 'Vos articles sauvegardés',
       ),
 
       // Main body content
