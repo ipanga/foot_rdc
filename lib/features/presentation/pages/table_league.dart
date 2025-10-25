@@ -352,7 +352,7 @@ class TableLeagueState extends ConsumerState<TableLeague>
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Container(
-          margin: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             color: colorScheme.surface,
@@ -380,14 +380,14 @@ class TableLeagueState extends ConsumerState<TableLeague>
                       child: DataTable(
                         // Header
                         headingRowColor: MaterialStateProperty.all(
-                          colorScheme.secondaryContainer.withOpacity(0.45),
+                          colorScheme.primaryContainer.withOpacity(0.9),
                         ),
-                        headingRowHeight: 56,
+                        headingRowHeight: 60,
                         headingTextStyle: TextStyle(
-                          color: colorScheme.onSecondaryContainer,
-                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w800,
                           fontSize: 13,
-                          letterSpacing: 0.3,
+                          letterSpacing: 0.6,
                         ),
 
                         // Rows
@@ -401,8 +401,8 @@ class TableLeagueState extends ConsumerState<TableLeague>
                         ),
 
                         // Layout
-                        columnSpacing: 12,
-                        horizontalMargin: 10,
+                        columnSpacing: 18,
+                        horizontalMargin: 12,
                         border: TableBorder(
                           horizontalInside: BorderSide(
                             color: colorScheme.outline.withOpacity(0.25),
@@ -419,12 +419,12 @@ class TableLeagueState extends ConsumerState<TableLeague>
                         ),
 
                         columns: [
-                          const DataColumn(label: Text('Pos'), numeric: true),
+                          const DataColumn(label: Text('POS')),
                           const DataColumn(label: Text('Club')),
                           DataColumn(
                             label: Center(
                               child: Text(
-                                headers?.pts ?? 'Pts',
+                                (headers?.pts ?? 'Pts').toUpperCase(),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -432,7 +432,7 @@ class TableLeagueState extends ConsumerState<TableLeague>
                           DataColumn(
                             label: Center(
                               child: Text(
-                                headers?.p ?? 'J',
+                                (headers?.p ?? 'J').toUpperCase(),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -440,7 +440,7 @@ class TableLeagueState extends ConsumerState<TableLeague>
                           DataColumn(
                             label: Center(
                               child: Text(
-                                headers?.w ?? 'G',
+                                (headers?.w ?? 'G').toUpperCase(),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -448,7 +448,7 @@ class TableLeagueState extends ConsumerState<TableLeague>
                           DataColumn(
                             label: Center(
                               child: Text(
-                                headers?.d ?? 'N',
+                                (headers?.d ?? 'N').toUpperCase(),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -456,7 +456,7 @@ class TableLeagueState extends ConsumerState<TableLeague>
                           DataColumn(
                             label: Center(
                               child: Text(
-                                headers?.ptwo ?? 'D',
+                                (headers?.ptwo ?? 'D').toUpperCase(),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -464,7 +464,7 @@ class TableLeagueState extends ConsumerState<TableLeague>
                           DataColumn(
                             label: Center(
                               child: Text(
-                                headers?.gd ?? 'DIF',
+                                (headers?.gd ?? 'DIF').toUpperCase(),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -530,16 +530,13 @@ class TableLeagueState extends ConsumerState<TableLeague>
 
                               // Club name
                               DataCell(
-                                SizedBox(
-                                  width: 135,
-                                  child: Text(
-                                    team.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: colorScheme.onSurface,
-                                    ),
+                                Text(
+                                  team.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: colorScheme.onSurface,
                                   ),
                                 ),
                               ),
