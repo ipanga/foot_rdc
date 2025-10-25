@@ -319,6 +319,11 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
       return Scaffold(
         appBar: _buildAppBar(),
         drawer: const AppDrawer(),
+        onDrawerChanged: (isOpen) {
+          if (!isOpen) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          }
+        },
         body: RefreshIndicator(
           onRefresh: _onRefresh,
           color: colorScheme.primary,
@@ -442,6 +447,11 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
       return Scaffold(
         appBar: _buildAppBar(),
         drawer: const AppDrawer(),
+        onDrawerChanged: (isOpen) {
+          if (!isOpen) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          }
+        },
         body: Center(
           child: CircularProgressIndicator(color: colorScheme.primary),
         ),
@@ -513,6 +523,11 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
     return Scaffold(
       appBar: _buildAppBar(),
       drawer: const AppDrawer(),
+      onDrawerChanged: (isOpen) {
+        if (!isOpen) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        }
+      },
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

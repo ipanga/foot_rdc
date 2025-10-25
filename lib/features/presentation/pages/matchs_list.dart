@@ -191,7 +191,6 @@ class _MatchsListState extends ConsumerState<MatchsList> {
       }
 
       final input = "seasons=821&page=1&per_page=$_perPage";
-      //final input = "leagues=552&seasons=821&page=1&per_page=$_perPage";
       final matches = await ref.read(fetchMatchesProvider(input).future);
 
       if (mounted) {
@@ -264,7 +263,7 @@ class _MatchsListState extends ConsumerState<MatchsList> {
 
     try {
       final nextPage = cacheState.currentPage + 1;
-      final input = "leagues=552&seasons=553&page=$nextPage&per_page=$_perPage";
+      final input = "seasons=821&page=$nextPage&per_page=$_perPage";
       final newMatches = await ref.read(fetchMatchesProvider(input).future);
 
       if (mounted) {

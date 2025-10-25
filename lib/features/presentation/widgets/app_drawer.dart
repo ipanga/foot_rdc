@@ -50,6 +50,59 @@ class AppDrawer extends ConsumerWidget {
     );
   }
 
+  void _confirmDisableNotifications(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 8),
+        showCloseIcon: true,
+        closeIconColor: scheme.onSurface.withOpacity(0.7),
+        backgroundColor: scheme.surface,
+        elevation: 8,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: scheme.outline.withOpacity(0.15)),
+        ),
+        dismissDirection: DismissDirection.horizontal,
+        content: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Désactiver les notifications ?',
+                style: TextStyle(
+                  color: scheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                messenger.hideCurrentSnackBar();
+                await _toggleNotifications(context, ref, false);
+              },
+              child: const Text('Oui'),
+            ),
+            const SizedBox(width: 4),
+            TextButton(
+              onPressed: () {
+                messenger.hideCurrentSnackBar();
+              },
+              child: const Text('Non'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
@@ -57,7 +110,12 @@ class AppDrawer extends ConsumerWidget {
     final notificationState = ref.watch(notificationNotifierProvider);
 
     return Drawer(
-      child: Column(
+      child: Listener(
+        onPointerDown: (_) {
+          // Dismiss any active SnackBar when tapping anywhere in the drawer area
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        },
+        child: Column(
         children: [
           // Simple Header
           AnimatedContainer(
@@ -178,8 +236,13 @@ class AppDrawer extends ConsumerWidget {
                                 ),
                                 Switch(
                                   value: notificationState.enabled,
-                                  onChanged: (value) =>
-                                      _toggleNotifications(context, ref, value),
+                                  onChanged: (value) {
+                                    if (value) {
+                                      _toggleNotifications(context, ref, true);
+                                    } else {
+                                      _confirmDisableNotifications(context, ref);
+                                    }
+                                  },
                                   activeColor: scheme.primary,
                                 ),
                               ],
@@ -256,7 +319,8 @@ class AppDrawer extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
