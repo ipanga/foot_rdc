@@ -30,6 +30,14 @@ class TableLeagueState extends ConsumerState<TableLeague>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRankingForTab(0);
     });
+
+    // Ensure data loads when user changes tab via swipe or programmatically
+    _tabController.addListener(() {
+      // When the tab change animation completes, indexIsChanging becomes false
+      if (!_tabController.indexIsChanging) {
+        _loadRankingForTab(_tabController.index);
+      }
+    });
   }
 
   @override
