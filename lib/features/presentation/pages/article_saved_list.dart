@@ -10,7 +10,6 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_saved_item.dart';
-import 'package:foot_rdc/features/presentation/widgets/custom_app_bar.dart';
 
 /// A page that displays a list of saved articles.
 ///
@@ -150,10 +149,21 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
 
     return Scaffold(
       // App bar with French title
-      appBar: const CustomAppBar(
-        icon: Icons.bookmark_rounded,
-        title: 'ARTICLES ENREGISTRÉS',
-        subtitle: 'Vos articles sauvegardés',
+      appBar: AppBar(
+        title: const Text(
+          '|  ARTICLES ENREGISTRÉS',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Oswald',
+            letterSpacing: 1.5,
+          ),
+        ),
+        centerTitle: false,
+        elevation: 4.0,
+        shadowColor: theme.brightness == Brightness.light
+            ? Colors.black26
+            : Colors.white24,
       ),
 
       // Main body content

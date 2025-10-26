@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/presentation/providers/ranking_provider.dart';
 import 'package:foot_rdc/features/presentation/providers/ranking_cache_provider.dart';
 import 'package:foot_rdc/features/domain/entities/ranking.dart';
-import 'package:foot_rdc/features/presentation/widgets/custom_app_bar.dart';
 
 class TableLeague extends ConsumerStatefulWidget {
   const TableLeague({super.key});
@@ -181,11 +180,21 @@ class TableLeagueState extends ConsumerState<TableLeague>
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: CustomAppBar(
-        icon: Icons.emoji_events_rounded,
-        title: 'CLASSEMENT LINAFOOT',
-        subtitle: 'Classements des groupes et play-off',
-        elevation: 2,
+      appBar: AppBar(
+        title: const Text(
+          '|  CLASSEMENT LINAFOOT',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Oswald',
+            letterSpacing: 1.5,
+          ),
+        ),
+        centerTitle: false,
+        elevation: 4.0,
+        shadowColor: theme.brightness == Brightness.light
+            ? Colors.black26
+            : Colors.white24,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Container(
@@ -198,11 +207,11 @@ class TableLeagueState extends ConsumerState<TableLeague>
               controller: _tabController,
               onTap: _loadRankingForTab,
               indicator: BoxDecoration(
-                color: colorScheme.primary,
+                color: colorScheme.primary.withOpacity(0.50),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.3),
+                    color: colorScheme.primary.withOpacity(0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),

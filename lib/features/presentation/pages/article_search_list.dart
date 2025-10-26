@@ -5,7 +5,6 @@ import 'package:foot_rdc/features/domain/entities/article.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/presentation/widgets/custom_search_bar.dart';
-import 'package:foot_rdc/features/presentation/widgets/custom_app_bar.dart';
 import 'package:foot_rdc/main.dart';
 import 'dart:async';
 import 'dart:io';
@@ -50,19 +49,19 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
 
   final String _bannerAdUnitId = kReleaseMode
       ? (Platform.isAndroid
-          ? 'ca-app-pub-8433726715962091/9671028035'
-          : 'ca-app-pub-8433726715962091/6360777917')
+            ? 'ca-app-pub-8433726715962091/9671028035'
+            : 'ca-app-pub-8433726715962091/6360777917')
       : (Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/6300978111'
-          : 'ca-app-pub-3940256099942544/2934735716');
+            ? 'ca-app-pub-3940256099942544/6300978111'
+            : 'ca-app-pub-3940256099942544/2934735716');
 
   final String _nativeAdUnitId = kReleaseMode
       ? (Platform.isAndroid
-          ? 'ca-app-pub-8433726715962091/5762012110'
-          : 'ca-app-pub-8433726715962091/8196603768')
+            ? 'ca-app-pub-8433726715962091/5762012110'
+            : 'ca-app-pub-8433726715962091/8196603768')
       : (Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/2247696110'
-          : 'ca-app-pub-3940256099942544/3986624511');
+            ? 'ca-app-pub-3940256099942544/2247696110'
+            : 'ca-app-pub-3940256099942544/3986624511');
 
   @override
   void initState() {
@@ -284,10 +283,21 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: const CustomAppBar(
-        icon: Icons.search_rounded,
-        title: 'RECHERCHER DES ARTICLES',
-        subtitle: 'Trouvez vos articles préférés',
+      appBar: AppBar(
+        title: const Text(
+          '|  RECHERCHER DES ARTICLES',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Oswald',
+            letterSpacing: 1.5,
+          ),
+        ),
+        centerTitle: false,
+        elevation: 4.0,
+        shadowColor: theme.brightness == Brightness.light
+            ? Colors.black26
+            : Colors.white24,
       ),
       body: Column(
         children: [
@@ -483,9 +493,9 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                                     vertical: 8.0,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .surfaceVariant,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceVariant,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 );
@@ -579,20 +589,20 @@ class _ArticleSearchState extends ConsumerState<ArticleSearchList> {
                             if (!isLoaded) {
                               return Container(
                                 height: 320,
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceVariant,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               );
                             }
                             return Container(
                               height: 320,
-                              margin:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              margin: const EdgeInsets.symmetric(vertical: 8.0),
                               child: AdWidget(ad: item),
                             );
                           }

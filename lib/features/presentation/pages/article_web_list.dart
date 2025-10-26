@@ -731,7 +731,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
   }
 
   AppBar _buildAppBar() {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     return AppBar(
       leading: Builder(
@@ -762,6 +763,10 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
           ),
         ],
       ),
+      elevation: 4.0,
+      shadowColor: theme.brightness == Brightness.light
+          ? Colors.black26
+          : Colors.white24,
     );
   }
 }

@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/domain/entities/match.dart';
 import 'package:foot_rdc/features/presentation/widgets/match_list_item.dart';
 import 'package:foot_rdc/features/presentation/providers/match_cache_provider.dart';
-import 'package:foot_rdc/features/presentation/widgets/custom_app_bar.dart';
 import 'package:foot_rdc/main.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -359,7 +358,8 @@ class _MatchsListState extends ConsumerState<MatchsList> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final cacheState = ref.watch(matchCacheProvider);
 
     // Check if cache was cleared from outside
@@ -374,10 +374,21 @@ class _MatchsListState extends ConsumerState<MatchsList> {
     }
 
     return Scaffold(
-      appBar: const CustomAppBar(
-        icon: Icons.sports_soccer_rounded,
-        title: 'RÉSULTATS MATCHS',
-        subtitle: 'Tous les résultats en direct',
+      appBar: AppBar(
+        title: const Text(
+          '|  RÉSULTATS MATCHS',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Oswald',
+            letterSpacing: 1.5,
+          ),
+        ),
+        centerTitle: false,
+        elevation: 4.0,
+        shadowColor: theme.brightness == Brightness.light
+            ? const Color.fromARGB(66, 63, 56, 56)
+            : Colors.white24,
       ),
       body: _buildBody(colorScheme, cacheState),
       bottomNavigationBar: _isAdLoaded && _bannerAd != null
