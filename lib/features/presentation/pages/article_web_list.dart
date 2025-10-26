@@ -13,6 +13,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:foot_rdc/utils/ad_constants.dart';
 
 /// A page that shows a list of articles fetched via a Riverpod provider.
 class ArticleWebList extends ConsumerStatefulWidget {
@@ -51,21 +52,8 @@ class _ArticleListState extends ConsumerState<ArticleWebList>
   // Track native ad load state to ensure AdWidget is only built after load
   final Map<NativeAd, bool> _nativeAdLoaded = {};
 
-  final String _bannerAdUnitId = kReleaseMode
-      ? (Platform.isAndroid
-            ? 'ca-app-pub-8433726715962091/9671028035'
-            : 'ca-app-pub-8433726715962091/6360777917')
-      : (Platform.isAndroid
-            ? 'ca-app-pub-3940256099942544/6300978111'
-            : 'ca-app-pub-3940256099942544/2934735716');
-
-  final String _nativeAdUnitId = kReleaseMode
-      ? (Platform.isAndroid
-            ? 'ca-app-pub-8433726715962091/5762012110'
-            : 'ca-app-pub-8433726715962091/8196603768')
-      : (Platform.isAndroid
-            ? 'ca-app-pub-3940256099942544/2247696110'
-            : 'ca-app-pub-3940256099942544/3986624511');
+  final String _bannerAdUnitId = AdConstants.bannerAdUnitId;
+  final String _nativeAdUnitId = AdConstants.nativeAdUnitId;
 
   // Carousel state
   final List<Map<String, String>> _carouselImages = [

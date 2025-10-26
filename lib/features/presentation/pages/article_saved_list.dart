@@ -1,5 +1,4 @@
 // Flutter framework imports
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:foot_rdc/features/presentation/pages/article_details_page.dart';
 import 'package:foot_rdc/features/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/features/presentation/widgets/article_saved_item.dart';
+import 'package:foot_rdc/utils/ad_constants.dart';
 
 /// A page that displays a list of saved articles.
 ///
@@ -32,21 +32,8 @@ class _ArticleSavedListState extends ConsumerState<ArticleSavedList> {
   // Track native ad load state
   final Map<NativeAd, bool> _nativeAdLoaded = {};
 
-  final String _bannerAdUnitId = kReleaseMode
-      ? (Platform.isAndroid
-            ? 'ca-app-pub-8433726715962091/9671028035'
-            : 'ca-app-pub-8433726715962091/6360777917')
-      : (Platform.isAndroid
-            ? 'ca-app-pub-3940256099942544/6300978111'
-            : 'ca-app-pub-3940256099942544/2934735716');
-
-  final String _nativeAdUnitId = kReleaseMode
-      ? (Platform.isAndroid
-            ? 'ca-app-pub-8433726715962091/5762012110'
-            : 'ca-app-pub-8433726715962091/8196603768')
-      : (Platform.isAndroid
-            ? 'ca-app-pub-3940256099942544/2247696110'
-            : 'ca-app-pub-3940256099942544/3986624511');
+  final String _bannerAdUnitId = AdConstants.bannerAdUnitId;
+  final String _nativeAdUnitId = AdConstants.nativeAdUnitId;
 
   @override
   void initState() {
