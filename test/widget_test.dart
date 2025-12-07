@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:foot_rdc/main.dart';
+import 'package:foot_rdc/main_old.dart';
 import 'package:foot_rdc/features/presentation/pages/home_page.dart';
 
 void main() {
