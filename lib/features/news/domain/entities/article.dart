@@ -30,10 +30,6 @@ class Article {
   });
 
   factory Article.fromJson(Map<String, dynamic> json) {
-    final categories = json['categories'] as List<dynamic>?;
-    final firstCategoryId =
-        categories != null && categories.isNotEmpty ? categories.first : 'N/A';
-
     return Article(
       id: json['id'] as int? ?? 0,
       dateGmt: DateTime.tryParse(json['date_gmt'] as String? ?? '') ??
@@ -45,7 +41,7 @@ class Article {
       slug: json['slug'] as String? ?? '',
       status: json['status'] as String? ?? '',
       type: json['type'] as String? ?? '',
-      category: 'category-$firstCategoryId',
+      category: _extractCategoryName(json),
       link: json['link'] as String? ?? '',
       title:
           (json['title'] as Map<String, dynamic>?)?['rendered'] as String? ??
@@ -58,6 +54,39 @@ class Article {
           '',
       imageUrl: _extractFeaturedImage(json),
     );
+  }
+
+  static String _extractCategoryName(Map<String, dynamic> json) {
+    try {
+      // Try to get category name from _embedded wp:term (when using _embed parameter)
+      final embedded = json['_embedded'] as Map<String, dynamic>?;
+      if (embedded != null) {
+        final wpTerms = embedded['wp:term'] as List<dynamic>?;
+        if (wpTerms != null && wpTerms.isNotEmpty) {
+          // wp:term is an array of arrays - first array contains categories
+          final categories = wpTerms.first as List<dynamic>?;
+          if (categories != null && categories.isNotEmpty) {
+            final firstCategory = categories.first as Map<String, dynamic>?;
+            if (firstCategory != null) {
+              final name = firstCategory['name'] as String?;
+              if (name != null && name.isNotEmpty) {
+                return name;
+              }
+            }
+          }
+        }
+      }
+
+      // Fallback to category ID if name not available
+      final categoryIds = json['categories'] as List<dynamic>?;
+      if (categoryIds != null && categoryIds.isNotEmpty) {
+        return 'Category ${categoryIds.first}';
+      }
+
+      return '';
+    } catch (_) {
+      return '';
+    }
   }
 
   static String _extractFeaturedImage(Map<String, dynamic> json) {

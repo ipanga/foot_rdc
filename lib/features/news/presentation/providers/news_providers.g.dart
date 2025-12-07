@@ -6,7 +6,28 @@ part of 'news_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$fetchArticlesHash() => r'a1b2c3d4e5f6g7h8i9j0';
+String _$fetchArticlesHash() => r'1ec85d5df7dcfb3f8ee7ab7788c3fc3017b2354e';
+
+/// Copied from Dart SDK
+class _SystemHash {
+  _SystemHash._();
+
+  static int combine(int hash, int value) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + value);
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+    return hash ^ (hash >> 6);
+  }
+
+  static int finish(int hash) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+    // ignore: parameter_assignments
+    hash = hash ^ (hash >> 11);
+    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+  }
+}
 
 /// Fetches articles from the API with pagination
 ///
@@ -147,7 +168,7 @@ class _FetchArticlesProviderElement
   String get input => (origin as FetchArticlesProvider).input;
 }
 
-String _$searchArticlesHash() => r'z9y8x7w6v5u4t3s2r1q0';
+String _$searchArticlesHash() => r'd67cb364b5dc7913ef8bfb557a41b846670bfa5b';
 
 /// Searches articles from the API
 ///
@@ -287,22 +308,5 @@ class _SearchArticlesProviderElement
   @override
   String get searchName => (origin as SearchArticlesProvider).searchName;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
-
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    hash = 0x1fffffff & (hash + value);
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}

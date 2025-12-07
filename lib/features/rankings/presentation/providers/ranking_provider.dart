@@ -1,23 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:foot_rdc/core/network/dio_client.dart';
 import 'package:foot_rdc/features/rankings/data/datasources/ranking_remote_datasource.dart';
 import 'package:foot_rdc/features/rankings/data/repositories/ranking_repository_impl.dart';
 import 'package:foot_rdc/features/rankings/domain/entities/ranking.dart';
 import 'package:foot_rdc/features/rankings/domain/repositories/ranking_repository.dart';
 import 'package:foot_rdc/features/rankings/domain/usecases/get_ranking.dart';
 import 'package:foot_rdc/features/rankings/presentation/providers/ranking_cache_provider.dart';
-import 'package:http/http.dart' as http;
-
-// Provider for HTTP client
-final httpClientProvider = Provider<http.Client>((ref) {
-  return http.Client();
-});
 
 // Provider for ranking remote data source
 final rankingRemoteDataSourceProvider = Provider<RankingRemoteDataSource>((
   ref,
 ) {
-  final client = ref.read(httpClientProvider);
-  return RankingRemoteDataSourceImpl(client);
+  final dioClient = ref.watch(dioClientProvider);
+  return RankingRemoteDataSourceImpl(dioClient);
 });
 
 // Provider for ranking repository

@@ -1,7 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
-
-/// Provider for HTTP client used across the application
-final httpClientProvider = Provider<http.Client>((ref) {
-  return http.Client();
-});
+// This file is deprecated. Use dio_client.dart instead.
+// Keeping for backwards compatibility during migration.
+export 'dio_client.dart';
+export 'network_exceptions.dart';

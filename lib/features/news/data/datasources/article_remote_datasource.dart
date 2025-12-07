@@ -1,6 +1,5 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:foot_rdc/core/constants/api_constants.dart';
+import 'package:foot_rdc/core/network/dio_client.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
 
 abstract class ArticleRemoteDataSource {
@@ -9,45 +8,38 @@ abstract class ArticleRemoteDataSource {
 }
 
 class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
-  final http.Client client;
+  final DioClient _dioClient;
 
-  ArticleRemoteDataSourceImpl(this.client);
+  ArticleRemoteDataSourceImpl(this._dioClient);
 
   @override
   Future<List<Article>> fetchArticles(int page, int perPage) async {
-    final url = Uri.parse(
-      '${ApiConstants.postsEndpoint}?page=$page&per_page=$perPage&_embed',
+    final response = await _dioClient.get<List<dynamic>>(
+      '${ApiConstants.wpApiPath}/posts',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        '_embed': true,
+      },
     );
 
-    final response = await client.get(
-      url,
-      headers: {'Accept': 'application/json'},
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonList = json.decode(response.body);
-      return jsonList.map((json) => Article.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load articles: ${response.statusCode}');
-    }
+    final List<dynamic> jsonList = response.data ?? [];
+    return jsonList.map((json) => Article.fromJson(json)).toList();
   }
 
   @override
   Future<List<Article>> searchArticles(String query, int page, int perPage) async {
-    final url = Uri.parse(
-      '${ApiConstants.postsEndpoint}?page=$page&per_page=$perPage&search=$query&_embed',
+    final response = await _dioClient.get<List<dynamic>>(
+      '${ApiConstants.wpApiPath}/posts',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        'search': query,
+        '_embed': true,
+      },
     );
 
-    final response = await client.get(
-      url,
-      headers: {'Accept': 'application/json'},
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonList = json.decode(response.body);
-      return jsonList.map((json) => Article.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to search articles: ${response.statusCode}');
-    }
+    final List<dynamic> jsonList = response.data ?? [];
+    return jsonList.map((json) => Article.fromJson(json)).toList();
   }
 }

@@ -9,7 +9,6 @@ import 'package:foot_rdc/features/rankings/presentation/screens/rankings_screen.
 import 'package:foot_rdc/features/saved_articles/presentation/screens/saved_articles_screen.dart';
 import 'package:foot_rdc/features/search/presentation/screens/search_screen.dart';
 import 'package:foot_rdc/features/news/presentation/providers/article_cache_provider.dart';
-import 'package:foot_rdc/features/matches/presentation/providers/match_cache_provider.dart';
 import 'package:foot_rdc/features/home/presentation/providers/home_providers.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -23,6 +22,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
   final GlobalKey<RankingsScreenState> _rankingsScreenKey =
       GlobalKey<RankingsScreenState>();
+  final GlobalKey<MatchesListScreenState> _matchesScreenKey =
+      GlobalKey<MatchesListScreenState>();
 
   @override
   void initState() {
@@ -63,12 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   void _checkAndRefreshMatchesIfNeeded() {
-    final cacheState = ref.read(matchCacheProvider);
-
-    if (cacheState.matches.isNotEmpty &&
-        !cacheState.isCacheValid(validDuration: const Duration(minutes: 2))) {
-      ref.read(matchCacheProvider.notifier).clearCache();
-    }
+    _matchesScreenKey.currentState?.checkAndRefreshIfNeeded();
   }
 
   void _checkAndRefreshRankingsIfNeeded() {
@@ -82,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     List<Widget> pages = [
       const NewsListScreen(),
-      const MatchesListScreen(),
+      MatchesListScreen(key: _matchesScreenKey),
       RankingsScreen(key: _rankingsScreenKey),
       const SavedArticlesScreen(),
       const SearchScreen(),
