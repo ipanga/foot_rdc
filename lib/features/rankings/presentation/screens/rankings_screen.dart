@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/rankings/presentation/providers/ranking_provider.dart';
 import 'package:foot_rdc/features/rankings/presentation/providers/ranking_cache_provider.dart';
 import 'package:foot_rdc/features/rankings/domain/entities/ranking.dart';
+import 'package:foot_rdc/core/theme/app_colors.dart';
+import 'package:foot_rdc/core/theme/app_design_system.dart';
 
 class RankingsScreen extends ConsumerStatefulWidget {
   const RankingsScreen({super.key});
@@ -177,41 +179,76 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text(
-          '|  CLASSEMENT LINAFOOT',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Oswald',
-            letterSpacing: 1.5,
-          ),
+        backgroundColor: isDark
+            ? AppColors.surfaceDark
+            : AppColors.surfaceLight,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 4,
+              height: 24,
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: AppDesignSystem.borderRadiusFull,
+              ),
+            ),
+            const SizedBox(width: AppDesignSystem.space10),
+            Text(
+              'CLASSEMENT LINAFOOT',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Oswald',
+                letterSpacing: 1.2,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
+              ),
+            ),
+          ],
         ),
         centerTitle: false,
-        elevation: 4.0,
-        shadowColor: theme.brightness == Brightness.light
-            ? Colors.black26
-            : Colors.white24,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        shadowColor: isDark ? Colors.black45 : Colors.black12,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
+          preferredSize: const Size.fromHeight(64),
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.symmetric(
+              horizontal: AppDesignSystem.space12,
+              vertical: AppDesignSystem.space8,
+            ),
+            padding: const EdgeInsets.all(AppDesignSystem.space4),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withAlpha(102),
-              borderRadius: BorderRadius.circular(12),
+              color: isDark
+                  ? AppColors.surfaceContainerDark
+                  : AppColors.surfaceContainerLight,
+              borderRadius: AppDesignSystem.borderRadiusLg,
+              border: Border.all(
+                color: isDark
+                    ? AppColors.borderDark
+                    : AppColors.borderLight,
+                width: 1,
+              ),
             ),
             child: TabBar(
               controller: _tabController,
               onTap: _loadRankingForTab,
               indicator: BoxDecoration(
-                color: colorScheme.primary.withAlpha(128),
-                borderRadius: BorderRadius.circular(10),
+                color: colorScheme.primary,
+                borderRadius: AppDesignSystem.borderRadiusMd,
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withAlpha(51),
+                    color: colorScheme.primary.withAlpha(isDark ? 60 : 40),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -219,51 +256,55 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
-              labelColor: colorScheme.onPrimary,
-              unselectedLabelColor: colorScheme.onSurface.withAlpha(166),
+              labelColor: Colors.white,
+              unselectedLabelColor: isDark
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondaryLight,
               labelStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
                 fontFamily: 'Oswald',
                 letterSpacing: 0.5,
               ),
               unselectedLabelStyle: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontSize: 12,
                 fontFamily: 'Oswald',
                 letterSpacing: 0.3,
               ),
-              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+              labelPadding: const EdgeInsets.symmetric(
+                horizontal: AppDesignSystem.space6,
+              ),
               tabs: const [
                 Tab(
-                  height: 40,
+                  height: 42,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.group, size: 18),
-                      SizedBox(width: 6),
+                      Icon(Icons.group_outlined, size: 16),
+                      SizedBox(width: AppDesignSystem.space6),
                       Text('Groupe A'),
                     ],
                   ),
                 ),
                 Tab(
-                  height: 40,
+                  height: 42,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.groups, size: 18),
-                      SizedBox(width: 6),
+                      Icon(Icons.groups_outlined, size: 16),
+                      SizedBox(width: AppDesignSystem.space6),
                       Text('Groupe B'),
                     ],
                   ),
                 ),
                 Tab(
-                  height: 40,
+                  height: 42,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.emoji_events, size: 18),
-                      SizedBox(width: 6),
+                      Icon(Icons.emoji_events_outlined, size: 16),
+                      SizedBox(width: AppDesignSystem.space6),
                       Text('Play-off'),
                     ],
                   ),
@@ -273,7 +314,6 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
           ),
         ),
       ),
-      backgroundColor: colorScheme.surface,
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -290,18 +330,37 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
       builder: (context, ref, child) {
         final rankingState = ref.watch(rankingNotifierProvider);
         final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
         final colorScheme = theme.colorScheme;
 
         if (rankingState is RankingLoading) {
           return Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: AppDesignSystem.space16),
+                Text(
+                  'Chargement du classement...',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight,
+                  ),
+                ),
+              ],
             ),
           );
         }
 
         if (rankingState is RankingError) {
-          // Use friendly, URL-free error messaging and design
           final title = _friendlyTitleFrom(rankingState.message);
           final message = _friendlyMessageFrom(rankingState.message);
           final icon = _friendlyIconFrom(rankingState.message);
@@ -309,48 +368,60 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
           return Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 16,
+                horizontal: AppDesignSystem.space32,
+                vertical: AppDesignSystem.space20,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(AppDesignSystem.space20),
                     decoration: BoxDecoration(
-                      color: colorScheme.secondaryContainer.withAlpha(89),
+                      color: colorScheme.errorContainer.withAlpha(isDark ? 40 : 60),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       icon,
-                      size: 36,
-                      color: colorScheme.onSecondaryContainer,
+                      size: 40,
+                      color: colorScheme.error,
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: AppDesignSystem.space20),
                   Text(
                     title,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: colorScheme.onSurface,
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      fontSize: 16,
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimaryLight,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppDesignSystem.space8),
                   Text(
                     message,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: colorScheme.onSurface.withAlpha(204),
-                      fontSize: 14,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight,
+                      height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
+                  const SizedBox(height: AppDesignSystem.space24),
+                  FilledButton.icon(
                     onPressed: () => _loadRankingForTab(_tabController.index),
-                    icon: const Icon(Icons.refresh_rounded),
+                    icon: const Icon(Icons.refresh_rounded, size: 20),
                     label: const Text('Réessayer'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDesignSystem.space24,
+                        vertical: AppDesignSystem.space12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppDesignSystem.borderRadiusMd,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -363,23 +434,50 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
         }
 
         return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.table_chart_outlined,
-                size: 64,
-                color: colorScheme.onSurface.withAlpha(102),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Aucune donnée disponible',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: colorScheme.onSurface.withAlpha(179),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDesignSystem.space32,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppDesignSystem.space20),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.surfaceContainerDark
+                        : AppColors.surfaceContainerLight,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.table_chart_outlined,
+                    size: 48,
+                    color: isDark
+                        ? AppColors.textTertiaryDark
+                        : AppColors.textTertiaryLight,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppDesignSystem.space20),
+                Text(
+                  'Aucune donnée disponible',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
+                  ),
+                ),
+                const SizedBox(height: AppDesignSystem.space8),
+                Text(
+                  'Le classement sera affiché ici',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -390,13 +488,34 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
     final teams = ranking.teams;
     final headers = ranking.headers;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
     if (teams.isEmpty) {
       return Center(
-        child: Text(
-          'Aucune équipe trouvée',
-          style: TextStyle(fontSize: 16, color: colorScheme.onSurface),
+        child: Padding(
+          padding: const EdgeInsets.all(AppDesignSystem.space32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.sports_soccer_outlined,
+                size: 48,
+                color: isDark
+                    ? AppColors.textTertiaryDark
+                    : AppColors.textTertiaryLight,
+              ),
+              const SizedBox(height: AppDesignSystem.space16),
+              Text(
+                'Aucune équipe trouvée',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -404,24 +523,32 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
     return RefreshIndicator(
       onRefresh: _refreshRankingForCurrentTab,
       color: colorScheme.primary,
+      backgroundColor: isDark
+          ? AppColors.surfaceElevatedDark
+          : AppColors.surfaceLight,
+      strokeWidth: 2.5,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+          margin: const EdgeInsets.symmetric(
+            vertical: AppDesignSystem.space16,
+            horizontal: AppDesignSystem.space12,
+          ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.shadow.withAlpha(20),
-                spreadRadius: 2,
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            borderRadius: AppDesignSystem.borderRadiusXl,
+            color: isDark
+                ? AppColors.surfaceElevatedDark
+                : AppColors.surfaceLight,
+            border: Border.all(
+              color: isDark
+                  ? AppColors.borderDark
+                  : AppColors.borderLight,
+              width: 1,
+            ),
+            boxShadow: isDark ? AppShadows.cardDark : AppShadows.cardLight,
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppDesignSystem.borderRadiusXl,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
@@ -429,57 +556,55 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
                   child: ConstrainedBox(
                     constraints: BoxConstraints(minWidth: constraints.maxWidth),
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      switchInCurve: Curves.easeOut,
-                      switchOutCurve: Curves.easeIn,
+                      duration: AppDesignSystem.durationNormal,
+                      switchInCurve: AppDesignSystem.curveDefault,
+                      switchOutCurve: AppDesignSystem.curveDefault,
                       child: DataTable(
                         // Header
                         headingRowColor: WidgetStateProperty.all(
-                          colorScheme.primaryContainer.withAlpha(230),
+                          colorScheme.primary.withAlpha(isDark ? 40 : 30),
                         ),
-                        headingRowHeight: 60,
+                        headingRowHeight: 56,
                         headingTextStyle: TextStyle(
-                          color: colorScheme.onPrimaryContainer,
+                          color: isDark
+                              ? AppColors.textPrimaryDark
+                              : colorScheme.primary,
                           fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                          letterSpacing: 0.6,
+                          fontSize: 12,
+                          letterSpacing: 0.8,
                         ),
 
                         // Rows
-                        dataRowMinHeight: 52,
-                        dataRowMaxHeight: 60,
+                        dataRowMinHeight: 56,
+                        dataRowMaxHeight: 64,
                         dataTextStyle: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurface,
+                          fontSize: 13,
+                          color: isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimaryLight,
                           fontWeight: FontWeight.w600,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
 
                         // Layout
-                        columnSpacing: 18,
-                        horizontalMargin: 12,
+                        columnSpacing: 16,
+                        horizontalMargin: 14,
                         border: TableBorder(
                           horizontalInside: BorderSide(
-                            color: colorScheme.outline.withAlpha(64),
+                            color: isDark
+                                ? AppColors.borderSubtleDark
+                                : AppColors.borderSubtleLight,
                             width: 1,
-                          ),
-                          top: BorderSide(
-                            color: colorScheme.outline.withAlpha(153),
-                            width: 2,
-                          ),
-                          bottom: BorderSide(
-                            color: colorScheme.outline.withAlpha(153),
-                            width: 2,
                           ),
                         ),
 
                         columns: [
-                          const DataColumn(label: Text('POS')),
-                          const DataColumn(label: Text('Club')),
+                          const DataColumn(label: Text('#')),
+                          const DataColumn(label: Text('CLUB')),
                           DataColumn(
                             label: Center(
                               child: Text(
-                                (headers?.pts ?? 'Pts').toUpperCase(),
+                                (headers?.pts ?? 'PTS').toUpperCase(),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -534,15 +659,42 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
 
                           final isOdd = index.isOdd;
                           final baseRowColor = isOdd
-                              ? colorScheme.secondaryContainer.withAlpha(20)
-                              : colorScheme.surface;
+                              ? (isDark
+                                  ? AppColors.surfaceContainerDark.withAlpha(60)
+                                  : AppColors.surfaceContainerLight.withAlpha(128))
+                              : (isDark
+                                  ? AppColors.surfaceElevatedDark
+                                  : AppColors.surfaceLight);
+
+                          // Position-based styling
+                          Color positionColor;
+                          Color positionBgColor;
+                          if (pos == 1) {
+                            positionColor = AppColors.positionGold;
+                            positionBgColor = AppColors.positionGold.withAlpha(isDark ? 40 : 25);
+                          } else if (pos == 2) {
+                            positionColor = AppColors.positionSilver;
+                            positionBgColor = AppColors.positionSilver.withAlpha(isDark ? 40 : 25);
+                          } else if (pos == 3) {
+                            positionColor = AppColors.positionBronze;
+                            positionBgColor = AppColors.positionBronze.withAlpha(isDark ? 40 : 25);
+                          } else if (pos <= 4) {
+                            positionColor = AppColors.positionPromotion;
+                            positionBgColor = AppColors.positionPromotion.withAlpha(isDark ? 30 : 20);
+                          } else {
+                            positionColor = isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondaryLight;
+                            positionBgColor = isDark
+                                ? AppColors.surfaceContainerDark
+                                : AppColors.surfaceContainerLight;
+                          }
 
                           return DataRow(
                             color: WidgetStateProperty.resolveWith((states) {
                               if (states.contains(WidgetState.hovered) ||
                                   states.contains(WidgetState.focused)) {
-                                return colorScheme.secondaryContainer
-                                    .withAlpha(46);
+                                return colorScheme.primary.withAlpha(isDark ? 20 : 15);
                               }
                               return baseRowColor;
                             }),
@@ -550,32 +702,24 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
                               // Position badge
                               DataCell(
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
+                                  width: 32,
+                                  height: 32,
                                   decoration: BoxDecoration(
-                                    color: pos <= 3
-                                        ? colorScheme.primary.withAlpha(31)
-                                        : colorScheme.surfaceContainerHighest
-                                              .withAlpha(92),
-                                    borderRadius: BorderRadius.circular(10),
+                                    color: positionBgColor,
+                                    borderRadius: AppDesignSystem.borderRadiusSm,
                                     border: Border.all(
-                                      color: pos <= 3
-                                          ? colorScheme.primary
-                                          : colorScheme.outline.withAlpha(
-                                              128,
-                                            ),
-                                      width: 1,
+                                      color: positionColor.withAlpha(isDark ? 100 : 80),
+                                      width: 1.5,
                                     ),
                                   ),
-                                  child: Text(
-                                    '$pos',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: pos <= 3
-                                          ? colorScheme.primary
-                                          : colorScheme.onSurface,
+                                  child: Center(
+                                    child: Text(
+                                      '$pos',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                        color: positionColor,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -583,31 +727,58 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
 
                               // Club name
                               DataCell(
-                                Text(
-                                  team.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: colorScheme.onSurface,
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 140),
+                                  child: Text(
+                                    team.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                      color: isDark
+                                          ? AppColors.textPrimaryDark
+                                          : AppColors.textPrimaryLight,
+                                    ),
                                   ),
                                 ),
                               ),
 
-                              // Numeric stats
+                              // Points (highlighted)
                               DataCell(
                                 Center(
-                                  child: Text(
-                                    team.pts ?? '0',
-                                    textAlign: TextAlign.center,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppDesignSystem.space8,
+                                      vertical: AppDesignSystem.space4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primary.withAlpha(isDark ? 30 : 20),
+                                      borderRadius: AppDesignSystem.borderRadiusSm,
+                                    ),
+                                    child: Text(
+                                      team.pts ?? '0',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        color: colorScheme.primary,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
+
+                              // Other stats
                               DataCell(
                                 Center(
                                   child: Text(
                                     team.p ?? '0',
                                     textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? AppColors.textSecondaryDark
+                                          : AppColors.textSecondaryLight,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -616,6 +787,10 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
                                   child: Text(
                                     team.w ?? '0',
                                     textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: AppColors.success,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -624,6 +799,11 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
                                   child: Text(
                                     team.d ?? '0',
                                     textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? AppColors.textTertiaryDark
+                                          : AppColors.textTertiaryLight,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -632,15 +812,16 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
                                   child: Text(
                                     team.ptwo ?? '0',
                                     textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: AppColors.error,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
                               DataCell(
                                 Center(
-                                  child: Text(
-                                    team.gd ?? '0',
-                                    textAlign: TextAlign.center,
-                                  ),
+                                  child: _buildGoalDifference(team.gd ?? '0', isDark),
                                 ),
                               ),
                             ],
@@ -654,6 +835,30 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGoalDifference(String gd, bool isDark) {
+    final value = int.tryParse(gd) ?? 0;
+    Color textColor;
+
+    if (value > 0) {
+      textColor = AppColors.success;
+    } else if (value < 0) {
+      textColor = AppColors.error;
+    } else {
+      textColor = isDark
+          ? AppColors.textTertiaryDark
+          : AppColors.textTertiaryLight;
+    }
+
+    return Text(
+      value > 0 ? '+$gd' : gd,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: textColor,
+        fontWeight: FontWeight.w700,
       ),
     );
   }

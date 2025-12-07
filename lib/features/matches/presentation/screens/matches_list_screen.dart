@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core/constants/api_constants.dart';
+import 'package:foot_rdc/core/constants/ad_constants.dart';
+import 'package:foot_rdc/core/theme/app_colors.dart';
+import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/features/matches/presentation/widgets/matches_tab_content.dart';
 import 'package:foot_rdc/features/matches/presentation/providers/match_cache_provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:foot_rdc/core/constants/ad_constants.dart';
 
 class MatchesListScreen extends ConsumerStatefulWidget {
   const MatchesListScreen({super.key});
@@ -86,39 +88,70 @@ class MatchesListScreenState extends ConsumerState<MatchesListScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text(
-          '|  RESULTATS MATCHS',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Oswald',
-            letterSpacing: 1.5,
-          ),
+        backgroundColor:
+            isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 4,
+              height: 24,
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: AppDesignSystem.borderRadiusFull,
+              ),
+            ),
+            const SizedBox(width: AppDesignSystem.space10),
+            Text(
+              'RÉSULTATS MATCHS',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Oswald',
+                letterSpacing: 1.2,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
+              ),
+            ),
+          ],
         ),
         centerTitle: false,
-        elevation: 4.0,
-        shadowColor: theme.brightness == Brightness.light
-            ? const Color.fromARGB(66, 63, 56, 56)
-            : Colors.white24,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        shadowColor: isDark ? Colors.black45 : Colors.black12,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
+          preferredSize: const Size.fromHeight(64),
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.symmetric(
+              horizontal: AppDesignSystem.space12,
+              vertical: AppDesignSystem.space8,
+            ),
+            padding: const EdgeInsets.all(AppDesignSystem.space4),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withAlpha(102),
-              borderRadius: BorderRadius.circular(12),
+              color: isDark
+                  ? AppColors.surfaceContainerDark
+                  : AppColors.surfaceContainerLight,
+              borderRadius: AppDesignSystem.borderRadiusLg,
+              border: Border.all(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                width: 1,
+              ),
             ),
             child: TabBar(
               controller: _tabController,
               indicator: BoxDecoration(
-                color: colorScheme.primary.withAlpha(128),
-                borderRadius: BorderRadius.circular(10),
+                color: colorScheme.primary,
+                borderRadius: AppDesignSystem.borderRadiusMd,
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withAlpha(51),
+                    color: colorScheme.primary.withAlpha(60),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -126,21 +159,24 @@ class MatchesListScreenState extends ConsumerState<MatchesListScreen>
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
-              labelColor: colorScheme.onPrimary,
-              unselectedLabelColor: colorScheme.onSurface.withAlpha(166),
+              labelColor: Colors.white,
+              unselectedLabelColor: isDark
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondaryLight,
               labelStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
                 fontSize: 13,
                 fontFamily: 'Oswald',
                 letterSpacing: 0.5,
               ),
               unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 fontSize: 13,
                 fontFamily: 'Oswald',
                 letterSpacing: 0.3,
               ),
-              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+              labelPadding:
+                  const EdgeInsets.symmetric(horizontal: AppDesignSystem.space8),
               tabs: const [
                 Tab(
                   height: 40,
@@ -148,7 +184,7 @@ class MatchesListScreenState extends ConsumerState<MatchesListScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.group, size: 18),
-                      SizedBox(width: 6),
+                      SizedBox(width: AppDesignSystem.space6),
                       Text('Groupe A'),
                     ],
                   ),
@@ -159,7 +195,7 @@ class MatchesListScreenState extends ConsumerState<MatchesListScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.groups, size: 18),
-                      SizedBox(width: 6),
+                      SizedBox(width: AppDesignSystem.space6),
                       Text('Groupe B'),
                     ],
                   ),
@@ -170,7 +206,7 @@ class MatchesListScreenState extends ConsumerState<MatchesListScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.emoji_events, size: 18),
-                      SizedBox(width: 6),
+                      SizedBox(width: AppDesignSystem.space6),
                       Text('Play-off'),
                     ],
                   ),
@@ -180,10 +216,9 @@ class MatchesListScreenState extends ConsumerState<MatchesListScreen>
           ),
         ),
       ),
-      backgroundColor: colorScheme.surface,
       body: TabBarView(
         controller: _tabController,
-        children: [
+        children: const [
           MatchesTabContent(
             leagueId: ApiConstants.groupeALeagueId,
             tabName: 'Groupe A',
@@ -199,10 +234,23 @@ class MatchesListScreenState extends ConsumerState<MatchesListScreen>
         ],
       ),
       bottomNavigationBar: _isAdLoaded && _bannerAd != null
-          ? SizedBox(
-              width: _bannerAd!.size.width.toDouble(),
-              height: _bannerAd!.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
+          ? Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
             )
           : const SizedBox.shrink(),
     );

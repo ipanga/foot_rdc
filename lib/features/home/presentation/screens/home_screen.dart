@@ -75,6 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final currentPage = ref.watch(currentPageProvider);
     final theme = Theme.of(context);
+    final navTheme = theme.bottomNavigationBarTheme;
 
     List<Widget> pages = [
       const NewsListScreen(),
@@ -85,189 +86,110 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ];
 
     return Scaffold(
+      extendBody: true, // Allow body to extend behind the bottom nav
       body: pages[currentPage],
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 0, left: 0, right: 0),
-          child: ClipRRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                decoration: BoxDecoration(
-                  color:
-                      (Theme.of(
-                                context,
-                              ).bottomNavigationBarTheme.backgroundColor ??
-                              theme.scaffoldBackgroundColor)
-                          .withAlpha(217),
-                  border: const Border(
-                    top: BorderSide(color: Colors.grey, width: 0.2),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(
-                        theme.brightness == Brightness.dark ? 51 : 15,
-                      ),
-                      blurRadius: 20,
-                      offset: const Offset(0, -6),
-                    ),
-                  ],
-                ),
-                child: BottomNavigationBar(
-                  backgroundColor: Colors.transparent,
-                  type: BottomNavigationBarType.fixed,
-                  selectedItemColor:
-                      theme.bottomNavigationBarTheme.selectedItemColor ??
-                      theme.colorScheme.primary,
-                  unselectedItemColor:
-                      theme.bottomNavigationBarTheme.unselectedItemColor ??
-                      Colors.grey,
-                  selectedFontSize: 11,
-                  unselectedFontSize: 10,
-                  selectedLabelStyle: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                  ),
-                  showUnselectedLabels: true,
-                  elevation: 0,
-                  currentIndex: currentPage,
-                  onTap: (value) {
-                    HapticFeedback.selectionClick();
-                    if (value == 0 && currentPage != 0) {
-                      _checkAndRefreshArticlesIfNeeded();
-                    } else if (value == 1 && currentPage != 1) {
-                      _checkAndRefreshMatchesIfNeeded();
-                    } else if (value == 2 && currentPage != 2) {
-                      _checkAndRefreshRankingsIfNeeded();
-                    }
-                    ref.read(currentPageProvider.notifier).state = value;
-                  },
-                  items: [
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/images/home-icon-v2-outlined.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ??
-                              Colors.grey,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      activeIcon: SvgPicture.asset(
-                        'assets/images/home-icon-v2-filled.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ??
-                              theme.primaryColor,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: 'Accueil',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/images/soccer-field-icon-outlined.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ??
-                              Colors.grey,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      activeIcon: SvgPicture.asset(
-                        'assets/images/soccer-field-icon-filled.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ??
-                              theme.primaryColor,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: 'Matchs',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/images/ranking-icon-outlined.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ??
-                              Colors.grey,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      activeIcon: SvgPicture.asset(
-                        'assets/images/ranking-icon-filled.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ??
-                              theme.primaryColor,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: 'Classement',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/images/save-icon-outlined.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ??
-                              Colors.grey,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      activeIcon: SvgPicture.asset(
-                        'assets/images/save-icon-filled.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ??
-                              theme.primaryColor,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: 'Enregistrés',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/images/search-icon-outlined.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.unselectedItemColor ??
-                              Colors.grey,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      activeIcon: SvgPicture.asset(
-                        'assets/images/search-icon-outlined.svg',
-                        height: 26,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          theme.bottomNavigationBarTheme.selectedItemColor ??
-                              theme.primaryColor,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: 'Recherche',
-                    ),
-                  ],
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: navTheme.backgroundColor,
+              border: Border(
+                top: BorderSide(
+                  color: theme.dividerTheme.color ?? Colors.grey.shade200,
+                  width: 0.5,
                 ),
               ),
+            ),
+            child: BottomNavigationBar(
+              backgroundColor: Colors.transparent, // Handled by Container
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: navTheme.selectedItemColor,
+              unselectedItemColor: navTheme.unselectedItemColor,
+              selectedFontSize: 12,
+              unselectedFontSize: 12,
+              selectedLabelStyle: navTheme.selectedLabelStyle,
+              unselectedLabelStyle: navTheme.unselectedLabelStyle,
+              showUnselectedLabels: true,
+              elevation: 0,
+              currentIndex: currentPage,
+              onTap: (value) {
+                HapticFeedback.selectionClick();
+                if (value == 0 && currentPage != 0) {
+                  _checkAndRefreshArticlesIfNeeded();
+                } else if (value == 1 && currentPage != 1) {
+                  _checkAndRefreshMatchesIfNeeded();
+                } else if (value == 2 && currentPage != 2) {
+                  _checkAndRefreshRankingsIfNeeded();
+                }
+                ref.read(currentPageProvider.notifier).state = value;
+              },
+              items: [
+                _buildNavItem(
+                  'assets/images/home-icon-v2-outlined.svg',
+                  'assets/images/home-icon-v2-filled.svg',
+                  'Accueil',
+                  theme,
+                ),
+                _buildNavItem(
+                  'assets/images/soccer-field-icon-outlined.svg',
+                  'assets/images/soccer-field-icon-filled.svg',
+                  'Matchs',
+                  theme,
+                ),
+                _buildNavItem(
+                  'assets/images/ranking-icon-outlined.svg',
+                  'assets/images/ranking-icon-filled.svg',
+                  'Classement',
+                  theme,
+                ),
+                _buildNavItem(
+                  'assets/images/save-icon-outlined.svg',
+                  'assets/images/save-icon-filled.svg',
+                  'Enregistrés',
+                  theme,
+                ),
+                _buildNavItem(
+                  'assets/images/search-icon-outlined.svg',
+                  'assets/images/search-icon-outlined.svg', // Assuming search doesn't have a filled variant or using same
+                  'Recherche',
+                  theme,
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  BottomNavigationBarItem _buildNavItem(
+    String iconPath,
+    String activeIconPath,
+    String label,
+    ThemeData theme,
+  ) {
+    final navTheme = theme.bottomNavigationBarTheme;
+    return BottomNavigationBarItem(
+      icon: SvgPicture.asset(
+        iconPath,
+        height: 24,
+        fit: BoxFit.contain,
+        colorFilter: ColorFilter.mode(
+          navTheme.unselectedItemColor ?? Colors.grey,
+          BlendMode.srcIn,
+        ),
+      ),
+      activeIcon: SvgPicture.asset(
+        activeIconPath,
+        height: 24,
+        fit: BoxFit.contain,
+        colorFilter: ColorFilter.mode(
+          navTheme.selectedItemColor ?? theme.primaryColor,
+          BlendMode.srcIn,
+        ),
+      ),
+      label: label,
     );
   }
 }

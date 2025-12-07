@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
 import 'package:foot_rdc/features/news/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/core/utils/date_utils.dart';
+import 'package:foot_rdc/core/theme/app_colors.dart';
+import 'package:foot_rdc/core/theme/app_design_system.dart';
 
 /// A reusable widget that displays a single saved article item.
 class SavedArticleItem extends ConsumerWidget {
@@ -16,31 +18,40 @@ class SavedArticleItem extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final tileColor = Color.alphaBlend(
-      (isDark ? Colors.white : Colors.black).withAlpha(10),
-      colorScheme.surface,
-    );
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Card(
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDesignSystem.space16,
+        vertical: AppDesignSystem.space6,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: AppDesignSystem.borderRadiusXl,
         clipBehavior: Clip.antiAlias,
-        elevation: 3,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: colorScheme.outlineVariant.withAlpha(153)),
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(color: tileColor),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
+        child: InkWell(
+          onTap: onTap,
+          splashColor: colorScheme.primary.withAlpha(20),
+          highlightColor: colorScheme.primary.withAlpha(8),
+          borderRadius: AppDesignSystem.borderRadiusXl,
+          child: AnimatedContainer(
+            duration: AppDesignSystem.durationFast,
+            height: AppDesignSystem.articleCardHeight,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.surfaceElevatedDark
+                  : AppColors.surfaceLight,
+              borderRadius: AppDesignSystem.borderRadiusXl,
+              border: Border.all(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                width: 1,
+              ),
+              boxShadow: isDark ? AppShadows.softDark : AppShadows.cardLight,
+            ),
             child: Row(
               children: [
-                _buildArticleImage(context),
-                const SizedBox(width: 12),
-                Expanded(child: _buildArticleContent(context, ref)),
+                _buildArticleImage(context, isDark),
+                const SizedBox(width: AppDesignSystem.space12),
+                Expanded(child: _buildArticleContent(context, ref, isDark)),
               ],
             ),
           ),
@@ -49,15 +60,16 @@ class SavedArticleItem extends ConsumerWidget {
     );
   }
 
-  Widget _buildArticleImage(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget _buildArticleImage(BuildContext context, bool isDark) {
+    final colorScheme = Theme.of(context).colorScheme;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(AppDesignSystem.radiusXl),
+        bottomLeft: Radius.circular(AppDesignSystem.radiusXl),
+      ),
       child: SizedBox(
-        width: 112,
-        height: 84,
+        width: 130,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -68,46 +80,78 @@ class SavedArticleItem extends ConsumerWidget {
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
-                    color: colorScheme.surfaceContainerHighest,
+                    color: isDark
+                        ? AppColors.surfaceContainerDark
+                        : AppColors.surfaceContainerLight,
                     child: Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: colorScheme.primary,
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary.withAlpha(128),
+                        ),
                       ),
                     ),
                   );
                 },
                 errorBuilder: (context, error, stackTrace) => Container(
-                  color: colorScheme.surfaceContainerHighest,
+                  color: isDark
+                      ? AppColors.surfaceContainerDark
+                      : AppColors.surfaceContainerLight,
                   child: Icon(
-                    Icons.broken_image,
-                    size: 36,
-                    color: colorScheme.onSurfaceVariant,
+                    Icons.image_outlined,
+                    size: 32,
+                    color: isDark
+                        ? AppColors.textTertiaryDark
+                        : AppColors.textTertiaryLight,
                   ),
                 ),
               )
             else
               Container(
-                color: colorScheme.surfaceContainerHighest,
+                color: isDark
+                    ? AppColors.surfaceContainerDark
+                    : AppColors.surfaceContainerLight,
                 child: Icon(
-                  Icons.image,
-                  size: 36,
-                  color: colorScheme.onSurfaceVariant,
+                  Icons.image_outlined,
+                  size: 32,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight,
                 ),
               ),
 
-            // Subtle gradient overlay
+            // Gradient overlay
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
+                    end: Alignment.center,
                     colors: [
-                      Colors.black.withAlpha(46),
+                      Colors.black.withAlpha(100),
                       Colors.transparent,
                     ],
                   ),
+                ),
+              ),
+            ),
+
+            // Bookmark indicator
+            Positioned(
+              left: AppDesignSystem.space8,
+              bottom: AppDesignSystem.space8,
+              child: Container(
+                padding: const EdgeInsets.all(AppDesignSystem.space6),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withAlpha(230),
+                  borderRadius: AppDesignSystem.borderRadiusSm,
+                ),
+                child: const Icon(
+                  Icons.bookmark_rounded,
+                  size: 14,
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -117,65 +161,88 @@ class SavedArticleItem extends ConsumerWidget {
     );
   }
 
-  Widget _buildArticleContent(BuildContext context, WidgetRef ref) {
+  Widget _buildArticleContent(BuildContext context, WidgetRef ref, bool isDark) {
     final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                article.title,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  height: 1.25,
+    return Padding(
+      padding: const EdgeInsets.all(AppDesignSystem.space12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Title with delete button
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  article.title,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                    letterSpacing: -0.2,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            _buildDeleteButton(context, ref),
-          ],
-        ),
-        const SizedBox(height: 6),
+              const SizedBox(width: AppDesignSystem.space8),
+              _buildDeleteButton(context, ref, isDark),
+            ],
+          ),
 
-        Row(
-          children: [
-            Icon(Icons.event, size: 16, color: colorScheme.onSurfaceVariant),
-            const SizedBox(width: 6),
-            Text(
-              formatArticleDate(article.dateGmt),
-              style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                letterSpacing: .3,
+          // Date row
+          Row(
+            children: [
+              Icon(
+                Icons.schedule_rounded,
+                size: AppDesignSystem.iconXs,
+                color: isDark
+                    ? AppColors.textTertiaryDark
+                    : AppColors.textTertiaryLight,
               ),
-            ),
-          ],
-        ),
-      ],
+              const SizedBox(width: AppDesignSystem.space6),
+              Flexible(
+                child: Text(
+                  formatArticleDate(article.dateGmt),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColors.textTertiaryDark
+                        : AppColors.textTertiaryLight,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildDeleteButton(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget _buildDeleteButton(BuildContext context, WidgetRef ref, bool isDark) {
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Material(
       type: MaterialType.transparency,
       child: Container(
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
-          color: colorScheme.error.withAlpha(20),
-          shape: BoxShape.circle,
+          color: colorScheme.error.withAlpha(isDark ? 30 : 20),
+          borderRadius: AppDesignSystem.borderRadiusSm,
         ),
         child: IconButton(
           tooltip: 'Supprimer',
-          icon: Icon(Icons.delete_outline, color: colorScheme.error),
+          padding: EdgeInsets.zero,
+          iconSize: 20,
+          icon: Icon(
+            Icons.delete_outline_rounded,
+            color: colorScheme.error,
+          ),
           onPressed: () async {
             final messenger = ScaffoldMessenger.of(context);
 
@@ -186,23 +253,30 @@ class SavedArticleItem extends ConsumerWidget {
 
               messenger.showSnackBar(
                 SnackBar(
-                  content: Text(
-                    'Article supprimé',
-                    style: TextStyle(
-                      color: colorScheme.onError,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  content: const Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      SizedBox(width: AppDesignSystem.space10),
+                      Text(
+                        'Article supprimé',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
                   backgroundColor: colorScheme.error,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppDesignSystem.borderRadiusMd,
                   ),
-                  margin: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(AppDesignSystem.space16),
                   duration: const Duration(seconds: 2),
                   action: SnackBarAction(
                     label: 'OK',
-                    textColor: colorScheme.onError,
+                    textColor: Colors.white,
                     onPressed: messenger.hideCurrentSnackBar,
                   ),
                 ),
@@ -210,23 +284,30 @@ class SavedArticleItem extends ConsumerWidget {
             } catch (err) {
               messenger.showSnackBar(
                 SnackBar(
-                  content: Text(
-                    'Échec de la suppression',
-                    style: TextStyle(
-                      color: colorScheme.onError,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  content: const Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      SizedBox(width: AppDesignSystem.space10),
+                      Text(
+                        'Échec de la suppression',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
                   backgroundColor: colorScheme.error,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppDesignSystem.borderRadiusMd,
                   ),
-                  margin: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(AppDesignSystem.space16),
                   duration: const Duration(seconds: 3),
                   action: SnackBarAction(
                     label: 'Fermer',
-                    textColor: colorScheme.onError,
+                    textColor: Colors.white,
                     onPressed: messenger.hideCurrentSnackBar,
                   ),
                 ),

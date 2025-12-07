@@ -6,6 +6,8 @@ import 'package:foot_rdc/features/news/presentation/widgets/article_list_item.da
 import 'package:foot_rdc/features/news/presentation/providers/news_providers.dart';
 import 'package:foot_rdc/shared/widgets/custom_search_bar.dart';
 import 'package:foot_rdc/core/constants/ad_constants.dart';
+import 'package:foot_rdc/core/theme/app_colors.dart';
+import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -242,29 +244,66 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text(
-          '|  RECHERCHER DES ARTICLES',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Oswald',
-            letterSpacing: 1.5,
-          ),
+        backgroundColor: isDark
+            ? AppColors.surfaceDark
+            : AppColors.surfaceLight,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 4,
+              height: 24,
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: AppDesignSystem.borderRadiusFull,
+              ),
+            ),
+            const SizedBox(width: AppDesignSystem.space10),
+            Text(
+              'RECHERCHER',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Oswald',
+                letterSpacing: 1.2,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
+              ),
+            ),
+          ],
         ),
         centerTitle: false,
-        elevation: 4.0,
-        shadowColor: theme.brightness == Brightness.light
-            ? Colors.black26
-            : Colors.white24,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        shadowColor: isDark ? Colors.black45 : Colors.black12,
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(12.0),
+          // Search bar container
+          Container(
+            padding: const EdgeInsets.all(AppDesignSystem.space16),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.surfaceDark
+                  : AppColors.surfaceLight,
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark
+                      ? AppColors.borderSubtleDark
+                      : AppColors.borderSubtleLight,
+                  width: 1,
+                ),
+              ),
+            ),
             child: Form(
               key: _formKey,
               child: CustomSearchBar(
@@ -284,36 +323,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             child: Builder(
               builder: (context) {
                 if (_query == null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_rounded,
-                          size: 64,
-                          color: colorScheme.outline.withAlpha(128),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Rechercher des articles',
-                          style: TextStyle(
-                            color: colorScheme.onSurface,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Saisissez un terme de recherche ci-dessus\npour commencer',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: colorScheme.onSurface.withAlpha(179),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                  return _buildEmptySearchState(isDark, theme);
                 }
 
                 final searchArticlesAsync = ref.watch(
@@ -333,305 +343,45 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     }
 
                     if (_listItems.isNotEmpty) {
-                      return RefreshIndicator(
-                        onRefresh: _onRefresh,
-                        color: colorScheme.primary,
-                        backgroundColor: colorScheme.surface,
-                        child: ListView.separated(
-                          controller: _scrollController,
-                          itemCount:
-                              _listItems.length +
-                              ((_isLoadingMore || _loadMoreError) ? 1 : 0),
-                          separatorBuilder: (context, index) {
-                            if (index == _listItems.length - 1 &&
-                                (_isLoadingMore || _loadMoreError)) {
-                              return const SizedBox.shrink();
-                            }
-                            return Container(
-                              height: 1,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    colorScheme.outline.withAlpha(77),
-                                    colorScheme.outline.withAlpha(153),
-                                    colorScheme.outline.withAlpha(77),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                          itemBuilder: (context, index) {
-                            if (index == _listItems.length) {
-                              if (_isLoadingMore) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                );
-                              }
-                              if (_loadMoreError) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0,
-                                    vertical: 12.0,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.surface,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: colorScheme.outline,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.wifi_off_rounded,
-                                          color: colorScheme.error,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            'Impossible de charger plus d\'articles',
-                                            style: TextStyle(
-                                              color: colorScheme.onSurface,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        OutlinedButton.icon(
-                                          onPressed: _loadMoreArticles,
-                                          icon: const Icon(
-                                            Icons.refresh_rounded,
-                                            size: 18,
-                                          ),
-                                          label: const Text('Réessayer'),
-                                          style: OutlinedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 8,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-
-                            final item = _listItems[index];
-
-                            if (item is NativeAd) {
-                              final isLoaded = _nativeAdLoaded[item] == true;
-                              if (!isLoaded) {
-                                return Container(
-                                  height: 320,
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 8.0,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                );
-                              }
-                              return Container(
-                                height: 320,
-                                margin: const EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                ),
-                                child: AdWidget(ad: item),
-                              );
-                            }
-
-                            final article = item as Article;
-                            return InkWell(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        ArticleDetailScreen(article: article),
-                                  ),
-                                );
-                              },
-                              child: ArticleListItem(article: article),
-                            );
-                          },
-                        ),
-                      );
+                      return _buildSearchResults(isDark, colorScheme);
                     }
 
                     if (articles.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off_rounded,
-                              size: 64,
-                              color: colorScheme.outline.withAlpha(128),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Aucun article trouvé',
-                              style: TextStyle(
-                                color: colorScheme.onSurface,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Essayez avec d\'autres termes de recherche',
-                              style: TextStyle(
-                                color: colorScheme.onSurface.withAlpha(179),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
+                      return _buildNoResultsState(isDark, theme);
                     }
 
-                    return RefreshIndicator(
-                      onRefresh: _onRefresh,
-                      color: colorScheme.primary,
-                      backgroundColor: colorScheme.surface,
-                      child: ListView.separated(
-                        controller: _scrollController,
-                        itemCount: _listItems.length,
-                        separatorBuilder: (context, index) => Container(
-                          height: 1,
-                          margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                colorScheme.outline.withAlpha(77),
-                                colorScheme.outline.withAlpha(153),
-                                colorScheme.outline.withAlpha(77),
-                              ],
-                            ),
-                          ),
-                        ),
-                        itemBuilder: (context, index) {
-                          final item = _listItems[index];
-
-                          if (item is NativeAd) {
-                            final isLoaded = _nativeAdLoaded[item] == true;
-                            if (!isLoaded) {
-                              return Container(
-                                height: 320,
-                                margin: const EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.surfaceContainerHighest,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              );
-                            }
-                            return Container(
-                              height: 320,
-                              margin: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: AdWidget(ad: item),
-                            );
-                          }
-
-                          final article = item as Article;
-                          return InkWell(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      ArticleDetailScreen(article: article),
-                                ),
-                              );
-                            },
-                            child: ArticleListItem(article: article),
-                          );
-                        },
-                      ),
-                    );
+                    return _buildSearchResults(isDark, colorScheme);
                   },
                   loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: colorScheme.primary,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: AppDesignSystem.space16),
+                        Text(
+                          'Recherche en cours...',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  error: (error, stack) {
-                    final title = _friendlyTitle(error);
-                    final message = _friendlyGenericMessage(error);
-                    final icon = _friendlyIcon(error);
-
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0,
-                          vertical: 16.0,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: colorScheme.secondaryContainer
-                                    .withAlpha(89),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                icon,
-                                size: 36,
-                                color: colorScheme.onSecondaryContainer,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              title,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: colorScheme.onSurface,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              message,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: colorScheme.onSurface.withAlpha(204),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                if (_query != null) {
-                                  ref.invalidate(
-                                    searchArticlesProvider(_query!),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.refresh_rounded),
-                              label: const Text('Réessayer'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                  error: (error, stack) => _buildErrorState(
+                    error,
+                    isDark,
+                    colorScheme,
+                    theme,
+                  ),
                 );
               },
             ),
@@ -639,12 +389,371 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ],
       ),
       bottomNavigationBar: _isAdLoaded && _bannerAd != null
-          ? SizedBox(
-              width: _bannerAd!.size.width.toDouble(),
-              height: _bannerAd!.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
+          ? Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.surfaceDark
+                    : AppColors.surfaceLight,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
             )
           : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildEmptySearchState(bool isDark, ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDesignSystem.space32,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDesignSystem.space24),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.surfaceContainerDark
+                    : AppColors.surfaceContainerLight,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_rounded,
+                size: 56,
+                color: isDark
+                    ? AppColors.textTertiaryDark
+                    : AppColors.textTertiaryLight,
+              ),
+            ),
+            const SizedBox(height: AppDesignSystem.space24),
+            Text(
+              'Rechercher des articles',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
+              ),
+            ),
+            const SizedBox(height: AppDesignSystem.space8),
+            Text(
+              'Saisissez un terme de recherche ci-dessus\npour commencer',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState(bool isDark, ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDesignSystem.space32,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDesignSystem.space24),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.surfaceContainerDark
+                    : AppColors.surfaceContainerLight,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_off_rounded,
+                size: 56,
+                color: isDark
+                    ? AppColors.textTertiaryDark
+                    : AppColors.textTertiaryLight,
+              ),
+            ),
+            const SizedBox(height: AppDesignSystem.space24),
+            Text(
+              'Aucun article trouvé',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
+              ),
+            ),
+            const SizedBox(height: AppDesignSystem.space8),
+            Text(
+              'Essayez avec d\'autres termes de recherche',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchResults(bool isDark, ColorScheme colorScheme) {
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      color: colorScheme.primary,
+      backgroundColor: isDark
+          ? AppColors.surfaceElevatedDark
+          : AppColors.surfaceLight,
+      strokeWidth: 2.5,
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.only(bottom: AppDesignSystem.space16),
+        itemCount: _listItems.length + ((_isLoadingMore || _loadMoreError) ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _listItems.length) {
+            if (_isLoadingMore) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppDesignSystem.space24,
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: colorScheme.primary.withAlpha(180),
+                    ),
+                  ),
+                ),
+              );
+            }
+            if (_loadMoreError) {
+              return _buildLoadMoreError(isDark, colorScheme);
+            }
+          }
+
+          final item = _listItems[index];
+
+          if (item is NativeAd) {
+            return _buildNativeAdItem(item, isDark);
+          }
+
+          final article = item as Article;
+          return ArticleListItem(
+            article: article,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ArticleDetailScreen(article: article),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreError(bool isDark, ColorScheme colorScheme) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(AppDesignSystem.space16),
+      child: Container(
+        padding: const EdgeInsets.all(AppDesignSystem.space16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.surfaceElevatedDark
+              : AppColors.surfaceLight,
+          borderRadius: AppDesignSystem.borderRadiusLg,
+          border: Border.all(
+            color: isDark
+                ? AppColors.borderDark
+                : AppColors.borderLight,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDesignSystem.space8),
+              decoration: BoxDecoration(
+                color: colorScheme.errorContainer.withAlpha(isDark ? 40 : 60),
+                borderRadius: AppDesignSystem.borderRadiusSm,
+              ),
+              child: Icon(
+                Icons.wifi_off_rounded,
+                color: colorScheme.error,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppDesignSystem.space12),
+            Expanded(
+              child: Text(
+                'Erreur de chargement',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimaryLight,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: _loadMoreArticles,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Réessayer'),
+              style: TextButton.styleFrom(
+                foregroundColor: colorScheme.primary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDesignSystem.space12,
+                  vertical: AppDesignSystem.space8,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNativeAdItem(NativeAd item, bool isDark) {
+    final isLoaded = _nativeAdLoaded[item] == true;
+    if (!isLoaded) {
+      return Container(
+        height: 320,
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppDesignSystem.space16,
+          vertical: AppDesignSystem.space8,
+        ),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.surfaceContainerDark
+              : AppColors.surfaceContainerLight,
+          borderRadius: AppDesignSystem.borderRadiusLg,
+        ),
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Theme.of(context).colorScheme.primary.withAlpha(128),
+            ),
+          ),
+        ),
+      );
+    }
+    return Container(
+      height: 320,
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDesignSystem.space16,
+        vertical: AppDesignSystem.space8,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: AppDesignSystem.borderRadiusLg,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: AdWidget(ad: item),
+    );
+  }
+
+  Widget _buildErrorState(
+    Object error,
+    bool isDark,
+    ColorScheme colorScheme,
+    ThemeData theme,
+  ) {
+    final title = _friendlyTitle(error);
+    final message = _friendlyGenericMessage(error);
+    final icon = _friendlyIcon(error);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDesignSystem.space32,
+          vertical: AppDesignSystem.space20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDesignSystem.space20),
+              decoration: BoxDecoration(
+                color: colorScheme.errorContainer.withAlpha(isDark ? 40 : 60),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 40,
+                color: colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: AppDesignSystem.space20),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
+              ),
+            ),
+            const SizedBox(height: AppDesignSystem.space8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: AppDesignSystem.space24),
+            FilledButton.icon(
+              onPressed: () {
+                if (_query != null) {
+                  ref.invalidate(searchArticlesProvider(_query!));
+                }
+              },
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: const Text('Réessayer'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDesignSystem.space24,
+                  vertical: AppDesignSystem.space12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppDesignSystem.borderRadiusMd,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

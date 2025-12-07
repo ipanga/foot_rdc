@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:foot_rdc/features/matches/domain/entities/match.dart';
+import 'package:foot_rdc/core/theme/app_colors.dart';
+import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/core/utils/date_utils.dart';
 
 class MatchListItem extends StatelessWidget {
@@ -11,149 +13,57 @@ class MatchListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
     final hasScore = match.homeScore != null && match.awayScore != null;
-    final statusLabel = hasScore ? 'FT' : 'A venir';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colorScheme.primary.withOpacity(0.18),
-                colorScheme.primary.withOpacity(0.04),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDesignSystem.space12,
+        vertical: AppDesignSystem.space6,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: AppDesignSystem.borderRadiusLg,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppDesignSystem.borderRadiusLg,
+          splashColor: colorScheme.primary.withAlpha(20),
+          highlightColor: colorScheme.primary.withAlpha(8),
           child: Container(
-            margin: const EdgeInsets.all(1.2),
-            padding: const EdgeInsets.all(12.0),
             decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.primary.withAlpha(isDark ? 30 : 25),
+                  colorScheme.primary.withAlpha(isDark ? 8 : 6),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: AppDesignSystem.borderRadiusLg,
             ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _StatusChip(label: statusLabel, colorScheme: colorScheme),
-                    const Spacer(),
-                    Icon(
-                      Icons.schedule,
-                      size: 14,
-                      color: colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      formatArticleDate(match.dateGmt),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.6),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              match.homeTeam,
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: colorScheme.onSurface,
-                                letterSpacing: 0.2,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          _buildTeamIcon(context, match.homeTeam, size: 34),
-                        ],
-                      ),
-                    ),
+            child: Container(
+              margin: const EdgeInsets.all(1.5),
+              padding: const EdgeInsets.all(AppDesignSystem.space14),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.surfaceElevatedDark
+                    : AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(AppDesignSystem.radiusLg - 1),
+                boxShadow: isDark ? AppShadows.softDark : AppShadows.cardLight,
+              ),
+              child: Column(
+                children: [
+                  // Header row with status and date
+                  _buildHeaderRow(context, isDark, hasScore),
 
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: hasScore
-                                ? colorScheme.primary.withOpacity(0.10)
-                                : colorScheme.surfaceContainerHighest.withOpacity(0.45),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: hasScore
-                                  ? colorScheme.primary.withOpacity(0.30)
-                                  : colorScheme.outline.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Text(
-                            hasScore
-                                ? "${match.homeScore} - ${match.awayScore}"
-                                : "VS",
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: hasScore
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurface.withOpacity(0.7),
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: AppDesignSystem.space12),
 
-                    Expanded(
-                      flex: 2,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          _buildTeamIcon(context, match.awayTeam, size: 34),
-                          const SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              match.awayTeam,
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: colorScheme.onSurface,
-                                letterSpacing: 0.2,
-                              ),
-                              textAlign: TextAlign.end,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                  // Teams and score row
+                  _buildTeamsRow(context, isDark, hasScore),
+                ],
+              ),
             ),
           ),
         ),
@@ -161,78 +71,192 @@ class MatchListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamIcon(
-    BuildContext context,
-    String teamName, {
-    double size = 30,
-  }) {
-    final cs = Theme.of(context).colorScheme;
-    final inner = size - 8;
+  Widget _buildHeaderRow(BuildContext context, bool isDark, bool hasScore) {
+    final theme = Theme.of(context);
 
-    return Container(
-      width: size,
-      height: size,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: cs.surfaceContainerHighest.withOpacity(0.35),
-        border: Border.all(color: cs.outline.withOpacity(0.25)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+    return Row(
+      children: [
+        _MatchStatusBadge(
+          isFinished: hasScore,
+          isDark: isDark,
+        ),
+        const Spacer(),
+        Icon(
+          Icons.schedule_rounded,
+          size: AppDesignSystem.iconXs,
+          color: isDark
+              ? AppColors.textTertiaryDark
+              : AppColors.textTertiaryLight,
+        ),
+        const SizedBox(width: AppDesignSystem.space6),
+        Text(
+          formatArticleDate(match.dateGmt),
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: isDark
+                ? AppColors.textTertiaryDark
+                : AppColors.textTertiaryLight,
+            fontWeight: FontWeight.w500,
           ),
-        ],
-      ),
-      child: ClipOval(
-        child: _TeamIconWidget(teamName: teamName, size: inner),
-      ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTeamsRow(BuildContext context, bool isDark, bool hasScore) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Home team
+        Expanded(
+          flex: 2,
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  match.homeTeam,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
+                    letterSpacing: -0.2,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppDesignSystem.space10),
+              _TeamLogo(teamName: match.homeTeam, size: 36, isDark: isDark),
+            ],
+          ),
+        ),
+
+        // Score box
+        Expanded(
+          flex: 1,
+          child: Center(
+            child: AnimatedContainer(
+              duration: AppDesignSystem.durationFast,
+              curve: AppDesignSystem.curveEmphasized,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDesignSystem.space12,
+                vertical: AppDesignSystem.space8,
+              ),
+              decoration: BoxDecoration(
+                color: hasScore
+                    ? colorScheme.primary.withAlpha(isDark ? 30 : 20)
+                    : (isDark
+                        ? AppColors.surfaceContainerDark
+                        : AppColors.surfaceContainerLight),
+                borderRadius: AppDesignSystem.borderRadiusMd,
+                border: Border.all(
+                  color: hasScore
+                      ? colorScheme.primary.withAlpha(isDark ? 60 : 50)
+                      : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                hasScore
+                    ? "${match.homeScore} - ${match.awayScore}"
+                    : "VS",
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: hasScore
+                      ? colorScheme.primary
+                      : (isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight),
+                  letterSpacing: hasScore ? 1 : 2,
+                  fontFamily: 'Oswald',
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Away team
+        Expanded(
+          flex: 2,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _TeamLogo(teamName: match.awayTeam, size: 36, isDark: isDark),
+              const SizedBox(width: AppDesignSystem.space10),
+              Flexible(
+                child: Text(
+                  match.awayTeam,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
+                    letterSpacing: -0.2,
+                  ),
+                  textAlign: TextAlign.end,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  final String label;
-  final ColorScheme colorScheme;
+class _MatchStatusBadge extends StatelessWidget {
+  final bool isFinished;
+  final bool isDark;
 
-  const _StatusChip({required this.label, required this.colorScheme});
+  const _MatchStatusBadge({
+    required this.isFinished,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isFinal = label.toUpperCase() == 'FT';
+    final label = isFinished ? 'FT' : 'A venir';
+    final icon = isFinished ? Icons.check_circle_outline : Icons.schedule_rounded;
+
+    final backgroundColor = isFinished
+        ? AppColors.matchFinished.withAlpha(isDark ? 40 : 25)
+        : (isDark
+            ? AppColors.surfaceContainerDark
+            : AppColors.surfaceContainerLight);
+
+    final foregroundColor = isFinished
+        ? AppColors.matchFinished
+        : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight);
+
+    final borderColor = isFinished
+        ? AppColors.matchFinished.withAlpha(isDark ? 60 : 40)
+        : (isDark ? AppColors.borderDark : AppColors.borderLight);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDesignSystem.space10,
+        vertical: AppDesignSystem.space4,
+      ),
       decoration: BoxDecoration(
-        color: isFinal
-            ? colorScheme.secondaryContainer.withOpacity(0.7)
-            : colorScheme.surfaceContainerHighest.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: isFinal
-              ? colorScheme.primary.withOpacity(0.35)
-              : colorScheme.outline.withOpacity(0.3),
-        ),
+        color: backgroundColor,
+        borderRadius: AppDesignSystem.borderRadiusFull,
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            isFinal ? Icons.flag_rounded : Icons.event_available_rounded,
-            size: 14,
-            color: isFinal
-                ? colorScheme.primary
-                : colorScheme.onSurface.withOpacity(0.7),
-          ),
-          const SizedBox(width: 6),
+          Icon(icon, size: 12, color: foregroundColor),
+          const SizedBox(width: AppDesignSystem.space4),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            style: TextStyle(
+              color: foregroundColor,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: isFinal
-                  ? colorScheme.primary
-                  : colorScheme.onSurface.withOpacity(0.8),
-              letterSpacing: 0.2,
+              letterSpacing: 0.3,
             ),
           ),
         ],
@@ -241,17 +265,22 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-class _TeamIconWidget extends StatefulWidget {
+class _TeamLogo extends StatefulWidget {
   final String teamName;
   final double size;
+  final bool isDark;
 
-  const _TeamIconWidget({required this.teamName, this.size = 30});
+  const _TeamLogo({
+    required this.teamName,
+    this.size = 36,
+    required this.isDark,
+  });
 
   @override
-  State<_TeamIconWidget> createState() => _TeamIconWidgetState();
+  State<_TeamLogo> createState() => _TeamLogoState();
 }
 
-class _TeamIconWidgetState extends State<_TeamIconWidget> {
+class _TeamLogoState extends State<_TeamLogo> {
   int _currentUrlIndex = 0;
 
   List<String> _generatePossibleUrls(String teamName) {
@@ -272,68 +301,192 @@ class _TeamIconWidgetState extends State<_TeamIconWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
     final possibleUrls = _generatePossibleUrls(widget.teamName);
 
-    if (_currentUrlIndex >= possibleUrls.length) {
-      return Container(
-        width: widget.size,
-        height: widget.size,
-        color: Colors.transparent,
-        child: Icon(
-          Icons.sports_soccer,
-          size: widget.size * 0.6,
-          color: colorScheme.onSurface.withOpacity(0.6),
-        ),
-      );
-    }
+    final containerColor = widget.isDark
+        ? AppColors.surfaceContainerDark
+        : AppColors.surfaceContainerLight;
 
-    final currentUrl = possibleUrls[_currentUrlIndex];
+    final borderColor = widget.isDark
+        ? AppColors.borderDark
+        : AppColors.borderLight;
 
-    return SizedBox(
+    return Container(
       width: widget.size,
       height: widget.size,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          currentUrl,
-          width: widget.size,
-          height: widget.size,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                setState(() {
-                  _currentUrlIndex++;
-                });
-              }
-            });
-            return const SizedBox.shrink();
-          },
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) {
-              return child;
-            }
-            return Container(
-              width: widget.size,
-              height: widget.size,
-              color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
-              child: Center(
-                child: SizedBox(
-                  width: widget.size * 0.5,
-                  height: widget.size * 0.5,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: colorScheme.primary,
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                        : null,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: containerColor,
+        border: Border.all(color: borderColor, width: 1),
+        boxShadow: widget.isDark ? [] : AppShadows.softLight,
+      ),
+      child: ClipOval(
+        child: _currentUrlIndex >= possibleUrls.length
+            ? _buildFallbackIcon(colorScheme)
+            : Image.network(
+                possibleUrls[_currentUrlIndex],
+                width: widget.size,
+                height: widget.size,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      setState(() => _currentUrlIndex++);
+                    }
+                  });
+                  return _buildFallbackIcon(colorScheme);
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Padding(
+                    padding: EdgeInsets.all(widget.size * 0.25),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colorScheme.primary.withAlpha(128),
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackIcon(ColorScheme colorScheme) {
+    return Icon(
+      Icons.sports_soccer_rounded,
+      size: widget.size * 0.5,
+      color: colorScheme.outline,
+    );
+  }
+}
+
+/// Compact match card for horizontal lists
+class MatchCompactCard extends StatelessWidget {
+  final Match match;
+  final VoidCallback? onTap;
+  final double width;
+
+  const MatchCompactCard({
+    super.key,
+    required this.match,
+    this.onTap,
+    this.width = 200,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+    final hasScore = match.homeScore != null && match.awayScore != null;
+
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: AppDesignSystem.borderRadiusLg,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppDesignSystem.borderRadiusLg,
+          child: Container(
+            padding: const EdgeInsets.all(AppDesignSystem.space12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.surfaceElevatedDark
+                  : AppColors.surfaceLight,
+              borderRadius: AppDesignSystem.borderRadiusLg,
+              border: Border.all(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              ),
+              boxShadow: isDark ? AppShadows.softDark : AppShadows.cardLight,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Date
+                Text(
+                  formatArticleDate(match.dateGmt),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: isDark
+                        ? AppColors.textTertiaryDark
+                        : AppColors.textTertiaryLight,
                   ),
                 ),
-              ),
-            );
-          },
+
+                const SizedBox(height: AppDesignSystem.space10),
+
+                // Teams and score
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Home
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _TeamLogo(
+                            teamName: match.homeTeam,
+                            size: 32,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            match.homeTeam,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Score
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDesignSystem.space8,
+                      ),
+                      child: Text(
+                        hasScore
+                            ? "${match.homeScore} - ${match.awayScore}"
+                            : "VS",
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: hasScore
+                              ? colorScheme.primary
+                              : colorScheme.outline,
+                        ),
+                      ),
+                    ),
+
+                    // Away
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _TeamLogo(
+                            teamName: match.awayTeam,
+                            size: 32,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            match.awayTeam,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
 /// A custom search bar widget that provides a text input field with search functionality.
-///
-/// This widget combines a text field with built-in validation and submit handling.
-/// It supports both keyboard submission (search key) and programmatic submission.
 class CustomSearchBar extends StatelessWidget {
   /// Controller for the text input
   final TextEditingController controller;
@@ -24,7 +21,7 @@ class CustomSearchBar extends StatelessWidget {
     super.key,
     required this.controller,
     this.onSubmitted,
-    this.hintText = 'Search...',
+    this.hintText = 'Rechercher...',
     this.labelText,
     this.validator,
   });
@@ -35,60 +32,75 @@ class CustomSearchBar extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(
-          color: colorScheme.outline.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: colorScheme.outline, width: 1),
       ),
-      child: Row(
-        children: [
-          Icon(Icons.search, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextFormField(
-              controller: controller,
-              textInputAction: TextInputAction.search,
-              style: TextStyle(color: colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: hintText,
-                labelText: labelText,
-                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                border: InputBorder.none,
-              ),
-              validator: validator,
-              onFieldSubmitted: (_) => onSubmitted?.call(),
+      child: Material(
+        color: Colors.transparent,
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0),
+              child: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
             ),
-          ),
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: controller,
-            builder: (context, value, child) {
-              return value.text.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(
-                        Icons.clear,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      onPressed: () {
-                        controller.clear();
-                      },
-                    )
-                  : const SizedBox.shrink();
-            },
-          ),
-        ],
+            Expanded(
+              child: TextFormField(
+                controller: controller,
+                textInputAction: TextInputAction.search,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+                decoration: InputDecoration(
+                  hintText: hintText,
+                  labelText: labelText,
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+                validator: validator,
+                onFieldSubmitted: (_) => onSubmitted?.call(),
+              ),
+            ),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                return value.text.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: colorScheme.onSurfaceVariant,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            controller.clear();
+                          },
+                        ),
+                      )
+                    : const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
