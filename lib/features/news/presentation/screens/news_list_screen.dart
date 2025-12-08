@@ -9,9 +9,12 @@ import 'package:foot_rdc/features/news/presentation/providers/news_providers.dar
 import 'package:foot_rdc/features/news/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
 import 'package:foot_rdc/shared/widgets/app_drawer.dart';
+import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
+import 'package:foot_rdc/shared/widgets/news_app_bar.dart';
+import 'package:foot_rdc/features/search/presentation/screens/search_screen.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:foot_rdc/core/network/network_exceptions.dart' as network;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -165,8 +168,9 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Impossible d\'ouvrir le lien')),
+        AppSnackbar.showError(
+          context,
+          message: 'Impossible d\'ouvrir le lien',
         );
       }
     }
@@ -533,7 +537,7 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
               _loadMoreArticles();
             },
             icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Reessayer'),
+            label: const Text('Réessayer'),
             style: TextButton.styleFrom(
               foregroundColor: colorScheme.primary,
               padding: const EdgeInsets.symmetric(
@@ -880,22 +884,32 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
     }
   }
 
-  bool _isNoInternet(Object error) => error is SocketException;
-  bool _isTimeout(Object error) => error is TimeoutException;
+  bool _isNoInternet(Object error) =>
+      error is network.NoInternetException ||
+      error is SocketException ||
+      error.toString().toLowerCase().contains('socketexception') ||
+      error.toString().toLowerCase().contains('failed host lookup') ||
+      error.toString().toLowerCase().contains('network is unreachable') ||
+      error.toString().toLowerCase().contains('connection error');
+
+  bool _isTimeout(Object error) =>
+      error is network.TimeoutException ||
+      error is TimeoutException ||
+      error.toString().toLowerCase().contains('timeout');
 
   String _friendlyTitle(Object error) {
     if (_isNoInternet(error)) return 'Pas de connexion internet';
-    return 'Oups, un probleme est survenu';
+    return 'Oups, un problème est survenu';
   }
 
   String _friendlyGenericMessage(Object error) {
     if (_isNoInternet(error)) {
-      return 'Verifiez votre connexion et reessayez.';
+      return 'Vérifiez votre connexion et réessayez.';
     }
     if (_isTimeout(error)) {
-      return 'Le serveur met trop de temps a repondre. Reessayez.';
+      return 'Le serveur met trop de temps à répondre. Réessayez.';
     }
-    return 'Impossible de charger les articles. Veuillez reessayer.';
+    return 'Impossible de charger les articles. Veuillez réessayer.';
   }
 
   IconData _friendlyIcon(Object error) {
@@ -904,79 +918,15 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
     return Icons.error_outline_rounded;
   }
 
-  AppBar _buildAppBar() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final colorScheme = theme.colorScheme;
-
-    return AppBar(
-      backgroundColor: isDark
-          ? AppColors.surfaceDark
-          : AppColors.surfaceLight,
-      surfaceTintColor: Colors.transparent,
-      leading: Builder(
-        builder: (context) => Padding(
-          padding: const EdgeInsets.only(left: AppDesignSystem.space8),
-          child: IconButton(
-            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            style: IconButton.styleFrom(
-              backgroundColor: isDark
-                  ? AppColors.surfaceContainerDark
-                  : AppColors.surfaceContainerLight,
-              shape: RoundedRectangleBorder(
-                borderRadius: AppDesignSystem.borderRadiusMd,
-              ),
-            ),
-            icon: SvgPicture.asset(
-              'assets/images/menu-icon.svg',
-              width: 22,
-              height: 22,
-              colorFilter: ColorFilter.mode(
-                isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimaryLight,
-                BlendMode.srcIn,
-              ),
-            ),
+  PreferredSizeWidget _buildAppBar() {
+    return NewsAppBar(
+      onSearchPressed: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const SearchScreen(),
           ),
-        ),
-      ),
-      centerTitle: true,
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(
-            'assets/images/logo_splash_footrdc.png',
-            height: 46,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: AppDesignSystem.space4),
-          Text(
-            'FOOTRDC.COM',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-              color: colorScheme.primary,
-            ),
-          ),
-        ],
-      ),
-      elevation: 0,
-      scrolledUnderElevation: 1,
-      shadowColor: isDark
-          ? Colors.black45
-          : Colors.black12,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(
-          height: 1,
-          color: isDark
-              ? AppColors.borderSubtleDark
-              : AppColors.borderSubtleLight,
-        ),
-      ),
+        );
+      },
     );
   }
 }

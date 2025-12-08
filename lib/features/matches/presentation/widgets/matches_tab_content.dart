@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core/constants/api_constants.dart';
 import 'package:foot_rdc/core/network/network_exceptions.dart';
+import 'package:foot_rdc/core/theme/app_colors.dart';
+import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/features/matches/domain/entities/match.dart';
 import 'package:foot_rdc/features/matches/presentation/widgets/match_list_item.dart';
 import 'package:foot_rdc/features/matches/presentation/providers/match_cache_provider.dart';
 import 'package:foot_rdc/features/matches/presentation/providers/match_providers.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:foot_rdc/core/constants/ad_constants.dart';
+import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
 
 class MatchesTabContent extends ConsumerStatefulWidget {
   final int leagueId;
@@ -237,8 +240,9 @@ class _MatchesTabContentState extends ConsumerState<MatchesTabContent>
       await _loadInitialData();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_friendlyGenericMessage(error))),
+        AppSnackbar.showError(
+          context,
+          message: _friendlyGenericMessage(error),
         );
       }
     } finally {
@@ -326,55 +330,196 @@ class _MatchesTabContentState extends ConsumerState<MatchesTabContent>
   }
 
   Widget _buildErrorState(ColorScheme colorScheme, Object error) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final title = _friendlyTitle(error);
     final message = _friendlyGenericMessage(error);
     final icon = _friendlyIcon(error);
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDesignSystem.space32,
+          vertical: AppDesignSystem.space20,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(AppDesignSystem.space20),
               decoration: BoxDecoration(
-                color: colorScheme.secondaryContainer.withAlpha(89),
+                color: colorScheme.errorContainer.withAlpha(isDark ? 40 : 60),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 36,
-                color: colorScheme.onSecondaryContainer,
+                size: 40,
+                color: colorScheme.error,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: AppDesignSystem.space20),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colorScheme.onSurface,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                fontSize: 16,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppDesignSystem.space8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colorScheme.onSurface.withAlpha(204),
-                fontSize: 14,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+                height: 1.5,
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
+            const SizedBox(height: AppDesignSystem.space24),
+            FilledButton.icon(
               onPressed: () => _loadInitialData(),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reessayer'),
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: const Text('Réessayer'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDesignSystem.space24,
+                  vertical: AppDesignSystem.space12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppDesignSystem.borderRadiusMd,
+                ),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme, bool isDark, ColorScheme colorScheme) {
+    return Center(
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDesignSystem.space32,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppDesignSystem.space20),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.surfaceContainerDark
+                      : AppColors.surfaceContainerLight,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.sports_soccer_outlined,
+                  size: 48,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight,
+                ),
+              ),
+              const SizedBox(height: AppDesignSystem.space20),
+              Text(
+                'Aucun match trouvé',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimaryLight,
+                ),
+              ),
+              const SizedBox(height: AppDesignSystem.space8),
+              Text(
+                'Les matchs seront affichés ici',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
+                ),
+              ),
+              const SizedBox(height: AppDesignSystem.space24),
+              OutlinedButton.icon(
+                onPressed: () => _loadInitialData(),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Recharger'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDesignSystem.space20,
+                    vertical: AppDesignSystem.space10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppDesignSystem.borderRadiusMd,
+                  ),
+                  side: BorderSide(
+                    color: colorScheme.primary.withAlpha(128),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreError(bool isDark, ColorScheme colorScheme) {
+    final theme = Theme.of(context);
+    final error = _loadMoreErrorDetails;
+    final icon = error != null
+        ? _friendlyIcon(error)
+        : Icons.error_outline_rounded;
+    final message = error != null
+        ? _friendlyLoadMoreMessage(error)
+        : 'Impossible de charger plus de matchs.';
+
+    return Padding(
+      padding: const EdgeInsets.all(AppDesignSystem.space20),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            size: 32,
+            color: isDark
+                ? AppColors.textTertiaryDark
+                : AppColors.textTertiaryLight,
+          ),
+          const SizedBox(height: AppDesignSystem.space8),
+          Text(
+            message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isDark
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondaryLight,
+            ),
+          ),
+          const SizedBox(height: AppDesignSystem.space12),
+          TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _loadMoreError = false;
+              });
+              _loadMore();
+            },
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Réessayer'),
+            style: TextButton.styleFrom(
+              foregroundColor: colorScheme.primary,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDesignSystem.space16,
+                vertical: AppDesignSystem.space8,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -384,17 +529,18 @@ class _MatchesTabContentState extends ConsumerState<MatchesTabContent>
     List<Match> matches,
     LeagueMatchCacheState leagueCache,
   ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return RefreshIndicator(
       onRefresh: _onRefresh,
       color: colorScheme.primary,
-      backgroundColor: colorScheme.surface,
+      backgroundColor: isDark
+          ? AppColors.surfaceElevatedDark
+          : AppColors.surfaceLight,
+      strokeWidth: 2.5,
       child: _listItems.isEmpty && !_isLoadingMore
-          ? Center(
-              child: Text(
-                'Aucun match trouve',
-                style: TextStyle(color: colorScheme.onSurface),
-              ),
-            )
+          ? _buildEmptyState(theme, isDark, colorScheme)
           : ListView.separated(
               controller: _scrollController,
               physics: const BouncingScrollPhysics(
@@ -408,67 +554,23 @@ class _MatchesTabContentState extends ConsumerState<MatchesTabContent>
                 if (index == _listItems.length) {
                   if (_isLoadingMore) {
                     return Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppDesignSystem.space24,
+                      ),
                       child: Center(
-                        child: CircularProgressIndicator(
-                          color: colorScheme.primary,
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: colorScheme.primary.withAlpha(180),
+                          ),
                         ),
                       ),
                     );
                   }
                   if (_loadMoreError) {
-                    final error = _loadMoreErrorDetails;
-                    final icon = error != null
-                        ? _friendlyIcon(error)
-                        : Icons.error_outline_rounded;
-                    final message = error != null
-                        ? _friendlyLoadMoreMessage(error)
-                        : 'Impossible de charger plus de matchs.';
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 12,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: colorScheme.outline),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(icon, color: colorScheme.error),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                message,
-                                style: TextStyle(
-                                  color: colorScheme.onSurface,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            OutlinedButton.icon(
-                              onPressed: _loadMore,
-                              icon: const Icon(Icons.refresh_rounded, size: 18),
-                              label: const Text('Reessayer'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    return _buildLoadMoreError(isDark, colorScheme);
                   }
                 }
 

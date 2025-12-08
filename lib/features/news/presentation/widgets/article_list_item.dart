@@ -61,7 +61,7 @@ class ArticleListItem extends StatelessWidget {
                         // Title
                         Expanded(
                           child: Text(
-                            article.title,
+                            decodeHtmlEntities(article.title),
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall?.copyWith(
@@ -311,7 +311,7 @@ class ArticleFeaturedCard extends StatelessWidget {
 
                     // Title
                     Text(
-                      article.title,
+                      decodeHtmlEntities(article.title),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

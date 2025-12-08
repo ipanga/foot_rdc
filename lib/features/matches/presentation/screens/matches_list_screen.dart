@@ -6,6 +6,7 @@ import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/features/matches/presentation/widgets/matches_tab_content.dart';
 import 'package:foot_rdc/features/matches/presentation/providers/match_cache_provider.dart';
+import 'package:foot_rdc/shared/widgets/premium_tab_bar.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class MatchesListScreen extends ConsumerStatefulWidget {
@@ -128,91 +129,14 @@ class MatchesListScreenState extends ConsumerState<MatchesListScreen>
         shadowColor: isDark ? Colors.black45 : Colors.black12,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(64),
-          child: Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: AppDesignSystem.space12,
-              vertical: AppDesignSystem.space8,
-            ),
-            padding: const EdgeInsets.all(AppDesignSystem.space4),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.surfaceContainerDark
-                  : AppColors.surfaceContainerLight,
-              borderRadius: AppDesignSystem.borderRadiusLg,
-              border: Border.all(
-                color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                width: 1,
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: colorScheme.primary,
-                borderRadius: AppDesignSystem.borderRadiusMd,
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withAlpha(60),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              labelColor: Colors.white,
-              unselectedLabelColor: isDark
-                  ? AppColors.textSecondaryDark
-                  : AppColors.textSecondaryLight,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                fontFamily: 'Oswald',
-                letterSpacing: 0.5,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-                fontFamily: 'Oswald',
-                letterSpacing: 0.3,
-              ),
-              labelPadding:
-                  const EdgeInsets.symmetric(horizontal: AppDesignSystem.space8),
-              tabs: const [
-                Tab(
-                  height: 40,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.group, size: 18),
-                      SizedBox(width: AppDesignSystem.space6),
-                      Text('Groupe A'),
-                    ],
-                  ),
-                ),
-                Tab(
-                  height: 40,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.groups, size: 18),
-                      SizedBox(width: AppDesignSystem.space6),
-                      Text('Groupe B'),
-                    ],
-                  ),
-                ),
-                Tab(
-                  height: 40,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.emoji_events, size: 18),
-                      SizedBox(width: AppDesignSystem.space6),
-                      Text('Play-off'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          child: PremiumTabBar(
+            controller: _tabController,
+            height: 44,
+            tabs: const [
+              PremiumTabItem(label: 'Groupe A'),
+              PremiumTabItem(label: 'Groupe B'),
+              PremiumTabItem(icon: Icons.emoji_events_outlined, label: 'Play-off'),
+            ],
           ),
         ),
       ),

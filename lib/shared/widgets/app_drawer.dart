@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/shared/providers/theme_provider.dart';
 import 'package:foot_rdc/shared/providers/notification_provider.dart';
+import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -28,78 +29,44 @@ class AppDrawer extends ConsumerWidget {
     final hasPermission = newState.hasPermission;
     final isSubscribed = newState.isSubscribed;
 
-    String message;
     if (!value) {
-      message = 'Notifications desactivees. Vous ne recevrez plus de notifications.';
+      AppSnackbar.showInfo(
+        context,
+        message: 'Notifications desactivees. Vous ne recevrez plus de notifications.',
+        icon: Icons.notifications_off_outlined,
+      );
     } else if (hasPermission && isSubscribed) {
-      message = 'Notifications activees ! Vous recevrez les dernieres actualites.';
+      AppSnackbar.showSuccess(
+        context,
+        message: 'Notifications activees ! Vous recevrez les dernieres actualites.',
+        icon: Icons.notifications_active_outlined,
+      );
     } else if (!hasPermission) {
-      message = 'Veuillez autoriser les notifications dans les parametres de votre appareil.';
+      AppSnackbar.showWarning(
+        context,
+        message: 'Veuillez autoriser les notifications dans les parametres de votre appareil.',
+      );
     } else if (hasPermission && !isSubscribed) {
-      message = 'Activation en cours...';
+      AppSnackbar.showInfo(
+        context,
+        message: 'Activation en cours...',
+      );
     } else {
-      message = 'Impossible de s\'abonner aux notifications. Veuillez reessayer.';
+      AppSnackbar.showError(
+        context,
+        message: 'Impossible de s\'abonner aux notifications. Veuillez reessayer.',
+      );
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   void _confirmDisableNotifications(
     BuildContext context,
     WidgetRef ref,
   ) {
-    final scheme = Theme.of(context).colorScheme;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 8),
-        showCloseIcon: true,
-        closeIconColor: scheme.onSurface.withOpacity(0.7),
-        backgroundColor: scheme.surface,
-        elevation: 8,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: scheme.outline.withOpacity(0.15)),
-        ),
-        dismissDirection: DismissDirection.horizontal,
-        content: Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Desactiver les notifications ?',
-                style: TextStyle(
-                  color: scheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                messenger.hideCurrentSnackBar();
-                await _toggleNotifications(context, ref, false);
-              },
-              child: const Text('Oui'),
-            ),
-            const SizedBox(width: 4),
-            TextButton(
-              onPressed: () {
-                messenger.hideCurrentSnackBar();
-              },
-              child: const Text('Non'),
-            ),
-          ],
-        ),
-      ),
+    AppSnackbar.showConfirmation(
+      context,
+      message: 'Desactiver les notifications ?',
+      onConfirm: () => _toggleNotifications(context, ref, false),
     );
   }
 

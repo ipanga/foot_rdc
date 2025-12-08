@@ -25,45 +25,80 @@ class MatchListItem extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: AppDesignSystem.borderRadiusLg,
+        borderRadius: AppDesignSystem.borderRadiusXl,
         child: InkWell(
           onTap: onTap,
-          borderRadius: AppDesignSystem.borderRadiusLg,
-          splashColor: colorScheme.primary.withAlpha(20),
+          borderRadius: AppDesignSystem.borderRadiusXl,
+          splashColor: colorScheme.primary.withAlpha(15),
           highlightColor: colorScheme.primary.withAlpha(8),
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary.withAlpha(isDark ? 30 : 25),
-                  colorScheme.primary.withAlpha(isDark ? 8 : 6),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: AppDesignSystem.borderRadiusLg,
-            ),
-            child: Container(
-              margin: const EdgeInsets.all(1.5),
-              padding: const EdgeInsets.all(AppDesignSystem.space14),
-              decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.surfaceElevatedDark
+                  : AppColors.surfaceLight,
+              borderRadius: AppDesignSystem.borderRadiusXl,
+              border: Border.all(
                 color: isDark
-                    ? AppColors.surfaceElevatedDark
-                    : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(AppDesignSystem.radiusLg - 1),
-                boxShadow: isDark ? AppShadows.softDark : AppShadows.cardLight,
+                    ? AppColors.borderSubtleDark
+                    : AppColors.borderSubtleLight,
+                width: 1,
               ),
-              child: Column(
-                children: [
-                  // Header row with status and date
-                  _buildHeaderRow(context, isDark, hasScore),
+              boxShadow: isDark ? AppShadows.softDark : AppShadows.cardLight,
+            ),
+            child: Column(
+              children: [
+                // Header with status and date
+                _MatchHeader(
+                  date: match.dateGmt,
+                  hasScore: hasScore,
+                  isDark: isDark,
+                ),
 
-                  const SizedBox(height: AppDesignSystem.space12),
+                // Main content: Teams and Score
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppDesignSystem.space16,
+                    AppDesignSystem.space12,
+                    AppDesignSystem.space16,
+                    AppDesignSystem.space16,
+                  ),
+                  child: Row(
+                    children: [
+                      // Home Team
+                      Expanded(
+                        child: _TeamSection(
+                          teamName: match.homeTeam,
+                          score: match.homeScore,
+                          isHome: true,
+                          hasScore: hasScore,
+                          isDark: isDark,
+                          isWinner: _isWinner(match.homeScore, match.awayScore),
+                        ),
+                      ),
 
-                  // Teams and score row
-                  _buildTeamsRow(context, isDark, hasScore),
-                ],
-              ),
+                      // Score Box
+                      _ScoreBox(
+                        homeScore: match.homeScore,
+                        awayScore: match.awayScore,
+                        hasScore: hasScore,
+                        isDark: isDark,
+                      ),
+
+                      // Away Team
+                      Expanded(
+                        child: _TeamSection(
+                          teamName: match.awayTeam,
+                          score: match.awayScore,
+                          isHome: false,
+                          hasScore: hasScore,
+                          isDark: isDark,
+                          isWinner: _isWinner(match.awayScore, match.homeScore),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -71,142 +106,285 @@ class MatchListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderRow(BuildContext context, bool isDark, bool hasScore) {
-    final theme = Theme.of(context);
-
-    return Row(
-      children: [
-        _MatchStatusBadge(
-          isFinished: hasScore,
-          isDark: isDark,
-        ),
-        const Spacer(),
-        Icon(
-          Icons.schedule_rounded,
-          size: AppDesignSystem.iconXs,
-          color: isDark
-              ? AppColors.textTertiaryDark
-              : AppColors.textTertiaryLight,
-        ),
-        const SizedBox(width: AppDesignSystem.space6),
-        Text(
-          formatArticleDate(match.dateGmt),
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: isDark
-                ? AppColors.textTertiaryDark
-                : AppColors.textTertiaryLight,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
+  bool _isWinner(int? score1, int? score2) {
+    if (score1 == null || score2 == null) return false;
+    return score1 > score2;
   }
+}
 
-  Widget _buildTeamsRow(BuildContext context, bool isDark, bool hasScore) {
+/// Header section with match status and date
+class _MatchHeader extends StatelessWidget {
+  final DateTime? date;
+  final bool hasScore;
+  final bool isDark;
+
+  const _MatchHeader({
+    required this.date,
+    required this.hasScore,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Home team
-        Expanded(
-          flex: 2,
-          child: Row(
-            children: [
-              Flexible(
-                child: Text(
-                  match.homeTeam,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimaryLight,
-                    letterSpacing: -0.2,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: AppDesignSystem.space10),
-              _TeamLogo(teamName: match.homeTeam, size: 36, isDark: isDark),
-            ],
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDesignSystem.space16,
+        vertical: AppDesignSystem.space10,
+      ),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.surfaceContainerDark.withAlpha(60)
+            : AppColors.surfaceContainerLight.withAlpha(180),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppDesignSystem.radiusXl),
         ),
-
-        // Score box
-        Expanded(
-          flex: 1,
-          child: Center(
-            child: AnimatedContainer(
-              duration: AppDesignSystem.durationFast,
-              curve: AppDesignSystem.curveEmphasized,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDesignSystem.space12,
-                vertical: AppDesignSystem.space8,
-              ),
-              decoration: BoxDecoration(
-                color: hasScore
-                    ? colorScheme.primary.withAlpha(isDark ? 30 : 20)
-                    : (isDark
-                        ? AppColors.surfaceContainerDark
-                        : AppColors.surfaceContainerLight),
-                borderRadius: AppDesignSystem.borderRadiusMd,
-                border: Border.all(
-                  color: hasScore
-                      ? colorScheme.primary.withAlpha(isDark ? 60 : 50)
-                      : (isDark ? AppColors.borderDark : AppColors.borderLight),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                hasScore
-                    ? "${match.homeScore} - ${match.awayScore}"
-                    : "VS",
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: hasScore
-                      ? colorScheme.primary
-                      : (isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight),
-                  letterSpacing: hasScore ? 1 : 2,
-                  fontFamily: 'Oswald',
-                ),
+      ),
+      child: Row(
+        children: [
+          _MatchStatusBadge(
+            isFinished: hasScore,
+            isDark: isDark,
+          ),
+          const Spacer(),
+          if (date != null) ...[
+            Icon(
+              Icons.calendar_today_rounded,
+              size: 12,
+              color: isDark
+                  ? AppColors.textTertiaryDark
+                  : AppColors.textTertiaryLight,
+            ),
+            const SizedBox(width: AppDesignSystem.space6),
+            Text(
+              formatArticleDate(date!),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: isDark
+                    ? AppColors.textTertiaryDark
+                    : AppColors.textTertiaryLight,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.2,
               ),
             ),
-          ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Team section with logo and name
+class _TeamSection extends StatelessWidget {
+  final String teamName;
+  final int? score;
+  final bool isHome;
+  final bool hasScore;
+  final bool isDark;
+  final bool isWinner;
+
+  const _TeamSection({
+    required this.teamName,
+    required this.score,
+    required this.isHome,
+    required this.hasScore,
+    required this.isDark,
+    required this.isWinner,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      children: [
+        // Team Logo
+        _TeamLogo(
+          teamName: teamName,
+          size: 44,
+          isDark: isDark,
+          isWinner: isWinner && hasScore,
         ),
 
-        // Away team
-        Expanded(
-          flex: 2,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _TeamLogo(teamName: match.awayTeam, size: 36, isDark: isDark),
-              const SizedBox(width: AppDesignSystem.space10),
-              Flexible(
-                child: Text(
-                  match.awayTeam,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimaryLight,
-                    letterSpacing: -0.2,
-                  ),
-                  textAlign: TextAlign.end,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+        const SizedBox(height: AppDesignSystem.space10),
+
+        // Team Name
+        Text(
+          teamName,
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: isWinner && hasScore ? FontWeight.w800 : FontWeight.w600,
+            color: isWinner && hasScore
+                ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+            letterSpacing: -0.2,
           ),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
   }
 }
 
+/// Modern score box with gradient and animations
+class _ScoreBox extends StatelessWidget {
+  final int? homeScore;
+  final int? awayScore;
+  final bool hasScore;
+  final bool isDark;
+
+  const _ScoreBox({
+    required this.homeScore,
+    required this.awayScore,
+    required this.hasScore,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    if (!hasScore) {
+      return _buildUpcomingMatch(theme, colorScheme);
+    }
+
+    return _buildScoreDisplay(theme, colorScheme);
+  }
+
+  Widget _buildUpcomingMatch(ThemeData theme, ColorScheme colorScheme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppDesignSystem.space12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDesignSystem.space16,
+        vertical: AppDesignSystem.space12,
+      ),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.surfaceContainerDark
+            : AppColors.surfaceContainerLight,
+        borderRadius: AppDesignSystem.borderRadiusMd,
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          width: 1,
+        ),
+      ),
+      child: Text(
+        'VS',
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w800,
+          color: isDark
+              ? AppColors.textTertiaryDark
+              : AppColors.textTertiaryLight,
+          letterSpacing: 3,
+          fontFamily: 'Oswald',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreDisplay(ThemeData theme, ColorScheme colorScheme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppDesignSystem.space8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.primary,
+            Color.lerp(colorScheme.primary, Colors.black, 0.2)!,
+          ],
+        ),
+        borderRadius: AppDesignSystem.borderRadiusMd,
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withAlpha(isDark ? 60 : 40),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDesignSystem.space4,
+          vertical: AppDesignSystem.space8,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Home Score
+            _ScoreDigit(
+              score: homeScore ?? 0,
+              isWinner: (homeScore ?? 0) > (awayScore ?? 0),
+            ),
+
+            // Separator
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDesignSystem.space6,
+              ),
+              child: Text(
+                ':',
+                style: TextStyle(
+                  color: Colors.white.withAlpha(180),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w300,
+                  fontFamily: 'Oswald',
+                ),
+              ),
+            ),
+
+            // Away Score
+            _ScoreDigit(
+              score: awayScore ?? 0,
+              isWinner: (awayScore ?? 0) > (homeScore ?? 0),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Individual score digit with background
+class _ScoreDigit extends StatelessWidget {
+  final int score;
+  final bool isWinner;
+
+  const _ScoreDigit({
+    required this.score,
+    required this.isWinner,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 40,
+      decoration: BoxDecoration(
+        color: isWinner
+            ? Colors.white.withAlpha(30)
+            : Colors.white.withAlpha(15),
+        borderRadius: AppDesignSystem.borderRadiusSm,
+      ),
+      child: Center(
+        child: Text(
+          '$score',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Oswald',
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Match status badge
 class _MatchStatusBadge extends StatelessWidget {
   final bool isFinished;
   final bool isDark;
@@ -218,22 +396,18 @@ class _MatchStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = isFinished ? 'FT' : 'A venir';
-    final icon = isFinished ? Icons.check_circle_outline : Icons.schedule_rounded;
+    final label = isFinished ? 'Terminé' : 'A venir';
+    final icon = isFinished
+        ? Icons.check_circle_rounded
+        : Icons.access_time_rounded;
 
     final backgroundColor = isFinished
-        ? AppColors.matchFinished.withAlpha(isDark ? 40 : 25)
-        : (isDark
-            ? AppColors.surfaceContainerDark
-            : AppColors.surfaceContainerLight);
+        ? AppColors.matchFinished.withAlpha(isDark ? 30 : 20)
+        : AppColors.matchUpcoming.withAlpha(isDark ? 30 : 20);
 
     final foregroundColor = isFinished
         ? AppColors.matchFinished
-        : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight);
-
-    final borderColor = isFinished
-        ? AppColors.matchFinished.withAlpha(isDark ? 60 : 40)
-        : (isDark ? AppColors.borderDark : AppColors.borderLight);
+        : AppColors.matchUpcoming;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -243,7 +417,6 @@ class _MatchStatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: AppDesignSystem.borderRadiusFull,
-        border: Border.all(color: borderColor, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -265,15 +438,18 @@ class _MatchStatusBadge extends StatelessWidget {
   }
 }
 
+/// Team logo with loading and error states
 class _TeamLogo extends StatefulWidget {
   final String teamName;
   final double size;
   final bool isDark;
+  final bool isWinner;
 
   const _TeamLogo({
     required this.teamName,
-    this.size = 36,
+    this.size = 44,
     required this.isDark,
+    this.isWinner = false,
   });
 
   @override
@@ -303,22 +479,31 @@ class _TeamLogoState extends State<_TeamLogo> {
     final colorScheme = theme.colorScheme;
     final possibleUrls = _generatePossibleUrls(widget.teamName);
 
-    final containerColor = widget.isDark
-        ? AppColors.surfaceContainerDark
-        : AppColors.surfaceContainerLight;
-
-    final borderColor = widget.isDark
-        ? AppColors.borderDark
-        : AppColors.borderLight;
-
-    return Container(
+    return AnimatedContainer(
+      duration: AppDesignSystem.durationFast,
+      curve: AppDesignSystem.curveDefault,
       width: widget.size,
       height: widget.size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: containerColor,
-        border: Border.all(color: borderColor, width: 1),
-        boxShadow: widget.isDark ? [] : AppShadows.softLight,
+        color: widget.isDark
+            ? AppColors.surfaceContainerDark
+            : AppColors.surfaceContainerLight,
+        border: Border.all(
+          color: widget.isWinner
+              ? colorScheme.primary.withAlpha(widget.isDark ? 100 : 80)
+              : (widget.isDark ? AppColors.borderDark : AppColors.borderLight),
+          width: widget.isWinner ? 2 : 1,
+        ),
+        boxShadow: widget.isWinner
+            ? [
+                BoxShadow(
+                  color: colorScheme.primary.withAlpha(30),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : (widget.isDark ? [] : AppShadows.softLight),
       ),
       child: ClipOval(
         child: _currentUrlIndex >= possibleUrls.length
@@ -338,11 +523,14 @@ class _TeamLogoState extends State<_TeamLogo> {
                 },
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
-                  return Padding(
-                    padding: EdgeInsets.all(widget.size * 0.25),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: colorScheme.primary.withAlpha(128),
+                  return Center(
+                    child: SizedBox(
+                      width: widget.size * 0.4,
+                      height: widget.size * 0.4,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colorScheme.primary.withAlpha(100),
+                      ),
                     ),
                   );
                 },
@@ -352,10 +540,14 @@ class _TeamLogoState extends State<_TeamLogo> {
   }
 
   Widget _buildFallbackIcon(ColorScheme colorScheme) {
-    return Icon(
-      Icons.sports_soccer_rounded,
-      size: widget.size * 0.5,
-      color: colorScheme.outline,
+    return Center(
+      child: Icon(
+        Icons.sports_soccer_rounded,
+        size: widget.size * 0.45,
+        color: widget.isDark
+            ? AppColors.textTertiaryDark
+            : AppColors.textTertiaryLight,
+      ),
     );
   }
 }
@@ -447,15 +639,38 @@ class MatchCompactCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppDesignSystem.space8,
                       ),
-                      child: Text(
-                        hasScore
-                            ? "${match.homeScore} - ${match.awayScore}"
-                            : "VS",
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: hasScore
-                              ? colorScheme.primary
-                              : colorScheme.outline,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDesignSystem.space10,
+                          vertical: AppDesignSystem.space6,
+                        ),
+                        decoration: hasScore
+                            ? BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    colorScheme.primary,
+                                    Color.lerp(colorScheme.primary, Colors.black, 0.15)!,
+                                  ],
+                                ),
+                                borderRadius: AppDesignSystem.borderRadiusSm,
+                              )
+                            : BoxDecoration(
+                                color: isDark
+                                    ? AppColors.surfaceContainerDark
+                                    : AppColors.surfaceContainerLight,
+                                borderRadius: AppDesignSystem.borderRadiusSm,
+                              ),
+                        child: Text(
+                          hasScore
+                              ? "${match.homeScore} - ${match.awayScore}"
+                              : "VS",
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: hasScore
+                                ? Colors.white
+                                : colorScheme.outline,
+                            fontFamily: 'Oswald',
+                          ),
                         ),
                       ),
                     ),

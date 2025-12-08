@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
 import 'package:foot_rdc/features/news/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/core/utils/date_utils.dart';
+import 'package:foot_rdc/core/utils/string_utils.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
+import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
 
 /// A reusable widget that displays a single saved article item.
 class SavedArticleItem extends ConsumerWidget {
@@ -176,7 +178,7 @@ class SavedArticleItem extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  article.title,
+                  decodeHtmlEntities(article.title),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -244,74 +246,25 @@ class SavedArticleItem extends ConsumerWidget {
             color: colorScheme.error,
           ),
           onPressed: () async {
-            final messenger = ScaffoldMessenger.of(context);
-
             try {
               await ref
                   .read(articleSavedListNotifierProvider.notifier)
                   .removeArticle(article);
 
-              messenger.showSnackBar(
-                SnackBar(
-                  content: const Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      SizedBox(width: AppDesignSystem.space10),
-                      Text(
-                        'Article supprimé',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  backgroundColor: colorScheme.error,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppDesignSystem.borderRadiusMd,
-                  ),
-                  margin: const EdgeInsets.all(AppDesignSystem.space16),
-                  duration: const Duration(seconds: 2),
-                  action: SnackBarAction(
-                    label: 'OK',
-                    textColor: Colors.white,
-                    onPressed: messenger.hideCurrentSnackBar,
-                  ),
-                ),
-              );
+              if (context.mounted) {
+                AppSnackbar.showSuccess(
+                  context,
+                  message: 'Article supprimé',
+                  icon: Icons.delete_outline_rounded,
+                );
+              }
             } catch (err) {
-              messenger.showSnackBar(
-                SnackBar(
-                  content: const Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      SizedBox(width: AppDesignSystem.space10),
-                      Text(
-                        'Échec de la suppression',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  backgroundColor: colorScheme.error,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppDesignSystem.borderRadiusMd,
-                  ),
-                  margin: const EdgeInsets.all(AppDesignSystem.space16),
-                  duration: const Duration(seconds: 3),
-                  action: SnackBarAction(
-                    label: 'Fermer',
-                    textColor: Colors.white,
-                    onPressed: messenger.hideCurrentSnackBar,
-                  ),
-                ),
-              );
+              if (context.mounted) {
+                AppSnackbar.showError(
+                  context,
+                  message: 'Échec de la suppression',
+                );
+              }
             }
           },
         ),

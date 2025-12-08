@@ -8,6 +8,7 @@ import 'package:foot_rdc/shared/widgets/custom_search_bar.dart';
 import 'package:foot_rdc/core/constants/ad_constants.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
+import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -158,8 +159,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         _loadMoreError = true;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_friendlyLoadMoreMessage(error))),
+        AppSnackbar.showError(
+          context,
+          message: _friendlyLoadMoreMessage(error),
         );
       }
     }
@@ -186,9 +188,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       });
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        AppSnackbar.showError(
           context,
-        ).showSnackBar(SnackBar(content: Text(_friendlyGenericMessage(error))));
+          message: _friendlyGenericMessage(error),
+        );
       }
     }
   }
@@ -211,8 +214,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
   }
 
-  bool _isNoInternet(Object error) => error is SocketException;
-  bool _isTimeout(Object error) => error is TimeoutException;
+  bool _isNoInternet(Object error) =>
+      error is SocketException ||
+      error.toString().toLowerCase().contains('socketexception') ||
+      error.toString().toLowerCase().contains('failed host lookup') ||
+      error.toString().toLowerCase().contains('network is unreachable');
+
+  bool _isTimeout(Object error) =>
+      error is TimeoutException ||
+      error.toString().toLowerCase().contains('timeout');
 
   String _friendlyTitle(Object error) {
     if (_isNoInternet(error)) return 'Pas de connexion internet';
