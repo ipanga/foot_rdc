@@ -71,6 +71,7 @@ Findings from prior audit, scoped to "high-impact, low-risk" only.
 | TODO (owner) | Set branch protection on `main` requiring PR + green CI | GitHub UI: Settings → Branches → Add rule for `main` → require PR review + status check `flutter` |
 | TODO (owner) | Verify the workflow runs on the first push to `develop` and read the logs | If `flutter analyze` fails on CI but passes locally, the most likely cause is a Flutter version drift — pin `flutter-version` in the workflow |
 | DEFERRED | `dart format --set-exit-if-changed .` step | Existing code probably isn't `dart format`-clean; would block CI on first run. Add as a standalone "format the codebase" PR first. |
+| TODO | Add a smoke test (`test/smoke_test.dart`) and remove the conditional in the workflow's test step | Currently CI skips `flutter test` when no `*_test.dart` files exist (Git doesn't track the empty `test/` skeleton). Drop the guard once real tests land. |
 | DEFERRED | Pre-commit guard against committing Firebase config files to the index | Local hook; needs `husky_dart` or a shell script in `.git/hooks/pre-commit`. Tied to the deferred secrets work. |
 
 ---

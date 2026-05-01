@@ -47,7 +47,15 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Run tests
-        run: flutter test --no-pub
+        # Skip cleanly when no tests exist yet — git doesn't track the empty
+        # test/ skeleton, so CI sees no test directory at all. Remove this
+        # guard once a smoke test lands.
+        run: |
+          if [ -d test ] && [ -n "$(find test -name '*_test.dart' -print -quit 2>/dev/null)" ]; then
+            flutter test --no-pub
+          else
+            echo "No *_test.dart files found — skipping test step."
+          fi
 
       # Debug APK build verifies the project compiles end-to-end on Android
       # without needing release signing secrets in CI.
