@@ -35,23 +35,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   bool _loadMoreError = false;
 
-  BannerAd? _bannerAd;
   static const int _adFrequency = 9;
-  bool _isAdLoaded = false;
   final Map<NativeAd, bool> _nativeAdLoaded = {};
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _loadBannerAd();
   }
 
   @override
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
-    _bannerAd?.dispose();
     _disposeNativeAds();
     super.dispose();
   }
@@ -65,32 +61,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _nativeAdLoaded.clear();
   }
 
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: AdConstants.bannerAdUnitId,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _isAdLoaded = true;
-            });
-          }
-        },
-        onAdFailedToLoad: (ad, err) {
-          ad.dispose();
-        },
-      ),
-    )..load();
-  }
-
   void _updateListWithAds(List<Article> articles) {
     _disposeNativeAds();
     _listItems.clear();
     for (int i = 0; i < articles.length; i++) {
       _listItems.add(articles[i]);
-      if ((i + 1) % _adFrequency == 0 && i < articles.length - 1) {
+      if ((i + 1) % _adFrequency == 0 && i >= 4 && i < articles.length - 1) {
         final nativeAd = NativeAd(
           adUnitId: AdConstants.nativeAdUnitId,
           listener: NativeAdListener(
@@ -398,30 +374,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _isAdLoaded && _bannerAd != null
-          ? Container(
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.surfaceDark
-                    : AppColors.surfaceLight,
-                border: Border(
-                  top: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight,
-                    width: 0.5,
-                  ),
-                ),
-              ),
-              child: SafeArea(
-                child: SizedBox(
-                  width: _bannerAd!.size.width.toDouble(),
-                  height: _bannerAd!.size.height.toDouble(),
-                  child: AdWidget(ad: _bannerAd!),
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
     );
   }
 
@@ -650,31 +602,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildNativeAdItem(NativeAd item, bool isDark) {
     final isLoaded = _nativeAdLoaded[item] == true;
-    if (!isLoaded) {
-      return Container(
-        height: 320,
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppDesignSystem.space16,
-          vertical: AppDesignSystem.space8,
-        ),
-        decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.surfaceContainerDark
-              : AppColors.surfaceContainerLight,
-          borderRadius: AppDesignSystem.borderRadiusLg,
-        ),
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Theme.of(context).colorScheme.primary.withAlpha(128),
-            ),
-          ),
-        ),
-      );
-    }
     return Container(
       height: 320,
       margin: const EdgeInsets.symmetric(
@@ -682,10 +609,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         vertical: AppDesignSystem.space8,
       ),
       decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.surfaceContainerDark
+            : AppColors.surfaceContainerLight,
         borderRadius: AppDesignSystem.borderRadiusLg,
       ),
       clipBehavior: Clip.antiAlias,
-      child: AdWidget(ad: item),
+      child: isLoaded
+          ? AdWidget(ad: item)
+          : Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Theme.of(context).colorScheme.primary.withAlpha(128),
+                ),
+              ),
+            ),
     );
   }
 

@@ -20,6 +20,14 @@ class ApiConstants {
   static const int groupeBLeagueId = 547;
   static const int playOffLeagueId = 552;
 
+  // The currently active competition phase. Tabs in Matchs / Classement open
+  // on this league by default. Bump this when the phase rotates (e.g. from
+  // group stage back to a future Play-Off).
+  static const int currentPhaseLeagueId = playOffLeagueId;
+
+  // Editorial content
+  static const String bonASavoirCategorySlug = 'bon-a-savoir';
+
   // Pagination defaults
   static const int defaultArticlesPerPage = 15;
   static const int defaultMatchesPerPage = 10;

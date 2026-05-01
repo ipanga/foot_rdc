@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+# Cancel older runs of the same ref when a new push lands.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    name: Analyze · Test · Build (debug)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Static analysis
+        # --no-fatal-infos lets info-level lints (withOpacity / prefer_const_*
+        # / overridden_fields, etc.) ride along without failing CI. Warnings
+        # and errors still fail. Bulk-clean those infos in a dedicated PR; see
+        # PROGRESS.md "Batch C — DEFERRED" for the list.
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run tests
+        # Skip cleanly when no tests exist yet — git doesn't track the empty
+        # test/ skeleton, so CI sees no test directory at all. Remove this
+        # guard once a smoke test lands.
+        run: |
+          if [ -d test ] && [ -n "$(find test -name '*_test.dart' -print -quit 2>/dev/null)" ]; then
+            flutter test --no-pub
+          else
+            echo "No *_test.dart files found — skipping test step."
+          fi
+
+      # Debug APK build verifies the project compiles end-to-end on Android
+      # without needing release signing secrets in CI.
+      - name: Build APK (debug)
+        run: flutter build apk --debug
