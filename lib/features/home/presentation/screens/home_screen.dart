@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:foot_rdc/core/network/connectivity_service.dart';
 import 'package:foot_rdc/features/editorial/presentation/screens/editorial_list_screen.dart';
 import 'package:foot_rdc/features/news/presentation/screens/news_list_screen.dart';
 import 'package:foot_rdc/features/matches/presentation/screens/matches_list_screen.dart';
@@ -7,6 +8,8 @@ import 'package:foot_rdc/features/rankings/presentation/screens/rankings_screen.
 import 'package:foot_rdc/features/saved_articles/presentation/screens/saved_articles_screen.dart';
 import 'package:foot_rdc/features/news/presentation/providers/article_cache_provider.dart';
 import 'package:foot_rdc/features/home/presentation/providers/home_providers.dart';
+import 'package:foot_rdc/shared/providers/connectivity_provider.dart';
+import 'package:foot_rdc/shared/widgets/connectivity_banner.dart';
 import 'package:foot_rdc/shared/widgets/persistent_banner_ad.dart';
 import 'package:foot_rdc/shared/widgets/premium_bottom_nav_bar.dart';
 
@@ -84,9 +87,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _rankingsScreenKey.currentState?.checkAndRefreshIfNeeded();
   }
 
+  void _refreshActiveTab(int currentPage) {
+    switch (currentPage) {
+      case 0:
+        _checkAndRefreshArticlesIfNeeded();
+        break;
+      case 1:
+        _checkAndRefreshEditorialIfNeeded();
+        break;
+      case 2:
+        _checkAndRefreshMatchesIfNeeded();
+        break;
+      case 3:
+        _checkAndRefreshRankingsIfNeeded();
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentPage = ref.watch(currentPageProvider);
+
+    // Auto-refresh the active tab once per offline → online transition.
+    // Single-edge trigger — no aggressive reload loops.
+    ref.listen<AsyncValue<ConnectivityStatus>>(connectivityStatusProvider,
+        (prev, next) {
+      final prevStatus = prev?.valueOrNull;
+      final newStatus = next.valueOrNull;
+      if (prevStatus == ConnectivityStatus.disconnected &&
+          newStatus == ConnectivityStatus.connected) {
+        _refreshActiveTab(ref.read(currentPageProvider));
+      }
+    });
 
     final pages = [
       const NewsListScreen(),
@@ -102,6 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const ConnectivityBanner(),
           const PersistentBannerAd(),
           PremiumBottomNavBar(
             currentIndex: currentPage,

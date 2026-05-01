@@ -139,31 +139,43 @@ class DioClient {
   }
 }
 
-/// Retry interceptor for handling transient failures
+/// Retry interceptor for transient connection failures.
+///
+/// Strategy: exponential backoff with a hard cap on attempts. Delay between
+/// retry N and N+1 is `_baseDelay * 2^N` (i.e. 1s, 2s, 4s for the default
+/// base of 1s). Total wait before final failure: ~7s — enough to ride out
+/// short network blips without making the user wait too long when the
+/// network is genuinely down.
+///
+/// Only fires on connection-layer errors (connection/receive timeout,
+/// connection error). 4xx and 5xx responses are NOT retried — they go
+/// straight to [NetworkExceptionHandler].
 class _RetryInterceptor extends Interceptor {
   final Dio _dio;
   final int _maxRetries;
-  final Duration _retryDelay;
+  final Duration _baseDelay;
 
   _RetryInterceptor(
     this._dio, {
-    int maxRetries = 2,
-    Duration retryDelay = const Duration(seconds: 1),
+    int maxRetries = 3,
+    Duration baseDelay = const Duration(seconds: 1),
   })  : _maxRetries = maxRetries,
-        _retryDelay = retryDelay;
+        _baseDelay = baseDelay;
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // Only retry on connection errors or timeouts
     if (_shouldRetry(err)) {
       final retries = err.requestOptions.extra['retries'] as int? ?? 0;
 
       if (retries < _maxRetries) {
+        final delay = _baseDelay * (1 << retries); // 1s, 2s, 4s ...
+
         if (kDebugMode) {
-          debugPrint('DIO: Retrying request (${retries + 1}/$_maxRetries)');
+          debugPrint(
+              'DIO: Retrying request (${retries + 1}/$_maxRetries) after ${delay.inMilliseconds}ms');
         }
 
-        await Future.delayed(_retryDelay);
+        await Future.delayed(delay);
 
         try {
           err.requestOptions.extra['retries'] = retries + 1;

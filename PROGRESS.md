@@ -62,6 +62,22 @@ Findings from prior audit, scoped to "high-impact, low-risk" only.
 
 ---
 
+## Batch E — Connectivity management (✅ shipped)
+
+**Goal:** Detect online/offline state, surface a global UI signal, and auto-refresh the active tab when the network is restored.
+
+| Status | Item | Notes |
+|--------|------|-------|
+| DONE | Add `connectivity_plus ^6.0.0` (resolved to 6.1.5) | Cross-platform interface state |
+| DONE | `ConnectivityService` + `ConnectivityStatus` enum (binary) | `lib/core/network/connectivity_service.dart` |
+| DONE | `connectivityStatusProvider` (Riverpod `StreamProvider`) | `lib/shared/providers/connectivity_provider.dart` — single OS subscription, deduped |
+| DONE | `ConnectivityBanner` widget | Animated 0 ↔ 32dp; red offline / green "Connexion rétablie" on restore (~2s) |
+| DONE | `HomeScreen` integration: banner above `PersistentBannerAd`; `ref.listen` for `disconnected → connected` triggers active-tab refresh | Single-edge trigger, no aggressive loops |
+| DONE | DioClient retry: fixed 1s × 2 → exponential 1s/2s/4s × 3 | Better blip resilience without long waits when truly offline |
+| DEFERRED | Disk-persistent caches for articles / matches / rankings (Hive boxes) | Big change; existing in-memory caches + saved-articles Hive box already cover the core offline UX |
+| DEFERRED | Active reachability probing (captive portals, DNS) | Out of scope; interface state is sufficient for v1 |
+| DEFERRED | "Slow connection" detection | Requires active probes; defer until there's a real signal it matters |
+
 ## Batch D — CI/CD setup (✅ workflow shipped, owner steps remain)
 
 | Status | Item | Notes |
