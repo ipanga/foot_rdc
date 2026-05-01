@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:foot_rdc/core/constants/api_constants.dart';
 import 'package:foot_rdc/features/rankings/presentation/providers/ranking_provider.dart';
 import 'package:foot_rdc/features/rankings/presentation/providers/ranking_cache_provider.dart';
 import 'package:foot_rdc/features/rankings/domain/entities/ranking.dart';
@@ -19,18 +20,25 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
 
-  // League and Season IDs from the API URLs
-  static const int seasonId = 821;
-  static const int groupeALeagueId = 546;
-  static const int groupeBLeagueId = 547;
-  static const int playOffLeagueId = 552;
+  // Tab order: Play-Off (active phase) first, then Groupe A, Groupe B.
+  // See ApiConstants.currentPhaseLeagueId.
+  static const _tabLeagueIds = <int>[
+    ApiConstants.playOffLeagueId,
+    ApiConstants.groupeALeagueId,
+    ApiConstants.groupeBLeagueId,
+  ];
+
+  static const int seasonId = ApiConstants.currentSeasonId;
+
+  int _leagueIdForTab(int index) =>
+      _tabLeagueIds[index.clamp(0, _tabLeagueIds.length - 1)];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
 
-    // Load initial data for Groupe A
+    // Load initial data for the first (default) tab — Play-Off.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRankingForTab(0);
     });
@@ -51,20 +59,7 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
   }
 
   void _loadRankingForTab(int tabIndex) {
-    int leagueId;
-    switch (tabIndex) {
-      case 0:
-        leagueId = groupeALeagueId;
-        break;
-      case 1:
-        leagueId = groupeBLeagueId;
-        break;
-      case 2:
-        leagueId = playOffLeagueId;
-        break;
-      default:
-        leagueId = groupeALeagueId;
-    }
+    final leagueId = _leagueIdForTab(tabIndex);
 
     final cacheState = ref.read(rankingCacheProvider);
 
@@ -85,20 +80,7 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
 
   // Pull-to-refresh helper - always force refresh
   Future<void> _refreshRankingForCurrentTab() {
-    int leagueId;
-    switch (_tabController.index) {
-      case 0:
-        leagueId = groupeALeagueId;
-        break;
-      case 1:
-        leagueId = groupeBLeagueId;
-        break;
-      case 2:
-        leagueId = playOffLeagueId;
-        break;
-      default:
-        leagueId = groupeALeagueId;
-    }
+    final leagueId = _leagueIdForTab(_tabController.index);
     return ref
         .read(rankingNotifierProvider.notifier)
         .fetchRanking(
@@ -111,20 +93,7 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
   // Check and refresh cache if needed (called from HomePage)
   void checkAndRefreshIfNeeded() {
     final currentTabIndex = _tabController.index;
-    int leagueId;
-    switch (currentTabIndex) {
-      case 0:
-        leagueId = groupeALeagueId;
-        break;
-      case 1:
-        leagueId = groupeBLeagueId;
-        break;
-      case 2:
-        leagueId = playOffLeagueId;
-        break;
-      default:
-        leagueId = groupeALeagueId;
-    }
+    final leagueId = _leagueIdForTab(currentTabIndex);
 
     final cacheState = ref.read(rankingCacheProvider);
 
@@ -229,9 +198,9 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
             onTap: _loadRankingForTab,
             height: 44,
             tabs: const [
+              PremiumTabItem(icon: Icons.emoji_events_outlined, label: 'Play-off'),
               PremiumTabItem(label: 'Groupe A'),
               PremiumTabItem(label: 'Groupe B'),
-              PremiumTabItem(icon: Icons.emoji_events_outlined, label: 'Play-off'),
             ],
           ),
         ),
@@ -239,9 +208,9 @@ class RankingsScreenState extends ConsumerState<RankingsScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
+          _buildRankingTab('Play-off'),
           _buildRankingTab('Groupe A'),
           _buildRankingTab('Groupe B'),
-          _buildRankingTab('Play-off'),
         ],
       ),
     );

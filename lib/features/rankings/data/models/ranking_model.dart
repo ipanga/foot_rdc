@@ -6,10 +6,13 @@ part 'ranking_model.g.dart';
 @HiveType(typeId: 1)
 class RankingModel extends Ranking {
   @HiveField(0)
+  @override
   final int id;
   @HiveField(1)
+  @override
   final String title;
   @HiveField(2)
+  @override
   final Map<String, TeamData> data;
 
   const RankingModel({
@@ -50,24 +53,34 @@ class RankingModel extends Ranking {
 @HiveType(typeId: 2)
 class TeamDataModel extends TeamData {
   @HiveField(0)
+  @override
   final String? p;
   @HiveField(1)
+  @override
   final String? w;
   @HiveField(2)
+  @override
   final String? d;
   @HiveField(3)
+  @override
   final String? ptwo;
   @HiveField(4)
+  @override
   final String? f;
   @HiveField(5)
+  @override
   final String? a;
   @HiveField(6)
+  @override
   final String? gd;
   @HiveField(7)
+  @override
   final String? pts;
   @HiveField(8)
+  @override
   final String name;
   @HiveField(9)
+  @override
   final int pos;
 
   const TeamDataModel({

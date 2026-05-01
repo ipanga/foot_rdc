@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:foot_rdc/core/errors/failures.dart';
 import 'package:foot_rdc/features/news/data/datasources/article_local_datasource.dart';
 import 'package:foot_rdc/features/news/data/models/article_model.dart';
@@ -16,8 +17,13 @@ class ArticleRepositoryImpl implements ArticleRepository {
       final articleModels = await localDataSource.getArticles();
       final articles = articleModels.map((model) => model.toEntity()).toList();
       return Right(articles);
-    } catch (e) {
-      return Left(SomeSpecificError('Failed to get saved articles: $e'));
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('ArticleRepository.getSavedArticles failed: $e\n$st');
+      }
+      return Left(
+        SomeSpecificError('Impossible de récupérer les articles enregistrés.'),
+      );
     }
   }
 
@@ -27,8 +33,11 @@ class ArticleRepositoryImpl implements ArticleRepository {
       final articleModel = ArticleModel.fromEntity(article);
       await localDataSource.addArticle(articleModel);
       return const Right(null);
-    } catch (e) {
-      return Left(SomeSpecificError('Failed to save article: $e'));
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('ArticleRepository.saveArticle failed: $e\n$st');
+      }
+      return Left(SomeSpecificError('Impossible d\'enregistrer l\'article.'));
     }
   }
 
@@ -38,8 +47,11 @@ class ArticleRepositoryImpl implements ArticleRepository {
       final articleModel = ArticleModel.fromEntity(article);
       await localDataSource.deleteArticle(articleModel);
       return const Right(null);
-    } catch (e) {
-      return Left(SomeSpecificError('Failed to delete article: $e'));
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('ArticleRepository.deleteArticle failed: $e\n$st');
+      }
+      return Left(SomeSpecificError('Impossible de supprimer l\'article.'));
     }
   }
 

@@ -7,11 +7,10 @@ import 'package:foot_rdc/features/news/domain/entities/article.dart';
 import 'package:foot_rdc/features/news/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/core/utils/date_utils.dart';
 import 'package:foot_rdc/core/utils/string_utils.dart';
-import 'package:foot_rdc/core/constants/ad_constants.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:foot_rdc/shared/widgets/persistent_banner_ad.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -25,67 +24,6 @@ class ArticleDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
-  BannerAd? _bannerAd;
-  NativeAd? _nativeAd;
-  bool _isBannerAdLoaded = false;
-  bool _isNativeAdLoaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBannerAd();
-    _loadNativeAd();
-  }
-
-  @override
-  void dispose() {
-    _bannerAd?.dispose();
-    _nativeAd?.dispose();
-    super.dispose();
-  }
-
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: AdConstants.bannerAdUnitId,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _isBannerAdLoaded = true;
-            });
-          }
-        },
-        onAdFailedToLoad: (ad, err) {
-          ad.dispose();
-        },
-      ),
-    )..load();
-  }
-
-  void _loadNativeAd() {
-    _nativeAd = NativeAd(
-      adUnitId: AdConstants.nativeAdUnitId,
-      listener: NativeAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _isNativeAdLoaded = true;
-            });
-          }
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-      request: const AdRequest(),
-      nativeTemplateStyle: NativeTemplateStyle(
-        templateType: TemplateType.medium,
-      ),
-    )..load();
-  }
-
   String? _imageUrl() => widget.article.imageUrl;
   String _dateText() => formatArticleDate(widget.article.dateGmt);
   String _categoryText() => widget.article.category;
@@ -606,21 +544,6 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
                     ),
 
                     const SizedBox(height: AppDesignSystem.space24),
-
-                    if (_isNativeAdLoaded && _nativeAd != null)
-                      Container(
-                        height: 320,
-                        margin: const EdgeInsets.symmetric(
-                          vertical: AppDesignSystem.space16,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: AppDesignSystem.borderRadiusMd,
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: AdWidget(ad: _nativeAd!),
-                      ),
-
-                    const SizedBox(height: AppDesignSystem.space8),
                   ],
                 ),
               ),
@@ -630,13 +553,7 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _isBannerAdLoaded && _bannerAd != null
-          ? SizedBox(
-              width: _bannerAd!.size.width.toDouble(),
-              height: _bannerAd!.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
-            )
-          : const SizedBox.shrink(),
+      bottomNavigationBar: const PersistentBannerAd(),
     );
   }
 

@@ -80,7 +80,7 @@ class _MatchesTabContentState extends ConsumerState<MatchesTabContent>
     _listItems.clear();
     for (int i = 0; i < matches.length; i++) {
       _listItems.add(matches[i]);
-      if ((i + 1) % _adFrequency == 0 && i < matches.length - 1) {
+      if ((i + 1) % _adFrequency == 0 && i >= 4 && i < matches.length - 1) {
         final nativeAd = NativeAd(
           adUnitId: AdConstants.nativeAdUnitId,
           listener: NativeAdListener(
@@ -578,22 +578,19 @@ class _MatchesTabContentState extends ConsumerState<MatchesTabContent>
 
                 if (item is NativeAd) {
                   final isLoaded = _nativeAdLoaded[item] == true;
-                  if (!isLoaded) {
-                    return Container(
-                      height: 320,
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    );
-                  }
                   return Container(
                     height: 320,
                     margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: AdWidget(ad: item),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: isLoaded
+                        ? AdWidget(ad: item)
+                        : const SizedBox.shrink(),
                   );
                 }
 

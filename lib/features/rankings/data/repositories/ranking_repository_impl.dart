@@ -1,5 +1,7 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:foot_rdc/core/errors/failures.dart';
+import 'package:foot_rdc/core/network/network_exceptions.dart' as network;
 import 'package:foot_rdc/features/rankings/data/datasources/ranking_remote_datasource.dart';
 import 'package:foot_rdc/features/rankings/domain/entities/ranking.dart';
 import 'package:foot_rdc/features/rankings/domain/repositories/ranking_repository.dart';
@@ -20,8 +22,13 @@ class RankingRepositoryImpl implements RankingRepository {
         seasonId: seasonId,
       );
       return Right(ranking);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } on network.NetworkException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('RankingRepository.getRanking failed: $e\n$st');
+      }
+      return Left(ServerFailure('Impossible de charger le classement.'));
     }
   }
 }

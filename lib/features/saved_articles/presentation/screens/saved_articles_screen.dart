@@ -17,16 +17,13 @@ class SavedArticlesScreen extends ConsumerStatefulWidget {
 }
 
 class _SavedArticlesScreenState extends ConsumerState<SavedArticlesScreen> {
-  BannerAd? _bannerAd;
   final List<Object> _listItems = [];
   static const int _adFrequency = 9;
-  bool _isAdLoaded = false;
   final Map<NativeAd, bool> _nativeAdLoaded = {};
 
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final savedArticles = ref.read(articleSavedListNotifierProvider);
@@ -39,7 +36,6 @@ class _SavedArticlesScreenState extends ConsumerState<SavedArticlesScreen> {
 
   @override
   void dispose() {
-    _bannerAd?.dispose();
     _disposeNativeAds();
     super.dispose();
   }
@@ -53,32 +49,12 @@ class _SavedArticlesScreenState extends ConsumerState<SavedArticlesScreen> {
     _nativeAdLoaded.clear();
   }
 
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: AdConstants.bannerAdUnitId,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _isAdLoaded = true;
-            });
-          }
-        },
-        onAdFailedToLoad: (ad, err) {
-          ad.dispose();
-        },
-      ),
-    )..load();
-  }
-
   void _updateListWithAds(List<Article> articles) {
     _disposeNativeAds();
     _listItems.clear();
     for (int i = 0; i < articles.length; i++) {
       _listItems.add(articles[i]);
-      if ((i + 1) % _adFrequency == 0 && i < articles.length - 1) {
+      if ((i + 1) % _adFrequency == 0 && i >= 4 && i < articles.length - 1) {
         final nativeAd = NativeAd(
           adUnitId: AdConstants.nativeAdUnitId,
           listener: NativeAdListener(
@@ -223,7 +199,7 @@ class _SavedArticlesScreenState extends ConsumerState<SavedArticlesScreen> {
                         .read(articleSavedListNotifierProvider.notifier)
                         .removeArticle(article);
 
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Row(
@@ -274,30 +250,6 @@ class _SavedArticlesScreenState extends ConsumerState<SavedArticlesScreen> {
                 );
               },
             ),
-      bottomNavigationBar: _isAdLoaded && _bannerAd != null
-          ? Container(
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.surfaceDark
-                    : AppColors.surfaceLight,
-                border: Border(
-                  top: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight,
-                    width: 0.5,
-                  ),
-                ),
-              ),
-              child: SafeArea(
-                child: SizedBox(
-                  width: _bannerAd!.size.width.toDouble(),
-                  height: _bannerAd!.size.height.toDouble(),
-                  child: AdWidget(ad: _bannerAd!),
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
     );
   }
 
@@ -355,31 +307,6 @@ class _SavedArticlesScreenState extends ConsumerState<SavedArticlesScreen> {
 
   Widget _buildNativeAdItem(NativeAd item, bool isDark) {
     final isLoaded = _nativeAdLoaded[item] == true;
-    if (!isLoaded) {
-      return Container(
-        height: 320,
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppDesignSystem.space16,
-          vertical: AppDesignSystem.space8,
-        ),
-        decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.surfaceContainerDark
-              : AppColors.surfaceContainerLight,
-          borderRadius: AppDesignSystem.borderRadiusLg,
-        ),
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Theme.of(context).colorScheme.primary.withAlpha(128),
-            ),
-          ),
-        ),
-      );
-    }
     return Container(
       height: 320,
       margin: const EdgeInsets.symmetric(
@@ -387,10 +314,24 @@ class _SavedArticlesScreenState extends ConsumerState<SavedArticlesScreen> {
         vertical: AppDesignSystem.space8,
       ),
       decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.surfaceContainerDark
+            : AppColors.surfaceContainerLight,
         borderRadius: AppDesignSystem.borderRadiusLg,
       ),
       clipBehavior: Clip.antiAlias,
-      child: AdWidget(ad: item),
+      child: isLoaded
+          ? AdWidget(ad: item)
+          : Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Theme.of(context).colorScheme.primary.withAlpha(128),
+                ),
+              ),
+            ),
     );
   }
 }
