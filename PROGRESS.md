@@ -1,5 +1,13 @@
 # FootRDC Progress Tracker
 
+## Phase 6 Consolidation (2026-10-05)
+
+Source integration DONE on develop: accepted Core-only football commitdccc9f0219a6f0f954f1e1ec886ff4407bc09782 fast-forwarded from66fbc6c, no conflict/main promotion/history rewrite. Feature branch retained. Pre/post40unit-widget regressions and2actual Core staging tests PASS, football analyzer0/whole app46existinginfos. Android staging debug builds rerun; close-out in docs/FOOTBALL_INTEGRATION.md. No build published or iOS production validation. Original modified ios/Podfile.lock remains untouched/unstaged. Older batch tables below retain their historical context.
+
+News/editorial remains FootRDC WordPress API; dedicated configurable Core football module defaults OFF for normal builds, explicit staging flag only. Standings quality/offline/live gates unchanged. Existing app device/news/push/ad runtime checks remain partial/not tested; preserve their source/identity/configuration.
+
+Production roadmap DEFERRED: sportrdc.com first, separately audit/migrate manual/FTP deployment toward GitHub-controlled reviewed immutable release/health/rollback; validate RDC Football with existing editorial/theme; separately approve GeneratePress later; only then consider FootRDC.com. No production deployment/workflow/theme/SportPress/scheduler/readiness change here. REAL LINAFOOT LIVE VALIDATION: PENDING.
+
 Status markers: `TODO` · `IN_PROGRESS` · `DONE` · `DEFERRED`.
 Update this file as work moves between batches. The goal is resumability — a fresh Claude (or a fresh dev) should be able to read this file and know exactly what's left.
 

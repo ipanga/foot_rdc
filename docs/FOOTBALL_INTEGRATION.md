@@ -1,5 +1,17 @@
 # RDC Football Core Integration
 
+## Consolidation And Roadmap
+
+2026-10-05: existing develop fast-forwarded66fbc6c -> accepteddccc9f0 after full pre-validation;40regression tests and both actual Core-only staging tests independently PASS before and after, new analyzer0issues/whole app46existinginfos. Android staging debug builds are rerun pre/post; close-out documented below. Flutter main is NOT promoted. Featurecodex/rdc-football-integration retained; documentation-only follow-up on develop, no runtime/package/configuration changes. User ios/Podfile.lock remains dirty/unstaged with original SHA256 f1c9ace02712c54a328e28eff3e1fec697e2d7a92febfec4f8c66446e42d29dd. Initial "unmerged" acceptance statements below are historical.
+
+News/editorial remains on the existing FootRDC WordPress API. Football stays on the dedicated configurable RDC Football Core REST client; direct Sportmonks/API-Football calls0. Default RDCF_ENV=off/legacy production behavior unchanged; only explicit staging builds use staging.sportrdc.com. No production-origin switch, release signing, app publishing or OS-verified deep-link claim.
+
+Next production target is sportrdc.com, not footrdc.com. A separately authorized phase must audit/replace SportRDC manual/FTP production deployment with reviewed GitHub-controlled immutable releases, health checks and rollback; integrate RDC Football in the existing editorial/theme context; separately approve GeneratePress later; validate the full architecture before considering FootRDC. No workflow implemented, theme changed, SportPress removed or production inspected/deployed here. Theme similarity is not verified. Staging remains immutable33f84cb, existing scheduler/readiness/provider configuration untouched. Genuine Linafoot live observation/latency validation remains PENDING.
+
+Existing-app regression coverage is PARTIAL: unchanged news/editorial/saved/connectivity/constants/identity/CI sources and preserved service initialization/build integrity, but device news/article/saved/reconnect behavior and actual Firebase/push/ad delivery NOT TESTED. iOS build/signing/distribution and verified OS links NOT TESTED. Existing Gradle/AGP/Kotlin future compatibility warnings remain deferred; no unrelated SDK upgrade.
+
+Consolidation build close-out: Android staging debug prePASS4.0seconds/postPASS39.4seconds in the original develop checkout, no release signing/publishing. Both40-test rounds PASS and both2-test staging rounds PASS (17seconds/11seconds), analyzers identical46infos/0new issues. Offline dependency resolution leaves accepted pubspec.lock/package versions unchanged; original Podfile.lock hash verified again. Documentation-only follow-up integrated into develop; target push/equality verified in the final report. Accepted feature tipdccc9f0 retained; Flutter main unchanged.
+
 ## Status
 
 Phase6 stable non-live implementation and staging acceptance PASS. Operator-approved immutable backend `33f84cbfe798f98688c29bfe884fc0b37b6782fc` is deployed to staging (Core0.4.1, schema0.3.0 unchanged). Actual Group A/B/Playoff metadata and31teams across25+6distinct pages pass. Backend feature `codex/flutter-api-integration` and app feature `codex/rdc-football-integration` remain unmerged; no production distribution.
