@@ -12,6 +12,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:foot_rdc/features/football/presentation/football_strings.dart';
+import 'package:foot_rdc/features/football/presentation/football_screens.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,12 +97,7 @@ Future<void> main() async {
   // Open box for storing articles
   await Hive.openBox<ArticleModel>('articles');
 
-  runApp(
-    ProviderScope(
-      observers: [LoggerRiverpod()],
-      child: const MyApp(),
-    ),
-  );
+  runApp(ProviderScope(observers: [LoggerRiverpod()], child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -111,6 +109,15 @@ class MyApp extends ConsumerWidget {
 
     return MaterialApp(
       title: 'FootRDC',
+      locale: const Locale('fr'),
+      supportedLocales: const [Locale('fr'), Locale('en')],
+      localizationsDelegates: const [
+        FootballStrings.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      onGenerateRoute: footballRoute,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ref

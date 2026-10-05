@@ -13,36 +13,35 @@ final dioClientProvider = Provider<DioClient>((ref) {
 class DioClient {
   late final Dio _dio;
 
-  DioClient() {
-    _dio = Dio(_baseOptions);
-    _setupInterceptors();
+  DioClient({String? baseUrl, bool logResponses = true}) {
+    _dio = Dio(_baseOptions.copyWith(baseUrl: baseUrl));
+    _setupInterceptors(logResponses);
   }
 
   /// Base configuration for all requests
   BaseOptions get _baseOptions => BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 30),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        validateStatus: (status) => status != null && status < 500,
-      );
+    baseUrl: ApiConstants.baseUrl,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+    sendTimeout: const Duration(seconds: 30),
+    headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+    validateStatus: (status) => status != null && status < 500,
+  );
 
   /// Setup interceptors for logging and error handling
-  void _setupInterceptors() {
+  void _setupInterceptors(bool logResponses) {
     // Logging interceptor (only in debug mode)
-    if (kDebugMode) {
-      _dio.interceptors.add(LogInterceptor(
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: false,
-        responseBody: true,
-        error: true,
-        logPrint: (obj) => debugPrint('DIO: $obj'),
-      ));
+    if (kDebugMode && logResponses) {
+      _dio.interceptors.add(
+        LogInterceptor(
+          requestHeader: true,
+          requestBody: true,
+          responseHeader: false,
+          responseBody: true,
+          error: true,
+          logPrint: (obj) => debugPrint('DIO: $obj'),
+        ),
+      );
     }
 
     // Retry interceptor for transient failures
@@ -159,8 +158,8 @@ class _RetryInterceptor extends Interceptor {
     this._dio, {
     int maxRetries = 3,
     Duration baseDelay = const Duration(seconds: 1),
-  })  : _maxRetries = maxRetries,
-        _baseDelay = baseDelay;
+  }) : _maxRetries = maxRetries,
+       _baseDelay = baseDelay;
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
@@ -172,7 +171,8 @@ class _RetryInterceptor extends Interceptor {
 
         if (kDebugMode) {
           debugPrint(
-              'DIO: Retrying request (${retries + 1}/$_maxRetries) after ${delay.inMilliseconds}ms');
+            'DIO: Retrying request (${retries + 1}/$_maxRetries) after ${delay.inMilliseconds}ms',
+          );
         }
 
         await Future.delayed(delay);

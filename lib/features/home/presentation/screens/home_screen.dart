@@ -12,6 +12,9 @@ import 'package:foot_rdc/shared/providers/connectivity_provider.dart';
 import 'package:foot_rdc/shared/widgets/connectivity_banner.dart';
 import 'package:foot_rdc/shared/widgets/persistent_banner_ad.dart';
 import 'package:foot_rdc/shared/widgets/premium_bottom_nav_bar.dart';
+import 'package:foot_rdc/features/football/presentation/football_providers.dart';
+import 'package:foot_rdc/features/football/presentation/football_screens.dart';
+import 'package:foot_rdc/features/football/presentation/football_strings.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -107,11 +110,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final currentPage = ref.watch(currentPageProvider);
+    final coreFootball = ref.watch(footballConfigProvider) != null;
 
     // Auto-refresh the active tab once per offline → online transition.
     // Single-edge trigger — no aggressive reload loops.
-    ref.listen<AsyncValue<ConnectivityStatus>>(connectivityStatusProvider,
-        (prev, next) {
+    ref.listen<AsyncValue<ConnectivityStatus>>(connectivityStatusProvider, (
+      prev,
+      next,
+    ) {
       final prevStatus = prev?.valueOrNull;
       final newStatus = next.valueOrNull;
       if (prevStatus == ConnectivityStatus.disconnected &&
@@ -123,8 +129,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final pages = [
       const NewsListScreen(),
       EditorialListScreen(key: _editorialScreenKey),
-      MatchesListScreen(key: _matchesScreenKey),
-      RankingsScreen(key: _rankingsScreenKey),
+      coreFootball
+          ? const FootballMatchCenterScreen()
+          : MatchesListScreen(key: _matchesScreenKey),
+      coreFootball
+          ? const FootballCompetitionScreen()
+          : RankingsScreen(key: _rankingsScreenKey),
       const SavedArticlesScreen(),
     ];
 
@@ -157,18 +167,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               }
               ref.read(currentPageProvider.notifier).state = index;
             },
-            items: const [
-              PremiumNavItem.svg(
+            items: [
+              const PremiumNavItem.svg(
                 iconPath: 'assets/images/home-icon-v2-outlined.svg',
                 activeIconPath: 'assets/images/home-icon-v2-filled.svg',
                 label: 'Accueil',
               ),
-              PremiumNavItem.icon(
+              const PremiumNavItem.icon(
                 icon: Icons.lightbulb_outline_rounded,
                 activeIcon: Icons.lightbulb_rounded,
                 label: 'À Savoir',
               ),
-              PremiumNavItem.svg(
+              const PremiumNavItem.svg(
                 iconPath: 'assets/images/soccer-field-icon-outlined.svg',
                 activeIconPath: 'assets/images/soccer-field-icon-filled.svg',
                 label: 'Matchs',
@@ -176,9 +186,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               PremiumNavItem.svg(
                 iconPath: 'assets/images/ranking-icon-outlined.svg',
                 activeIconPath: 'assets/images/ranking-icon-filled.svg',
-                label: 'Classement',
+                label: coreFootball
+                    ? FootballStrings.of(context).t('competitions')
+                    : 'Classement',
               ),
-              PremiumNavItem.svg(
+              const PremiumNavItem.svg(
                 iconPath: 'assets/images/save-icon-outlined.svg',
                 activeIconPath: 'assets/images/save-icon-filled.svg',
                 label: 'Enregistrés',
