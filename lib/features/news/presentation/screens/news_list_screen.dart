@@ -46,6 +46,9 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
 
   final String _nativeAdUnitId = AdConstants.nativeAdUnitId;
 
+  /// The sponsor slots below still point at placeholder addresses. Off until real images exist.
+  static const _sponsorsReady = false;
+
   final List<Map<String, String>> _carouselImages = [
     {
       'image': 'https://footrdc.com/image-sponsor-01',
@@ -402,7 +405,7 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
                   children: [
                     if (cacheState.articles.isNotEmpty) _buildHero(cacheState.articles.first),
                     const HomeMatchStrip(),
-                    _buildCarousel(),
+                    if (_sponsorsReady) _buildCarousel(),
                   ],
                 );
               }

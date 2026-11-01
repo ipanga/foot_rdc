@@ -23,3 +23,9 @@ Reason: same real navigation on iOS and Android, repeatable. Alternative: manual
 
 ## 2026-11-01 Project stays on CocoaPods
 Reason: `google_mobile_ads` has no Swift Package Manager support and fails `pod install` when the global SwiftPM setting is on. Set per project in `pubspec.yaml`, leaving the machine's global Flutter config alone. Revisit when the ads plugin adopts SwiftPM; Flutter says disabling it will eventually stop being allowed.
+
+## 2026-11-01 Minimum iOS is 15.0
+Reason: Xcode 27 refuses targets below 15.0, so the project could not build on this Mac. Effect: devices on iOS 13 and 14 stop receiving updates; they keep the installed version. Alternative: keep an older Xcode. Rejected: App Store builds need a current toolchain.
+
+## 2026-11-01 Sponsor carousel hidden on Home
+Reason: its three slots point at placeholder addresses on footrdc.com and render as an empty box. The code stays behind `_sponsorsReady` until real images and links exist.

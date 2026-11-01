@@ -136,13 +136,16 @@ class MatchRow extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (showTime && !match.status.hasScore)
+                      // A result list needs no repeated "Terminé": the score says it.
+                      if (showTime && (!match.status.hasScore || match.status == MatchStatus.finished))
                         Text(
                           kickoffTime(match.kickoff),
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: scheme.onSurfaceVariant),
-                        )
-                      else if (match.status == MatchStatus.finished)
-                        Text('Terminé', style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: match.status == MatchStatus.finished ? FontWeight.w400 : FontWeight.w600,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
                       StatusBadge(status: match.status, minute: match.minute),
                     ],
                   ),
@@ -295,7 +298,7 @@ class DayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
-    color: Theme.of(context).colorScheme.surfaceContainerLow,
+    color: Theme.of(context).brightness == Brightness.dark ? AppColors.surfaceContainerDark : AppColors.neutral100,
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
     child: Semantics(
       header: true,

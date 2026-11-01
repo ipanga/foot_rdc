@@ -79,7 +79,6 @@ void main() {
     testWidgets('states are in words, not only colour', (tester) async {
       for (final (status, text) in [
         (MatchStatus.postponed, 'Reporté'),
-        (MatchStatus.finished, 'Terminé'),
         (MatchStatus.awarded, 'Décision administrative'),
         (MatchStatus.halftime, 'Mi-temps'),
       ]) {

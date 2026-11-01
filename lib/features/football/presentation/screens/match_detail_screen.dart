@@ -214,7 +214,7 @@ class _EventRow extends StatelessWidget {
         child: Row(
           children: [
             SizedBox(
-              width: 40,
+              width: 52,
               child: Text(event.clock, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             ),
             Icon(icon, size: 18, color: color),
