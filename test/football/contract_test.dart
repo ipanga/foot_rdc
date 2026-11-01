@@ -158,6 +158,33 @@ void main() {
     });
   });
 
+  group('Failure kinds', () {
+    test('a timeout is reported as such, with no retry loop', () async {
+      final (repo, adapter, _) = contractRepository();
+      adapter.timeout = true;
+      await expectLater(
+        repo.club(4),
+        throwsA(isA<FootballFailure>().having((f) => f.kind, 'kind', FootballError.timeout)),
+      );
+      expect(adapter.calls, hasLength(1));
+    });
+
+    test('server errors and empty provider data', () async {
+      final (repo, adapter, _) = contractRepository();
+      adapter.failWith = 500;
+      await expectLater(
+        repo.seasons(),
+        throwsA(isA<FootballFailure>().having((f) => f.kind, 'kind', FootballError.server)),
+      );
+      adapter.failWith = null;
+      final (empty, _, _) = contractRepository(
+        data: {...productionContract(), 'standings_current': [], 'upcoming': []},
+      );
+      expect(await empty.standings(324), isEmpty);
+      expect((await empty.window('upcoming', 324)).rows, isEmpty);
+    });
+  });
+
   group('Cache', () {
     test('a fresh copy serves without a request; an old one refetches', () async {
       var now = DateTime.utc(2026, 11, 1, 12);

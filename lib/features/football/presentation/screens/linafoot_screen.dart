@@ -146,11 +146,12 @@ class _Overview extends ConsumerWidget {
             ),
           if ((results.valueOrNull?.value ?? const []).isNotEmpty) ...[
             SectionHeader('Derniers résultats', action: 'Tout voir', onAction: () => onTab(2)),
-            for (final m in results.requireValue.value) MatchRow(match: m, onTap: () => openMatch(context, m.id)),
+            for (final m in results.requireValue.value)
+              MatchRow(match: m, showDate: true, onTap: () => openMatch(context, m.id)),
           ],
           if (upcoming.isNotEmpty) ...[
             SectionHeader('Prochains matchs', action: 'Tout voir', onAction: () => onTab(1)),
-            for (final m in upcoming) MatchRow(match: m, onTap: () => openMatch(context, m.id)),
+            for (final m in upcoming) MatchRow(match: m, showDate: true, onTap: () => openMatch(context, m.id)),
           ],
           for (final table in (tables.valueOrNull?.value ?? const <StandingTable>[]).take(2)) ...[
             SectionHeader(

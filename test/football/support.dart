@@ -17,6 +17,7 @@ class ContractAdapter implements HttpClientAdapter {
   final List<Uri> calls = [];
   int? failWith;
   bool offline = false;
+  bool timeout = false;
   ContractAdapter([Map<String, dynamic>? data]) : data = data ?? productionContract();
 
   dynamic route(Uri uri) {
@@ -57,6 +58,7 @@ class ContractAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     calls.add(options.uri);
+    if (timeout) throw DioException.connectionTimeout(requestOptions: options, timeout: const Duration(seconds: 1));
     if (offline) throw DioException.connectionError(requestOptions: options, reason: 'offline');
     if (failWith != null) return ResponseBody.fromString('{}', failWith!, headers: _json);
     final body = route(options.uri);

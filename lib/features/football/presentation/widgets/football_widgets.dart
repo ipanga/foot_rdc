@@ -105,7 +105,10 @@ class StatusBadge extends StatelessWidget {
 class MatchRow extends StatelessWidget {
   final Match match;
   final VoidCallback? onTap;
-  const MatchRow({super.key, required this.match, this.onTap});
+
+  /// For lists without day headers: the date must then sit on the row itself.
+  final bool showDate;
+  const MatchRow({super.key, required this.match, this.onTap, this.showDate = false});
 
   String get _semantics {
     final score = match.status.hasScore && match.home.score != null
@@ -136,6 +139,12 @@ class MatchRow extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (showDate && match.kickoff != null)
+                        Text(
+                          shortDate(match.kickoff),
+                          maxLines: 1,
+                          style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                        ),
                       // A result list needs no repeated "Terminé": the score says it.
                       if (showTime && (!match.status.hasScore || match.status == MatchStatus.finished))
                         Text(

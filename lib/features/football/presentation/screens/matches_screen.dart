@@ -92,7 +92,8 @@ class _Today extends ConsumerWidget {
                 ),
                 if ((next.valueOrNull?.value ?? const []).isNotEmpty) ...[
                   const SectionHeader('Prochains matchs'),
-                  for (final m in next.requireValue.value) MatchRow(match: m, onTap: () => openMatch(context, m.id)),
+                  for (final m in next.requireValue.value)
+                    MatchRow(match: m, showDate: true, onTap: () => openMatch(context, m.id)),
                 ],
               ],
             ],

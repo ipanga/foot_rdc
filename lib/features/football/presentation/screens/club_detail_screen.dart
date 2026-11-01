@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/navigation/deep_link_handler.dart';
 import '../../domain/countries.dart';
 import '../../domain/models.dart';
 import '../football_labels.dart';
@@ -133,11 +134,11 @@ class _Overview extends ConsumerWidget {
           ),
         if (next.isNotEmpty) ...[
           const SectionHeader('Prochain match'),
-          MatchRow(match: next.first, onTap: () => openMatch(context, next.first.id)),
+          MatchRow(match: next.first, showDate: true, onTap: () => openMatch(context, next.first.id)),
         ],
         if (last.isNotEmpty) ...[
           const SectionHeader('Dernier résultat'),
-          MatchRow(match: last.first, onTap: () => openMatch(context, last.first.id)),
+          MatchRow(match: last.first, showDate: true, onTap: () => openMatch(context, last.first.id)),
         ],
         if (row != null) ...[
           const SectionHeader('Classement'),
@@ -175,7 +176,7 @@ class _News extends ConsumerWidget {
               return ListTile(
                 title: Text(item.title, maxLines: 3, overflow: TextOverflow.ellipsis),
                 subtitle: Text(shortDate(item.date)),
-                onTap: item.link.isEmpty ? null : () => launchUrl(Uri.parse(item.link)),
+                onTap: item.link.isEmpty ? null : () => pushLinks.add(item.link),
               );
             },
           ),

@@ -97,6 +97,16 @@ void main() {
       expect(find.text("63'"), findsOneWidget);
     });
 
+    testWidgets('a list without day headers carries the date', (tester) async {
+      await initializeDateFormatting('fr');
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MatchRow(match: sample(MatchStatus.scheduled), showDate: true)),
+        ),
+      );
+      expect(find.textContaining('nov'), findsOneWidget);
+    });
+
     testWidgets('a scheduled match shows no invented score', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -296,6 +306,54 @@ void main() {
       expect(find.text('saved'), findsOneWidget);
       expect(find.byType(StaleNotice), findsOneWidget);
     });
+  });
+
+  group('Responsive', () {
+    for (final width in [320.0, 360.0, 768.0]) {
+      for (final scale in [1.0, 1.3]) {
+        for (final dark in [false, true]) {
+          testWidgets('main screens at $width, text $scale, dark $dark', (tester) async {
+            tester.view.physicalSize = Size(width, 900);
+            tester.view.devicePixelRatio = 1;
+            addTearDown(tester.view.reset);
+            final (repo, _, _) = contractRepository();
+            for (final screen in const <Widget>[
+              MatchesScreen(),
+              LinafootScreen(),
+              LinafootScreen(initialTab: 3),
+              ClubDetailScreen(clubId: 4),
+              MatchDetailScreen(matchId: 6476),
+            ]) {
+              await tester.pumpWidget(
+                ProviderScope(
+                  key: UniqueKey(),
+                  overrides: [footballRepositoryProvider.overrideWith((ref) async => repo)],
+                  child: MaterialApp(
+                    theme: dark ? ThemeData.dark() : ThemeData.light(),
+                    locale: const Locale('fr'),
+                    supportedLocales: const [Locale('fr')],
+                    localizationsDelegates: const [
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                    ],
+                    builder: (context, child) => MediaQuery(
+                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+                      child: child!,
+                    ),
+                    home: screen,
+                  ),
+                ),
+              );
+              await settle(tester);
+              expect(tester.takeException(), isNull);
+            }
+            await tester.pumpWidget(const SizedBox());
+            await settle(tester);
+          });
+        }
+      }
+    }
   });
 
   group('Live polling', () {

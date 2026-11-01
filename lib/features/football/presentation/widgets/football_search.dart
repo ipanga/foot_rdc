@@ -22,7 +22,9 @@ class FootballSearchResults extends ConsumerWidget {
     final key = query.trim().toLowerCase();
     if (key.length < 2) return const SizedBox.shrink();
     final season = ref.watch(currentSeasonProvider).valueOrNull;
-    final clubs = season == null ? const <Club>[] : (ref.watch(clubsProvider(season.id)).valueOrNull?.value ?? const <Club>[]);
+    final clubs = season == null
+        ? const <Club>[]
+        : (ref.watch(clubsProvider(season.id)).valueOrNull?.value ?? const <Club>[]);
     final matches = clubs.where((c) => c.name.toLowerCase().contains(key)).take(3).toList();
     final players = (ref.watch(_playerSearchProvider(query.trim())).valueOrNull ?? const <Player>[]).take(3).toList();
     if (matches.isEmpty && players.isEmpty) return const SizedBox.shrink();
