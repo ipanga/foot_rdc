@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/football_client.dart';
-import '../../data/football_repository_v2.dart';
+import '../../data/football_repository.dart';
 import '../../domain/models.dart';
 import '../football_routes.dart';
 import '../providers.dart';

@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/network/dio_client.dart';
 import '../data/football_client.dart';
-import '../data/football_repository_v2.dart';
+import '../data/football_repository.dart';
 import '../domain/models.dart';
 
 final footballRepositoryProvider = FutureProvider<FootballRepository>((ref) async {

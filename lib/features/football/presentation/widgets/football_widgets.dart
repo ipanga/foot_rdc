@@ -14,10 +14,14 @@ class ClubCrest extends StatelessWidget {
   final double size;
   const ClubCrest({super.key, this.url, required this.name, this.size = 24});
 
+  /// Tests run without the image plugin.
+  @visibleForTesting
+  static bool loadImages = true;
+
   @override
   Widget build(BuildContext context) {
     final fallback = _Initials(name: name, size: size);
-    if (url == null || url!.isEmpty) return fallback;
+    if (url == null || url!.isEmpty || !loadImages) return fallback;
     return ExcludeSemantics(
       child: CachedNetworkImage(
         imageUrl: url!,

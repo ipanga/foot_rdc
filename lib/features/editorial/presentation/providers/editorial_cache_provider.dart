@@ -80,7 +80,6 @@ class EditorialCacheNotifier extends StateNotifier<EditorialCacheState> {
   }
 }
 
-final editorialCacheProvider =
-    StateNotifierProvider<EditorialCacheNotifier, EditorialCacheState>((ref) {
+final editorialCacheProvider = StateNotifierProvider.family<EditorialCacheNotifier, EditorialCacheState, String>((ref, slug) {
   return EditorialCacheNotifier();
 });

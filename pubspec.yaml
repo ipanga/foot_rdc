@@ -54,6 +54,8 @@ dependencies:
   onesignal_flutter: ^5.2.0
   carousel_slider: ^5.0.0
   connectivity_plus: ^6.0.0
+  cached_network_image: ^3.4.1
+  app_links: ^6.3.3
 
 
 dev_dependencies:

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/features/football/data/football_client.dart';
 import 'package:foot_rdc/features/football/data/football_mappers.dart';
-import 'package:foot_rdc/features/football/data/football_repository_v2.dart';
+import 'package:foot_rdc/features/football/data/football_repository.dart';
 import 'package:foot_rdc/features/football/domain/countries.dart';
 import 'package:foot_rdc/features/football/domain/models.dart';
 import 'package:foot_rdc/features/football/presentation/football_labels.dart';
@@ -46,7 +46,10 @@ void main() {
       expect(past.length, greaterThan(current.length));
       expect(past.any((t) => t.stage!.isPlayoff), isTrue);
       expect(past.expand((t) => t.rows).map((r) => r.stageId).toSet().contains(464), isFalse);
-      expect(adapter.calls.where((u) => u.path.endsWith('/standings')).map((u) => u.queryParameters['season_id']), containsAll(['324', '325']));
+      expect(
+        adapter.calls.where((u) => u.path.endsWith('/standings')).map((u) => u.queryParameters['season_id']),
+        containsAll(['324', '325']),
+      );
       expect((await repo.clubs(325)).length, greaterThan((await repo.clubs(324)).length));
     });
 
@@ -111,7 +114,15 @@ void main() {
     });
 
     test('malformed optional fields stay safe', () {
-      final m = matchFrom({'id': 1, 'home_team_id': 2, 'away_team_id': 3, 'status': 'live', 'home_score': 'x', 'kickoff_at': 'bad', 'quality': 'bad'});
+      final m = matchFrom({
+        'id': 1,
+        'home_team_id': 2,
+        'away_team_id': 3,
+        'status': 'live',
+        'home_score': 'x',
+        'kickoff_at': 'bad',
+        'quality': 'bad',
+      });
       expect(m.home.score, isNull);
       expect(m.kickoff, isNull);
       expect(m.quality.verified, isFalse);
@@ -119,17 +130,31 @@ void main() {
     });
 
     test('a non-list response is a malformed failure, not a crash', () async {
-      final (repo, _, _) = contractRepository(data: {...productionContract(), 'upcoming': {'oops': true}});
-      expect(() => repo.window('upcoming', 324), throwsA(isA<FootballFailure>().having((f) => f.kind, 'kind', FootballError.malformed)));
+      final (repo, _, _) = contractRepository(
+        data: {
+          ...productionContract(),
+          'upcoming': {'oops': true},
+        },
+      );
+      expect(
+        () => repo.window('upcoming', 324),
+        throwsA(isA<FootballFailure>().having((f) => f.kind, 'kind', FootballError.malformed)),
+      );
     });
 
     test('HTTP and offline map to plain failure kinds', () async {
       final (repo, adapter, _) = contractRepository();
       adapter.failWith = 404;
-      await expectLater(repo.club(99), throwsA(isA<FootballFailure>().having((f) => f.kind, 'kind', FootballError.notFound)));
+      await expectLater(
+        repo.club(99),
+        throwsA(isA<FootballFailure>().having((f) => f.kind, 'kind', FootballError.notFound)),
+      );
       adapter.failWith = null;
       adapter.offline = true;
-      await expectLater(repo.club(4), throwsA(isA<FootballFailure>().having((f) => f.kind, 'kind', FootballError.offline)));
+      await expectLater(
+        repo.club(4),
+        throwsA(isA<FootballFailure>().having((f) => f.kind, 'kind', FootballError.offline)),
+      );
     });
   });
 

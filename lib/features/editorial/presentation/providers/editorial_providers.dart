@@ -3,18 +3,31 @@ import 'package:foot_rdc/core/constants/api_constants.dart';
 import 'package:foot_rdc/core/network/dio_client.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
 
-/// Resolves the WordPress category slug `bon-a-savoir` to its numeric ID.
-/// Categories rarely change, so the result is cached for the session by
-/// Riverpod's [FutureProvider]. Returns `null` if no matching category exists
-/// (the category was deleted or renamed on the WP side).
-final editorialCategoryIdProvider = FutureProvider<int?>((ref) async {
+/// A WordPress category shown as a list. The numeric ID is looked up from the slug at runtime.
+class EditorialChannel {
+  final String slug;
+  final String title;
+  final String missingText;
+  const EditorialChannel({required this.slug, required this.title, required this.missingText});
+
+  static const edito = EditorialChannel(
+    slug: ApiConstants.editoCategorySlug,
+    title: 'ÉDITO',
+    missingText: 'La catégorie Édito n\'a pas été trouvée. Réessayez plus tard.',
+  );
+  static const bonASavoir = EditorialChannel(
+    slug: ApiConstants.bonASavoirCategorySlug,
+    title: 'BON À SAVOIR',
+    missingText: 'La catégorie Bon à savoir n\'a pas été trouvée. Réessayez plus tard.',
+  );
+}
+
+/// Category ID for a slug, cached for the session. Null when the category no longer exists on WordPress.
+final editorialCategoryIdProvider = FutureProvider.family<int?, String>((ref, slug) async {
   final dioClient = ref.watch(dioClientProvider);
   final response = await dioClient.get<List<dynamic>>(
     '${ApiConstants.wpApiPath}/categories',
-    queryParameters: {
-      'slug': ApiConstants.bonASavoirCategorySlug,
-      '_fields': 'id,slug',
-    },
+    queryParameters: {'slug': slug, '_fields': 'id,slug'},
   );
   final list = response.data ?? const <dynamic>[];
   if (list.isEmpty) return null;

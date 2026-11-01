@@ -5,10 +5,11 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:foot_rdc/core/network/dio_client.dart';
 import 'package:foot_rdc/features/football/data/football_client.dart';
-import 'package:foot_rdc/features/football/data/football_repository_v2.dart';
+import 'package:foot_rdc/features/football/data/football_repository.dart';
 
-Map<String, dynamic> productionContract() =>
-    Map<String, dynamic>.from(jsonDecode(File('test/fixtures/production_contract.json').readAsStringSync())['data'] as Map);
+Map<String, dynamic> productionContract() => Map<String, dynamic>.from(
+  jsonDecode(File('test/fixtures/production_contract.json').readAsStringSync())['data'] as Map,
+);
 
 /// Serves the captured Production responses. No network is touched in tests.
 class ContractAdapter implements HttpClientAdapter {
@@ -50,21 +51,37 @@ class ContractAdapter implements HttpClientAdapter {
   }
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
     calls.add(options.uri);
     if (offline) throw DioException.connectionError(requestOptions: options, reason: 'offline');
     if (failWith != null) return ResponseBody.fromString('{}', failWith!, headers: _json);
     final body = route(options.uri);
     if (body == null) return ResponseBody.fromString('{"code":"rdcf_not_found"}', 404, headers: _json);
-    return ResponseBody.fromString(jsonEncode(body), 200, headers: {..._json, 'x-wp-totalpages': ['1']});
+    return ResponseBody.fromString(
+      jsonEncode(body),
+      200,
+      headers: {
+        ..._json,
+        'x-wp-totalpages': ['1'],
+      },
+    );
   }
 
-  static const _json = {'content-type': ['application/json']};
+  static const _json = {
+    'content-type': ['application/json'],
+  };
   @override
   void close({bool force = false}) {}
 }
 
-(FootballRepository, ContractAdapter, MemoryFootballCache) contractRepository({DateTime Function()? clock, Map<String, dynamic>? data}) {
+(FootballRepository, ContractAdapter, MemoryFootballCache) contractRepository({
+  DateTime Function()? clock,
+  Map<String, dynamic>? data,
+}) {
   final http = DioClient(baseUrl: FootballClient.baseUrl, logResponses: false);
   http.dio.interceptors.clear();
   final adapter = ContractAdapter(data);

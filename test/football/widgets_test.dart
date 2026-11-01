@@ -1,0 +1,392 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:foot_rdc/core/navigation/deep_links.dart';
+import 'package:foot_rdc/features/football/data/football_repository.dart';
+import 'package:foot_rdc/features/football/domain/models.dart';
+import 'package:foot_rdc/features/football/presentation/providers.dart';
+import 'package:foot_rdc/features/football/presentation/screens/club_detail_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/linafoot_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/match_detail_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/matches_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/player_detail_screen.dart';
+import 'package:foot_rdc/features/football/presentation/widgets/football_widgets.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'support.dart';
+
+Widget app(
+  Widget home,
+  FootballRepository repo, {
+  double scale = 1,
+  Size size = const Size(390, 844),
+  List<Override> extra = const [],
+}) => ProviderScope(
+  overrides: [footballRepositoryProvider.overrideWith((ref) async => repo), ...extra],
+  child: MediaQuery(
+    data: MediaQueryData(size: size, textScaler: TextScaler.linear(scale)),
+    child: MaterialApp(
+      locale: const Locale('fr'),
+      supportedLocales: const [Locale('fr')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: home,
+    ),
+  ),
+);
+
+const home = MatchSide(teamId: 1, name: 'TP Mazembe', score: 2);
+const away = MatchSide(teamId: 2, name: 'AS Vita Club', score: 1);
+Match sample(MatchStatus status, {int? minute}) => Match(
+  id: 1,
+  seasonId: 324,
+  stageId: 1,
+  home: home,
+  away: away,
+  status: status,
+  minute: minute,
+  kickoff: DateTime.utc(2026, 11, 4, 12),
+);
+
+Future<void> settle(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 5)));
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
+void tall(WidgetTester tester) {
+  tester.view.physicalSize = const Size(430, 2600);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
+void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+    ClubCrest.loadImages = false;
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  group('MatchRow', () {
+    testWidgets('states are in words, not only colour', (tester) async {
+      for (final (status, text) in [
+        (MatchStatus.postponed, 'Reporté'),
+        (MatchStatus.finished, 'Terminé'),
+        (MatchStatus.awarded, 'Décision administrative'),
+        (MatchStatus.halftime, 'Mi-temps'),
+      ]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(body: MatchRow(match: sample(status))),
+          ),
+        );
+        expect(find.text(text), findsOneWidget);
+      }
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MatchRow(match: sample(MatchStatus.live, minute: 63))),
+        ),
+      );
+      expect(find.text("63'"), findsOneWidget);
+    });
+
+    testWidgets('a scheduled match shows no invented score', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MatchRow(match: sample(MatchStatus.scheduled))),
+        ),
+      );
+      expect(find.text('2'), findsNothing);
+    });
+
+    testWidgets('screen readers hear the match', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MatchRow(match: sample(MatchStatus.finished))),
+        ),
+      );
+      expect(find.bySemanticsLabel(RegExp('TP Mazembe contre AS Vita Club, 2 à 1')), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('tap target is at least 48 high', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MatchRow(match: sample(MatchStatus.finished), onTap: () {}),
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(InkWell)).height, greaterThanOrEqualTo(48));
+    });
+  });
+
+  group('Crest', () {
+    testWidgets('a club without a crest shows initials', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: ClubCrest(name: 'Etoile du Congo', size: 40)),
+        ),
+      );
+      expect(find.text('EC'), findsOneWidget);
+    });
+  });
+
+  group('Standings', () {
+    final rows = [
+      for (var i = 1; i <= 13; i++)
+        StandingRow(
+          teamId: i,
+          teamName: 'Club très long numéro $i de Lubumbashi',
+          stageId: 1,
+          position: i,
+          played: 3,
+          won: 1,
+          drawn: 1,
+          lost: 1,
+          goalsFor: 2,
+          goalsAgainst: 2,
+          goalDifference: 0,
+          points: 4,
+        ),
+    ];
+    for (final width in [320.0, 390.0]) {
+      for (final scale in [1.0, 1.3]) {
+        for (final full in [false, true]) {
+          testWidgets('fits $width at scale $scale, full $full', (tester) async {
+            tester.view.physicalSize = Size(width, 900);
+            tester.view.devicePixelRatio = 1;
+            addTearDown(tester.view.reset);
+            await tester.pumpWidget(
+              MaterialApp(
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+                  child: child!,
+                ),
+                home: Scaffold(
+                  body: SingleChildScrollView(
+                    child: StandingsTableView(rows: rows, full: full),
+                  ),
+                ),
+              ),
+            );
+            expect(tester.takeException(), isNull);
+            expect(find.text(full ? 'BC' : 'Diff.'), findsOneWidget);
+          });
+        }
+      }
+    }
+  });
+
+  group('Screens on the Production contract', () {
+    testWidgets('Matchs tab shows an honest empty day and the next matches', (tester) async {
+      tall(tester);
+      final (repo, _, _) = contractRepository();
+      await tester.pumpWidget(app(const MatchesScreen(), repo));
+      await settle(tester);
+      expect(find.text("Pas de match aujourd'hui"), findsOneWidget);
+      expect(find.text('Prochains matchs'), findsOneWidget);
+    });
+
+    testWidgets('switching to 2025–2026 changes every request and shows the notice', (tester) async {
+      final (repo, adapter, _) = contractRepository();
+      await tester.pumpWidget(app(const LinafootScreen(), repo));
+      await settle(tester);
+      expect(find.text('2026–2027 · Saison régulière'), findsOneWidget);
+      adapter.calls.clear();
+      await tester.tap(find.byTooltip('Changer de saison'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text('2025–2026').last);
+      await settle(tester);
+      expect(find.text('Saison passée · 2025–2026'), findsOneWidget);
+      final seasons = adapter.calls.map((u) => u.queryParameters['season_id']).whereType<String>().toSet();
+      expect(seasons, {'325'}, reason: 'no request may mix seasons');
+      await tester.pumpWidget(const SizedBox());
+      await settle(tester);
+    });
+
+    testWidgets('standings tab shows provisional tables and the full view', (tester) async {
+      tall(tester);
+      final (repo, _, _) = contractRepository();
+      await tester.pumpWidget(app(const LinafootScreen(initialTab: 3), repo));
+      await settle(tester);
+      expect(find.text('Groupe A'), findsWidgets);
+      expect(find.textContaining('Classement provisoire'), findsOneWidget);
+      await tester.tap(find.text('Tableau complet'));
+      await tester.pump();
+      expect(find.text('BP'), findsOneWidget);
+    });
+
+    testWidgets('match detail shows partial events without inventing names', (tester) async {
+      final (repo, _, _) = contractRepository();
+      await tester.pumpWidget(app(const MatchDetailScreen(matchId: 6476), repo));
+      await settle(tester);
+      expect(find.text('Malole'), findsWidgets);
+      expect(find.text('Fil du match'), findsOneWidget);
+      expect(find.textContaining('Stade Tshikisha'), findsOneWidget);
+      expect(find.text('Kalombo Kalala'), findsOneWidget);
+      expect(find.text('Remplacement'), findsWidgets);
+    });
+
+    testWidgets('club page opens with its tabs and squad groups', (tester) async {
+      tall(tester);
+      final (repo, _, _) = contractRepository();
+      await tester.pumpWidget(app(const ClubDetailScreen(clubId: 4), repo));
+      await settle(tester);
+      expect(find.text('FC Saint Eloi Lupopo'), findsWidgets);
+      await tester.tap(find.widgetWithText(Tab, 'Effectif'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await settle(tester);
+      expect(find.textContaining('Défenseurs'), findsOneWidget);
+      expect(find.text('Effectif non disponible'), findsNothing);
+    });
+
+    testWidgets('player page shows only known fields', (tester) async {
+      final (repo, _, _) = contractRepository();
+      final id = (productionContract()['squad'] as List).first['player_id'] as int;
+      await tester.pumpWidget(app(PlayerDetailScreen(playerId: id), repo));
+      await settle(tester);
+      expect(find.text('Effectifs'), findsOneWidget);
+      expect(find.text('null'), findsNothing);
+    });
+
+    testWidgets('offline with nothing saved shows plain French and a retry', (tester) async {
+      final (repo, adapter, _) = contractRepository();
+      adapter.offline = true;
+      await tester.pumpWidget(app(const MatchDetailScreen(matchId: 6476), repo));
+      await settle(tester);
+      expect(find.text('Pas de connexion. Vérifiez votre réseau.'), findsOneWidget);
+      expect(find.text('Réessayer'), findsOneWidget);
+      expect(find.textContaining('Dio'), findsNothing);
+      expect(find.textContaining('404'), findsNothing);
+    });
+
+    testWidgets('a server error never shows HTTP details', (tester) async {
+      final (repo, adapter, _) = contractRepository();
+      adapter.failWith = 503;
+      await tester.pumpWidget(app(const MatchDetailScreen(matchId: 6476), repo));
+      await settle(tester);
+      expect(find.text('Les données sont indisponibles pour le moment.'), findsOneWidget);
+      expect(find.textContaining('503'), findsNothing);
+    });
+
+    testWidgets('saved data stays on screen with a notice when refresh fails', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LoadedView<String>(
+              value: const AsyncValue.data(Loaded('saved', stale: true)),
+              builder: (v) => Text(v),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('saved'), findsOneWidget);
+      expect(find.byType(StaleNotice), findsOneWidget);
+    });
+  });
+
+  group('Live polling', () {
+    test('polls while live and stops when the server says it ended', () async {
+      final data = productionContract();
+      final live = {...(data['match'] as Map), 'status': 'live', 'current_minute': 60};
+      final (repo, adapter, _) = contractRepository(data: {...data, 'match': live});
+      final container = ProviderContainer(
+        overrides: [
+          footballRepositoryProvider.overrideWith((ref) async => repo),
+          livePollIntervalProvider.overrideWithValue(const Duration(milliseconds: 10)),
+        ],
+      );
+      addTearDown(container.dispose);
+      final states = <MatchStatus>[];
+      final done = Completer<void>();
+      final sub = container.listen(matchDetailProvider(6476), (_, next) {
+        final status = next.valueOrNull?.value.match.status;
+        if (status == null) return;
+        states.add(status);
+        if (states.length == 3) adapter.data['match'] = {...live, 'status': 'finished'};
+        if (status == MatchStatus.finished && !done.isCompleted) done.complete();
+      });
+      await done.future.timeout(const Duration(seconds: 5));
+      final calls = adapter.calls.length;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(adapter.calls.length, calls, reason: 'no request after the match ends');
+      sub.close();
+    });
+
+    test('background pauses polling', () async {
+      final data = productionContract();
+      final live = {...(data['match'] as Map), 'status': 'live'};
+      final (repo, adapter, _) = contractRepository(data: {...data, 'match': live});
+      final container = ProviderContainer(
+        overrides: [
+          footballRepositoryProvider.overrideWith((ref) async => repo),
+          livePollIntervalProvider.overrideWithValue(const Duration(milliseconds: 10)),
+        ],
+      );
+      addTearDown(container.dispose);
+      final sub = container.listen(matchDetailProvider(6476), (_, _) {});
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      container.read(appForegroundProvider.notifier).state = false;
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      final calls = adapter.calls.length;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(adapter.calls.length, calls);
+      sub.close();
+    });
+  });
+
+  group('Favorites', () {
+    test('toggle persists on the device', () async {
+      SharedPreferences.setMockInitialValues({});
+      final favorites = FavoriteClubs();
+      await Future<void>.delayed(Duration.zero);
+      await favorites.toggle(4);
+      expect(favorites.state, {4});
+      expect((await SharedPreferences.getInstance()).getStringList('rdcf_favorite_clubs'), ['4']);
+      await favorites.toggle(4);
+      expect(favorites.state, isEmpty);
+    });
+  });
+
+  group('Deep links', () {
+    test('every link form', () {
+      expect((DeepLink.parse('footrdc://match/6476') as MatchLink).id, 6476);
+      expect((DeepLink.parse('footrdc://club/4') as ClubLink).id, 4);
+      expect((DeepLink.parse('footrdc://article/72557') as ArticleLink).id, 72557);
+      expect(DeepLink.parse('footrdc://linafoot'), isA<LinafootLink>());
+      expect((DeepLink.parse('footrdc://standings') as LinafootLink).standings, isTrue);
+      expect((DeepLink.parse('https://footrdc.com/linafoot/classement-groupe-a/') as LinafootLink).standings, isTrue);
+      expect(
+        (DeepLink.parse('https://footrdc.com/a-la-une/edito-la-confusion/') as ArticleSlugLink).slug,
+        'edito-la-confusion',
+      );
+    });
+
+    test('junk opens nothing', () {
+      for (final raw in [
+        null,
+        '',
+        'footrdc://match/x',
+        'footrdc://match/0',
+        'footrdc://nope/1',
+        'https://evil.example/club/4',
+        'not a link',
+        'https://footrdc.com/',
+      ]) {
+        expect(DeepLink.parse(raw), isNull, reason: '$raw');
+      }
+    });
+  });
+}

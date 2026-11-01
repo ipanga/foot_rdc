@@ -1,3 +1,4 @@
+import 'package:foot_rdc/features/football/presentation/widgets/football_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
@@ -305,6 +306,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
             ),
           ),
+          if (_query != null) FootballSearchResults(query: _query!),
           Expanded(
             child: Builder(
               builder: (context) {

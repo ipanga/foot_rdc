@@ -17,7 +17,8 @@ import 'package:foot_rdc/features/news/presentation/widgets/article_list_item.da
 /// widget, but no carousel and no native-ad insertion (lower ad density for
 /// long-form content).
 class EditorialListScreen extends ConsumerStatefulWidget {
-  const EditorialListScreen({super.key});
+  final EditorialChannel channel;
+  const EditorialListScreen({super.key, this.channel = EditorialChannel.edito});
 
   @override
   ConsumerState<EditorialListScreen> createState() =>
@@ -58,15 +59,15 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
   /// Public entry point so [HomeScreen] can refresh the feed when this tab
   /// becomes visible after a long pause (lifecycle resume).
   void checkAndRefreshIfNeeded() {
-    final cacheState = ref.read(editorialCacheProvider);
+    final cacheState = ref.read(editorialCacheProvider(widget.channel.slug));
     if (cacheState.articles.isNotEmpty &&
         !cacheState.isCacheValid(validDuration: _cacheValidDuration)) {
-      ref.read(editorialCacheProvider.notifier).clearCache();
+      ref.read(editorialCacheProvider(widget.channel.slug).notifier).clearCache();
     }
   }
 
   Future<void> _loadInitialDataWithCacheCheck() async {
-    final cacheState = ref.read(editorialCacheProvider);
+    final cacheState = ref.read(editorialCacheProvider(widget.channel.slug));
     if (cacheState.articles.isNotEmpty &&
         cacheState.isCacheValid(validDuration: _cacheValidDuration)) {
       return;
@@ -75,7 +76,7 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
   }
 
   Future<int?> _resolveCategoryId() {
-    return ref.read(editorialCategoryIdProvider.future);
+    return ref.read(editorialCategoryIdProvider(widget.channel.slug).future);
   }
 
   Future<void> _loadInitialData() async {
@@ -107,7 +108,7 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
 
       if (mounted) {
         ref
-            .read(editorialCacheProvider.notifier)
+            .read(editorialCacheProvider(widget.channel.slug).notifier)
             .updateArticles(articles, perPage: _perPage, isFirstPage: true);
         setState(() {
           _isFetching = false;
@@ -125,7 +126,7 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
   }
 
   Future<void> _loadMoreArticles() async {
-    final cacheState = ref.read(editorialCacheProvider);
+    final cacheState = ref.read(editorialCacheProvider(widget.channel.slug));
     if (_isLoadingMore || cacheState.hasReachedEnd || _isFetching) return;
 
     setState(() {
@@ -156,7 +157,7 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
 
       if (mounted) {
         ref
-            .read(editorialCacheProvider.notifier)
+            .read(editorialCacheProvider(widget.channel.slug).notifier)
             .updateArticles(newArticles, perPage: _perPage, isFirstPage: false);
         setState(() {
           _isLoadingMore = false;
@@ -175,13 +176,13 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
 
   Future<void> _onRefresh() async {
     if (_isFetching) return;
-    ref.read(editorialCacheProvider.notifier).clearCache();
-    ref.invalidate(editorialCategoryIdProvider);
+    ref.read(editorialCacheProvider(widget.channel.slug).notifier).clearCache();
+    ref.invalidate(editorialCategoryIdProvider(widget.channel.slug));
     await _loadInitialData();
   }
 
   void _onScroll() {
-    final cacheState = ref.read(editorialCacheProvider);
+    final cacheState = ref.read(editorialCacheProvider(widget.channel.slug));
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
@@ -212,7 +213,7 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
 
   String _friendlyMessage(Object error) {
     if (error is _MissingCategoryError) {
-      return 'La catégorie À Savoir n\'a pas été trouvée. Réessayez plus tard.';
+      return widget.channel.missingText;
     }
     if (_isNoInternet(error)) {
       return 'Vérifiez votre connexion et réessayez.';
@@ -236,7 +237,7 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
-    final cacheState = ref.watch(editorialCacheProvider);
+    final cacheState = ref.watch(editorialCacheProvider(widget.channel.slug));
     final articles = cacheState.articles;
 
     // Trigger a fetch if cache was cleared externally (e.g. via lifecycle).
@@ -275,7 +276,7 @@ class EditorialListScreenState extends ConsumerState<EditorialListScreen>
           ),
           const SizedBox(width: AppDesignSystem.space10),
           Text(
-            'À SAVOIR',
+            widget.channel.title,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               fontFamily: 'Oswald',

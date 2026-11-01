@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core/network/connectivity_service.dart';
-import 'package:foot_rdc/features/editorial/presentation/screens/editorial_list_screen.dart';
 import 'package:foot_rdc/features/news/presentation/screens/news_list_screen.dart';
-import 'package:foot_rdc/features/matches/presentation/screens/matches_list_screen.dart';
-import 'package:foot_rdc/features/rankings/presentation/screens/rankings_screen.dart';
-import 'package:foot_rdc/features/saved_articles/presentation/screens/saved_articles_screen.dart';
 import 'package:foot_rdc/features/news/presentation/providers/article_cache_provider.dart';
 import 'package:foot_rdc/features/home/presentation/providers/home_providers.dart';
 import 'package:foot_rdc/shared/providers/connectivity_provider.dart';
 import 'package:foot_rdc/shared/widgets/connectivity_banner.dart';
 import 'package:foot_rdc/shared/widgets/persistent_banner_ad.dart';
 import 'package:foot_rdc/shared/widgets/premium_bottom_nav_bar.dart';
-import 'package:foot_rdc/features/football/presentation/football_providers.dart';
-import 'package:foot_rdc/features/football/presentation/football_screens.dart';
-import 'package:foot_rdc/features/football/presentation/football_strings.dart';
+import 'package:foot_rdc/features/editorial/presentation/providers/editorial_providers.dart';
+import 'package:foot_rdc/features/editorial/presentation/screens/editorial_list_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/linafoot_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/matches_screen.dart';
+import 'package:foot_rdc/features/more/more_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,14 +21,10 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen>
-    with WidgetsBindingObserver {
-  final GlobalKey<RankingsScreenState> _rankingsScreenKey =
-      GlobalKey<RankingsScreenState>();
-  final GlobalKey<MatchesListScreenState> _matchesScreenKey =
-      GlobalKey<MatchesListScreenState>();
-  final GlobalKey<EditorialListScreenState> _editorialScreenKey =
-      GlobalKey<EditorialListScreenState>();
+/// The five destinations. Football tabs refresh themselves through their providers.
+class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
+  static const _edito = 3;
+  final GlobalKey<EditorialListScreenState> _editoKey = GlobalKey<EditorialListScreenState>();
 
   @override
   void initState() {
@@ -47,95 +41,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) _refresh(ref.read(currentPageProvider));
+  }
 
-    if (state == AppLifecycleState.resumed) {
-      final currentPage = ref.read(currentPageProvider);
-
-      // Tab order: 0 Accueil · 1 À Savoir · 2 Matchs · 3 Classement · 4 Enregistrés.
-      switch (currentPage) {
-        case 0:
-          _checkAndRefreshArticlesIfNeeded();
-          break;
-        case 1:
-          _checkAndRefreshEditorialIfNeeded();
-          break;
-        case 2:
-          _checkAndRefreshMatchesIfNeeded();
-          break;
-        case 3:
-          _checkAndRefreshRankingsIfNeeded();
-          break;
+  void _refresh(int page) {
+    if (page == 0) {
+      final cache = ref.read(articleCacheProvider);
+      if (cache.articles.isNotEmpty && !cache.isCacheValid(validDuration: const Duration(minutes: 2))) {
+        ref.read(articleCacheProvider.notifier).clearCache();
       }
-    }
-  }
-
-  void _checkAndRefreshArticlesIfNeeded() {
-    final cacheState = ref.read(articleCacheProvider);
-
-    if (cacheState.articles.isNotEmpty &&
-        !cacheState.isCacheValid(validDuration: const Duration(minutes: 2))) {
-      ref.read(articleCacheProvider.notifier).clearCache();
-    }
-  }
-
-  void _checkAndRefreshEditorialIfNeeded() {
-    _editorialScreenKey.currentState?.checkAndRefreshIfNeeded();
-  }
-
-  void _checkAndRefreshMatchesIfNeeded() {
-    _matchesScreenKey.currentState?.checkAndRefreshIfNeeded();
-  }
-
-  void _checkAndRefreshRankingsIfNeeded() {
-    _rankingsScreenKey.currentState?.checkAndRefreshIfNeeded();
-  }
-
-  void _refreshActiveTab(int currentPage) {
-    switch (currentPage) {
-      case 0:
-        _checkAndRefreshArticlesIfNeeded();
-        break;
-      case 1:
-        _checkAndRefreshEditorialIfNeeded();
-        break;
-      case 2:
-        _checkAndRefreshMatchesIfNeeded();
-        break;
-      case 3:
-        _checkAndRefreshRankingsIfNeeded();
-        break;
+    } else if (page == _edito) {
+      _editoKey.currentState?.checkAndRefreshIfNeeded();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final currentPage = ref.watch(currentPageProvider);
-    final coreFootball = ref.watch(footballConfigProvider) != null;
 
-    // Auto-refresh the active tab once per offline → online transition.
-    // Single-edge trigger — no aggressive reload loops.
-    ref.listen<AsyncValue<ConnectivityStatus>>(connectivityStatusProvider, (
-      prev,
-      next,
-    ) {
-      final prevStatus = prev?.valueOrNull;
-      final newStatus = next.valueOrNull;
-      if (prevStatus == ConnectivityStatus.disconnected &&
-          newStatus == ConnectivityStatus.connected) {
-        _refreshActiveTab(ref.read(currentPageProvider));
+    // Refresh once per offline to online transition, never in a loop.
+    ref.listen<AsyncValue<ConnectivityStatus>>(connectivityStatusProvider, (prev, next) {
+      if (prev?.valueOrNull == ConnectivityStatus.disconnected && next.valueOrNull == ConnectivityStatus.connected) {
+        _refresh(ref.read(currentPageProvider));
       }
     });
 
     final pages = [
       const NewsListScreen(),
-      EditorialListScreen(key: _editorialScreenKey),
-      coreFootball
-          ? const FootballMatchCenterScreen()
-          : MatchesListScreen(key: _matchesScreenKey),
-      coreFootball
-          ? const FootballCompetitionScreen()
-          : RankingsScreen(key: _rankingsScreenKey),
-      const SavedArticlesScreen(),
+      const MatchesScreen(),
+      const LinafootScreen(),
+      EditorialListScreen(key: _editoKey, channel: EditorialChannel.edito),
+      const MoreScreen(),
     ];
 
     return Scaffold(
@@ -149,36 +85,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           PremiumBottomNavBar(
             currentIndex: currentPage,
             onTap: (index) {
-              if (index != currentPage) {
-                switch (index) {
-                  case 0:
-                    _checkAndRefreshArticlesIfNeeded();
-                    break;
-                  case 1:
-                    _checkAndRefreshEditorialIfNeeded();
-                    break;
-                  case 2:
-                    _checkAndRefreshMatchesIfNeeded();
-                    break;
-                  case 3:
-                    _checkAndRefreshRankingsIfNeeded();
-                    break;
-                }
-              }
+              if (index != currentPage) _refresh(index);
               ref.read(currentPageProvider.notifier).state = index;
             },
-            items: [
-              const PremiumNavItem.svg(
+            items: const [
+              PremiumNavItem.svg(
                 iconPath: 'assets/images/home-icon-v2-outlined.svg',
                 activeIconPath: 'assets/images/home-icon-v2-filled.svg',
                 label: 'Accueil',
               ),
-              const PremiumNavItem.icon(
-                icon: Icons.lightbulb_outline_rounded,
-                activeIcon: Icons.lightbulb_rounded,
-                label: 'À Savoir',
-              ),
-              const PremiumNavItem.svg(
+              PremiumNavItem.svg(
                 iconPath: 'assets/images/soccer-field-icon-outlined.svg',
                 activeIconPath: 'assets/images/soccer-field-icon-filled.svg',
                 label: 'Matchs',
@@ -186,15 +102,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               PremiumNavItem.svg(
                 iconPath: 'assets/images/ranking-icon-outlined.svg',
                 activeIconPath: 'assets/images/ranking-icon-filled.svg',
-                label: coreFootball
-                    ? FootballStrings.of(context).t('competitions')
-                    : 'Classement',
+                label: 'Linafoot',
               ),
-              const PremiumNavItem.svg(
-                iconPath: 'assets/images/save-icon-outlined.svg',
-                activeIconPath: 'assets/images/save-icon-filled.svg',
-                label: 'Enregistrés',
-              ),
+              PremiumNavItem.icon(icon: Icons.edit_note_outlined, activeIcon: Icons.edit_note, label: 'Édito'),
+              PremiumNavItem.icon(icon: Icons.menu_rounded, activeIcon: Icons.menu_rounded, label: 'Plus'),
             ],
           ),
         ],

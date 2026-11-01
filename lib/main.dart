@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +15,8 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:foot_rdc/features/football/presentation/football_strings.dart';
-import 'package:foot_rdc/features/football/presentation/football_screens.dart';
+import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
+import 'package:foot_rdc/features/football/presentation/providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +57,9 @@ Future<void> main() async {
 
   // Add click listener
   OneSignal.Notifications.addClickListener((event) {
+    final data = event.notification.additionalData;
+    final link = data?['link'] ?? data?['url'] ?? event.notification.launchUrl;
+    if (link is String) pushLinks.add(link);
     if (kDebugMode) {
       print(
         "OneSignal notification clicked: ${event.notification.notificationId}",
@@ -63,10 +68,8 @@ Future<void> main() async {
   });
 
   // Request notification permission
-  final permission = await OneSignal.Notifications.requestPermission(true);
-  if (kDebugMode) {
-    print("OneSignal permission result: $permission");
-  }
+  // Never awaited: the system prompt must not hold back the first frame.
+  unawaited(OneSignal.Notifications.requestPermission(true));
 
   // Log initial subscription state
   final subscriptionId = OneSignal.User.pushSubscription.id;
@@ -112,18 +115,17 @@ class MyApp extends ConsumerWidget {
       locale: const Locale('fr'),
       supportedLocales: const [Locale('fr'), Locale('en')],
       localizationsDelegates: const [
-        FootballStrings.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      onGenerateRoute: footballRoute,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ref
           .read(themeCustomNotifierProvider.notifier)
           .getFlutterThemeMode(context),
-      home: const HomeScreen(),
+      navigatorKey: appNavigatorKey,
+      home: const FootballLifecycle(child: DeepLinkHandler(child: HomeScreen())),
       debugShowCheckedModeBanner: false,
     );
   }

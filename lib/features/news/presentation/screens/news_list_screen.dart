@@ -16,7 +16,9 @@ import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/core/network/network_exceptions.dart' as network;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:foot_rdc/features/football/presentation/widgets/home_football.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:foot_rdc/core/constants/ad_constants.dart';
 
@@ -151,6 +153,47 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
         );
       }
     }
+  }
+
+  /// À la Une: the latest story, large.
+  Widget _buildHero(Article article) {
+    final theme = Theme.of(context);
+    return Semantics(
+      button: true,
+      label: article.title,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => ArticleDetailScreen(article: article)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: article.imageUrl.isEmpty
+                  ? ColoredBox(color: theme.colorScheme.surfaceContainerHighest)
+                  : CachedNetworkImage(
+                      imageUrl: article.imageUrl,
+                      fit: BoxFit.cover,
+                      fadeInDuration: Duration.zero,
+                      placeholder: (_, _) => ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
+                      errorWidget: (_, _, _) => ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+              child: Text(
+                article.title,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, height: 1.2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildCarousel() {
@@ -354,7 +397,14 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
                 (_loadMoreError ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == 0) {
-                return _buildCarousel();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (cacheState.articles.isNotEmpty) _buildHero(cacheState.articles.first),
+                    const HomeMatchStrip(),
+                    _buildCarousel(),
+                  ],
+                );
               }
 
               final adjustedIndex = index - 1;
@@ -374,7 +424,9 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
               }
 
               final article = item as Article;
-              return ArticleListItem(
+              // The first article is the hero; the Linafoot snapshot sits a few stories down.
+              if (identical(article, cacheState.articles.first)) return const SizedBox.shrink();
+              final row = ArticleListItem(
                 article: article,
                 onTap: () {
                   Navigator.of(context).push(
@@ -384,6 +436,10 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
                   );
                 },
               );
+              if (adjustedIndex == 5) {
+                return Column(children: [const HomeLinafootSnapshot(), row]);
+              }
+              return row;
             },
           ),
         ),
