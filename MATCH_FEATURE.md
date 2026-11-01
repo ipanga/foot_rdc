@@ -1,3 +1,5 @@
+> Superseded on 1 Nov 2026: this describes the removed football implementation. Current state: `API_MIGRATION_MATRIX.md` and `docs/mobile-redesign/02-TARGET-ARCHITECTURE.md`.
+
 # Match Feature Implementation
 
 This document describes the complete implementation of the Match feature following clean architecture principles.

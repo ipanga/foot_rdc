@@ -18,7 +18,7 @@ FootRDC is a French-first news and football app for Congolese football. Football
 |---|---|---|
 | Fixtures, results, standings, clubs, squads, players, events | RDC Football REST `https://footrdc.com/wp-json/rdcfootball/v1` | Server is authoritative. Flutter never calculates standings or match state. |
 | Articles, categories, authors, media | WordPress REST `https://footrdc.com/wp-json/wp/v2` | Never moved into RDC Football. |
-| SportsPress | `/wp-json/sportspress/v2` | Being removed. Target: `SPORTSPRESS_USAGE_REMAINING: 0`. No silent fallback. |
+| SportsPress | removed | `SPORTSPRESS_USAGE_REMAINING: 0` |
 
 Production is read-only for this project: public GET requests only.
 

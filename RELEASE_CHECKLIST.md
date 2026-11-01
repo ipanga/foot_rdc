@@ -3,9 +3,9 @@
 No upload without explicit owner approval.
 
 - [ ] Git tree clean, on the approved branch
-- [ ] `flutter analyze` no errors or warnings; `flutter test` green
-- [ ] Integration QA green on iOS and Android
-- [ ] `SPORTSPRESS_USAGE_REMAINING: 0`
+- [x] `flutter analyze` no errors or warnings; `flutter test` green
+- [x] Integration QA green on iOS and Android
+- [x] `SPORTSPRESS_USAGE_REMAINING: 0`
 - [ ] Version and build number valid and unique
 - [ ] Release notes ready
 - [ ] Bundle and package IDs correct; signing identity correct

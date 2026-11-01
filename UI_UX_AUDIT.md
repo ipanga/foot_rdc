@@ -1,6 +1,6 @@
 # UI/UX audit
 
-## Current state
+## State before the redesign
 
 Bottom tabs: Accueil, À Savoir, Matchs, Classement, Enregistrés. Matchs and Classement each have Play-off, Groupe A, Groupe B sub-tabs driven by hard-coded SportsPress IDs. Search is pushed from the app bar. Drawer holds theme and notification settings.
 
@@ -21,3 +21,7 @@ Theme tokens, connectivity banner, article detail, saved articles, ads placement
 ## Direction
 
 See `docs/mobile-redesign/01-UX-AUDIT.md` and `02-TARGET-ARCHITECTURE.md`.
+
+## Outcome
+
+Tabs are now Accueil, Matchs, Linafoot, Édito, Plus. All the problems above are resolved except that notification permission is still requested at launch, though it no longer blocks the first frame. Before and after screens are in `docs/mobile-redesign/screens/`.
