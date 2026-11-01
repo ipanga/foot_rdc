@@ -359,7 +359,7 @@ void main() {
   testWidgets('club search stays usable with the keyboard open on a small screen', (tester) async {
     tester.view.physicalSize = const Size(360, 640);
     tester.view.devicePixelRatio = 1;
-    tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 420);
     addTearDown(tester.view.reset);
     final (repo, _, _) = contractRepository();
     await tester.pumpWidget(
@@ -385,7 +385,8 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'zzz');
     await settle(tester);
-    expect(find.text('Aucun club trouvé'), findsOneWidget);
+    // Below the fold while the keyboard is open, but in the list.
+    expect(find.text('Aucun club trouvé', skipOffstage: false), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     await settle(tester);

@@ -50,53 +50,48 @@ class _ClubsDirectoryState extends ConsumerState<ClubsDirectory> {
                 )
                 .toList()
               ..sort((a, b) => (favorites.contains(a.id) ? 0 : 1).compareTo(favorites.contains(b.id) ? 0 : 1));
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: TextField(
-                onChanged: (v) => setState(() => _query = v),
-                decoration: const InputDecoration(
-                  isDense: true,
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'Rechercher un club',
-                  border: OutlineInputBorder(),
-                ),
+        // Search and filters scroll with the list, so a tall keyboard on a small screen cannot squeeze them.
+        final header = <Widget>[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: TextField(
+              onChanged: (v) => setState(() => _query = v),
+              decoration: const InputDecoration(
+                isDense: true,
+                prefixIcon: Icon(Icons.search),
+                hintText: 'Rechercher un club',
+                border: OutlineInputBorder(),
               ),
             ),
-            if (labels.length > 1)
-              SizedBox(
-                height: 48,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  children: [
-                    for (final label in [null, ...labels])
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(label ?? 'Tous'),
-                          selected: _group == label,
-                          onSelected: (_) => setState(() => _group = label),
-                        ),
+          ),
+          if (labels.length > 1)
+            SizedBox(
+              height: 48,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                children: [
+                  for (final label in [null, ...labels])
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(label ?? 'Tous'),
+                        selected: _group == label,
+                        onSelected: (_) => setState(() => _group = label),
                       ),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: rows.isEmpty
-                  ? ListView(
-                      children: const [MessageState(icon: Icons.search_off, title: 'Aucun club trouvé')],
-                    )
-                  : ListView.builder(
-                      itemCount: rows.length,
-                      itemBuilder: (context, index) {
-                        final club = rows[index];
-                        return ClubTile(club: club, subtitle: groupOf[club.id] ?? '');
-                      },
                     ),
+                ],
+              ),
             ),
-          ],
+        ];
+        return ListView.builder(
+          itemCount: header.length + (rows.isEmpty ? 1 : rows.length),
+          itemBuilder: (context, index) {
+            if (index < header.length) return header[index];
+            if (rows.isEmpty) return const MessageState(icon: Icons.search_off, title: 'Aucun club trouvé');
+            final club = rows[index - header.length];
+            return ClubTile(club: club, subtitle: groupOf[club.id] ?? '');
+          },
         );
       },
     );

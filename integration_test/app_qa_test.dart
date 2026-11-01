@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
 import 'package:foot_rdc/features/football/presentation/widgets/football_widgets.dart';
 import 'package:foot_rdc/features/news/data/models/article_model.dart';
+import 'package:foot_rdc/features/news/presentation/screens/article_detail_screen.dart';
 import 'package:foot_rdc/main.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:integration_test/integration_test.dart';
@@ -132,9 +133,32 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     await shot('edito');
 
+    await tester.tap(find.textContaining('Édito :').first);
+    await wait(find.byType(ArticleDetailScreen));
+    await tester.pump(const Duration(seconds: 3));
+    await shot('article');
+    await back();
+
     await nav('Plus');
     await wait(find.text('Clubs suivis'));
     await shot('plus');
+
+    await tester.tap(find.text('Recherche'));
+    await wait(find.byType(TextField));
+    await tester.enterText(find.byType(TextField).first, 'Mazembe');
+    await wait(find.text('TP Mazembe'));
+    await shot('recherche');
+    await back();
+
+    // Deep links arrive through the same stream as notifications.
+    pushLinks.add('footrdc://club/2221');
+    await wait(find.text('Etoile de Kivu'));
+    await shot('lien-club');
+    await back();
+    pushLinks.add('footrdc://standings');
+    await wait(find.textContaining('Groupe A'));
+    await shot('lien-classement');
+    await back();
 
     await nav('Accueil');
     await tester.pump(const Duration(seconds: 2));

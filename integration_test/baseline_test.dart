@@ -21,6 +21,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 200));
       }
     }
+
     await settle();
     await binding.takeScreenshot('${Platform.operatingSystem}-01-accueil');
     for (final (i, label) in const ['À Savoir', 'Matchs', 'Classement', 'Enregistrés'].indexed) {
