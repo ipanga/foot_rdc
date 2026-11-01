@@ -356,6 +356,22 @@ void main() {
     }
   });
 
+  testWidgets('a message fits a very small space', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              height: 60,
+              child: MessageState(icon: Icons.search_off, title: 'Aucun club trouvé'),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('club search stays usable with the keyboard open on a small screen', (tester) async {
     tester.view.physicalSize = const Size(360, 640);
     tester.view.devicePixelRatio = 1;

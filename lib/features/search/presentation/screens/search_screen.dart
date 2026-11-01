@@ -82,9 +82,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             },
           ),
           request: const AdRequest(),
-          nativeTemplateStyle: NativeTemplateStyle(
-            templateType: TemplateType.medium,
-          ),
+          nativeTemplateStyle: NativeTemplateStyle(templateType: TemplateType.medium),
         )..load();
         _nativeAdLoaded[nativeAd] = false;
         _listItems.insert(i + 1, nativeAd);
@@ -93,8 +91,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
         !_hasReachedEnd &&
         !_loadMoreError &&
@@ -121,9 +118,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         if (newArticles.isEmpty) {
           _hasReachedEnd = true;
         } else {
-          final currentArticles = _listItems.whereType<Article>().toList(
-            growable: false,
-          );
+          final currentArticles = _listItems.whereType<Article>().toList(growable: false);
           _updateListWithAds(currentArticles + newArticles);
           _currentPage = nextPage;
         }
@@ -136,10 +131,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         _loadMoreError = true;
       });
       if (mounted) {
-        AppSnackbar.showError(
-          context,
-          message: _friendlyLoadMoreMessage(error),
-        );
+        AppSnackbar.showError(context, message: _friendlyLoadMoreMessage(error));
       }
     }
   }
@@ -165,10 +157,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       });
     } catch (error) {
       if (mounted) {
-        AppSnackbar.showError(
-          context,
-          message: _friendlyGenericMessage(error),
-        );
+        AppSnackbar.showError(context, message: _friendlyGenericMessage(error));
       }
     }
   }
@@ -197,9 +186,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       error.toString().toLowerCase().contains('failed host lookup') ||
       error.toString().toLowerCase().contains('network is unreachable');
 
-  bool _isTimeout(Object error) =>
-      error is TimeoutException ||
-      error.toString().toLowerCase().contains('timeout');
+  bool _isTimeout(Object error) => error is TimeoutException || error.toString().toLowerCase().contains('timeout');
 
   String _friendlyTitle(Object error) {
     if (_isNoInternet(error)) return 'Pas de connexion internet';
@@ -235,13 +222,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.backgroundDark
-          : AppColors.backgroundLight,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: isDark
-            ? AppColors.surfaceDark
-            : AppColors.surfaceLight,
+        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
         surfaceTintColor: Colors.transparent,
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -249,10 +232,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             Container(
               width: 4,
               height: 24,
-              decoration: BoxDecoration(
-                color: colorScheme.primary,
-                borderRadius: AppDesignSystem.borderRadiusFull,
-              ),
+              decoration: BoxDecoration(color: colorScheme.primary, borderRadius: AppDesignSystem.borderRadiusFull),
             ),
             const SizedBox(width: AppDesignSystem.space10),
             Text(
@@ -261,9 +241,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Oswald',
                 letterSpacing: 1.2,
-                color: isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimaryLight,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
             ),
           ],
@@ -279,16 +257,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Container(
             padding: const EdgeInsets.all(AppDesignSystem.space16),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.surfaceDark
-                  : AppColors.surfaceLight,
+              color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
               border: Border(
-                bottom: BorderSide(
-                  color: isDark
-                      ? AppColors.borderSubtleDark
-                      : AppColors.borderSubtleLight,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: isDark ? AppColors.borderSubtleDark : AppColors.borderSubtleLight, width: 1),
               ),
             ),
             child: Form(
@@ -318,9 +289,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   return _buildEmptySearchState(isDark, theme);
                 }
 
-                final searchArticlesAsync = ref.watch(
-                  searchArticlesProvider(_query!),
-                );
+                final searchArticlesAsync = ref.watch(searchArticlesProvider(_query!));
 
                 return searchArticlesAsync.when(
                   data: (articles) {
@@ -351,29 +320,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         SizedBox(
                           width: 48,
                           height: 48,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            color: colorScheme.primary,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 3, color: colorScheme.primary),
                         ),
                         const SizedBox(height: AppDesignSystem.space16),
                         Text(
                           'Recherche en cours...',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondaryLight,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  error: (error, stack) => _buildErrorState(
-                    error,
-                    isDark,
-                    colorScheme,
-                    theme,
-                  ),
+                  error: (error, stack) => _buildErrorState(error, isDark, colorScheme, theme),
                 );
               },
             ),
@@ -385,51 +344,43 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildEmptySearchState(bool isDark, ThemeData theme) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDesignSystem.space32,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppDesignSystem.space24),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.surfaceContainerDark
-                    : AppColors.surfaceContainerLight,
-                shape: BoxShape.circle,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.space32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppDesignSystem.space24),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.surfaceContainerDark : AppColors.surfaceContainerLight,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.search_rounded,
+                  size: 56,
+                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                ),
               ),
-              child: Icon(
-                Icons.search_rounded,
-                size: 56,
-                color: isDark
-                    ? AppColors.textTertiaryDark
-                    : AppColors.textTertiaryLight,
+              const SizedBox(height: AppDesignSystem.space24),
+              Text(
+                'Articles, clubs et joueurs',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                ),
               ),
-            ),
-            const SizedBox(height: AppDesignSystem.space24),
-            Text(
-              'Articles, clubs et joueurs',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimaryLight,
+              const SizedBox(height: AppDesignSystem.space8),
+              Text(
+                'Saisissez un terme de recherche ci-dessus\npour commencer',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  height: 1.5,
+                ),
               ),
-            ),
-            const SizedBox(height: AppDesignSystem.space8),
-            Text(
-              'Saisissez un terme de recherche ci-dessus\npour commencer',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondaryLight,
-                height: 1.5,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -438,26 +389,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _buildNoResultsState(bool isDark, ThemeData theme) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDesignSystem.space32,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.space32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(AppDesignSystem.space24),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.surfaceContainerDark
-                    : AppColors.surfaceContainerLight,
+                color: isDark ? AppColors.surfaceContainerDark : AppColors.surfaceContainerLight,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.search_off_rounded,
                 size: 56,
-                color: isDark
-                    ? AppColors.textTertiaryDark
-                    : AppColors.textTertiaryLight,
+                color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
               ),
             ),
             const SizedBox(height: AppDesignSystem.space24),
@@ -465,9 +410,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               'Aucun article trouvé',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimaryLight,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
             ),
             const SizedBox(height: AppDesignSystem.space8),
@@ -475,9 +418,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               'Essayez avec d\'autres termes de recherche',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondaryLight,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
               ),
             ),
           ],
@@ -490,9 +431,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return RefreshIndicator(
       onRefresh: _onRefresh,
       color: colorScheme.primary,
-      backgroundColor: isDark
-          ? AppColors.surfaceElevatedDark
-          : AppColors.surfaceLight,
+      backgroundColor: isDark ? AppColors.surfaceElevatedDark : AppColors.surfaceLight,
       strokeWidth: 2.5,
       child: ListView.builder(
         controller: _scrollController,
@@ -502,17 +441,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           if (index == _listItems.length) {
             if (_isLoadingMore) {
               return Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppDesignSystem.space24,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: AppDesignSystem.space24),
                 child: Center(
                   child: SizedBox(
                     width: 28,
                     height: 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: colorScheme.primary.withAlpha(180),
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2.5, color: colorScheme.primary.withAlpha(180)),
                   ),
                 ),
               );
@@ -532,11 +466,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           return ArticleListItem(
             article: article,
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ArticleDetailScreen(article: article),
-                ),
-              );
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => ArticleDetailScreen(article: article)));
             },
           );
         },
@@ -552,15 +482,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       child: Container(
         padding: const EdgeInsets.all(AppDesignSystem.space16),
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.surfaceElevatedDark
-              : AppColors.surfaceLight,
+          color: isDark ? AppColors.surfaceElevatedDark : AppColors.surfaceLight,
           borderRadius: AppDesignSystem.borderRadiusLg,
-          border: Border.all(
-            color: isDark
-                ? AppColors.borderDark
-                : AppColors.borderLight,
-          ),
+          border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
         ),
         child: Row(
           children: [
@@ -570,11 +494,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 color: colorScheme.errorContainer.withAlpha(isDark ? 40 : 60),
                 borderRadius: AppDesignSystem.borderRadiusSm,
               ),
-              child: Icon(
-                Icons.wifi_off_rounded,
-                color: colorScheme.error,
-                size: 20,
-              ),
+              child: Icon(Icons.wifi_off_rounded, color: colorScheme.error, size: 20),
             ),
             const SizedBox(width: AppDesignSystem.space12),
             Expanded(
@@ -582,9 +502,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 'Erreur de chargement',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.textPrimaryDark
-                      : AppColors.textPrimaryLight,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                 ),
               ),
             ),
@@ -610,14 +528,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final isLoaded = _nativeAdLoaded[item] == true;
     return Container(
       height: 320,
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppDesignSystem.space16,
-        vertical: AppDesignSystem.space8,
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: AppDesignSystem.space16, vertical: AppDesignSystem.space8),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.surfaceContainerDark
-            : AppColors.surfaceContainerLight,
+        color: isDark ? AppColors.surfaceContainerDark : AppColors.surfaceContainerLight,
         borderRadius: AppDesignSystem.borderRadiusLg,
       ),
       clipBehavior: Clip.antiAlias,
@@ -636,22 +549,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildErrorState(
-    Object error,
-    bool isDark,
-    ColorScheme colorScheme,
-    ThemeData theme,
-  ) {
+  Widget _buildErrorState(Object error, bool isDark, ColorScheme colorScheme, ThemeData theme) {
     final title = _friendlyTitle(error);
     final message = _friendlyGenericMessage(error);
     final icon = _friendlyIcon(error);
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDesignSystem.space32,
-          vertical: AppDesignSystem.space20,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.space32, vertical: AppDesignSystem.space20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -661,11 +566,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 color: colorScheme.errorContainer.withAlpha(isDark ? 40 : 60),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 40,
-                color: colorScheme.error,
-              ),
+              child: Icon(icon, size: 40, color: colorScheme.error),
             ),
             const SizedBox(height: AppDesignSystem.space20),
             Text(
@@ -673,9 +574,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimaryLight,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
             ),
             const SizedBox(height: AppDesignSystem.space8),
@@ -683,9 +582,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondaryLight,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 height: 1.5,
               ),
             ),
@@ -703,9 +600,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   horizontal: AppDesignSystem.space24,
                   vertical: AppDesignSystem.space12,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: AppDesignSystem.borderRadiusMd,
-                ),
+                shape: RoundedRectangleBorder(borderRadius: AppDesignSystem.borderRadiusMd),
               ),
             ),
           ],

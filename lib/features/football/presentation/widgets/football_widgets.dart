@@ -344,31 +344,33 @@ class MessageState extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 40, color: scheme.onSurfaceVariant),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-            ),
-            if (detail != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                detail!,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
-              ),
-            ],
-            if (onRetry != null) ...[
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 40, color: scheme.onSurfaceVariant),
               const SizedBox(height: 12),
-              OutlinedButton(onPressed: onRetry, child: const Text('Réessayer')),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+              if (detail != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  detail!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                ),
+              ],
+              if (onRetry != null) ...[
+                const SizedBox(height: 12),
+                OutlinedButton(onPressed: onRetry, child: const Text('Réessayer')),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
