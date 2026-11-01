@@ -406,7 +406,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
             const SizedBox(height: AppDesignSystem.space24),
             Text(
-              'Rechercher des articles',
+              'Articles, clubs et joueurs',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: isDark

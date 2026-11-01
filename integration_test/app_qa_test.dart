@@ -146,6 +146,7 @@ void main() {
     await tester.tap(find.text('Recherche'));
     await wait(find.byType(TextField));
     await tester.enterText(find.byType(TextField).first, 'Mazembe');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
     await wait(find.text('TP Mazembe'));
     await shot('recherche');
     await back();
