@@ -74,45 +74,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       const MoreScreen(),
     ];
 
+    // Each tab has its own Scaffold that handles the keyboard. Resizing here too would count it twice.
+    final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Scaffold(
       extendBody: false,
+      resizeToAvoidBottomInset: false,
       body: pages[currentPage],
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const ConnectivityBanner(),
-          const PersistentBannerAd(),
-          // Tab labels have a fixed height, so they do not grow with system text size, as on native tab bars.
-          MediaQuery.withClampedTextScaling(
-            maxScaleFactor: 1.0,
-            child: PremiumBottomNavBar(
-              currentIndex: currentPage,
-              onTap: (index) {
-                if (index != currentPage) _refresh(index);
-                ref.read(currentPageProvider.notifier).state = index;
-              },
-              items: const [
-                PremiumNavItem.svg(
-                  iconPath: 'assets/images/home-icon-v2-outlined.svg',
-                  activeIconPath: 'assets/images/home-icon-v2-filled.svg',
-                  label: 'Accueil',
-                ),
-                PremiumNavItem.svg(
-                  iconPath: 'assets/images/soccer-field-icon-outlined.svg',
-                  activeIconPath: 'assets/images/soccer-field-icon-filled.svg',
-                  label: 'Matchs',
-                ),
-                PremiumNavItem.svg(
-                  iconPath: 'assets/images/ranking-icon-outlined.svg',
-                  activeIconPath: 'assets/images/ranking-icon-filled.svg',
-                  label: 'Linafoot',
-                ),
-                PremiumNavItem.icon(icon: Icons.edit_note_outlined, activeIcon: Icons.edit_note, label: 'Édito'),
-                PremiumNavItem.icon(icon: Icons.menu_rounded, activeIcon: Icons.menu_rounded, label: 'Plus'),
-              ],
+      bottomNavigationBar: Offstage(
+        offstage: typing,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ConnectivityBanner(),
+            const PersistentBannerAd(),
+            // Tab labels have a fixed height, so they do not grow with system text size, as on native tab bars.
+            MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.0,
+              child: PremiumBottomNavBar(
+                currentIndex: currentPage,
+                onTap: (index) {
+                  if (index != currentPage) _refresh(index);
+                  ref.read(currentPageProvider.notifier).state = index;
+                },
+                items: const [
+                  PremiumNavItem.svg(
+                    iconPath: 'assets/images/home-icon-v2-outlined.svg',
+                    activeIconPath: 'assets/images/home-icon-v2-filled.svg',
+                    label: 'Accueil',
+                  ),
+                  PremiumNavItem.svg(
+                    iconPath: 'assets/images/soccer-field-icon-outlined.svg',
+                    activeIconPath: 'assets/images/soccer-field-icon-filled.svg',
+                    label: 'Matchs',
+                  ),
+                  PremiumNavItem.svg(
+                    iconPath: 'assets/images/ranking-icon-outlined.svg',
+                    activeIconPath: 'assets/images/ranking-icon-filled.svg',
+                    label: 'Linafoot',
+                  ),
+                  PremiumNavItem.icon(icon: Icons.edit_note_outlined, activeIcon: Icons.edit_note, label: 'Édito'),
+                  PremiumNavItem.icon(icon: Icons.menu_rounded, activeIcon: Icons.menu_rounded, label: 'Plus'),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

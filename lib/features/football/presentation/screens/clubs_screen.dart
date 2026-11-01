@@ -85,7 +85,9 @@ class _ClubsDirectoryState extends ConsumerState<ClubsDirectory> {
               ),
             Expanded(
               child: rows.isEmpty
-                  ? const MessageState(icon: Icons.search_off, title: 'Aucun club trouvé')
+                  ? ListView(
+                      children: const [MessageState(icon: Icons.search_off, title: 'Aucun club trouvé')],
+                    )
                   : ListView.builder(
                       itemCount: rows.length,
                       itemBuilder: (context, index) {

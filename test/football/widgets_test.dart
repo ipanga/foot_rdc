@@ -356,6 +356,41 @@ void main() {
     }
   });
 
+  testWidgets('club search stays usable with the keyboard open on a small screen', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+    addTearDown(tester.view.reset);
+    final (repo, _, _) = contractRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [footballRepositoryProvider.overrideWith((ref) async => repo)],
+        child: MaterialApp(
+          locale: const Locale('fr'),
+          supportedLocales: const [Locale('fr')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.3)),
+            child: child!,
+          ),
+          home: const LinafootScreen(initialTab: 4),
+        ),
+      ),
+    );
+    await settle(tester);
+    expect(find.byType(TextField), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'zzz');
+    await settle(tester);
+    expect(find.text('Aucun club trouvé'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await settle(tester);
+  });
+
   group('Live polling', () {
     test('polls while live and stops when the server says it ended', () async {
       final data = productionContract();
