@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
@@ -65,7 +66,18 @@ void main() {
       step++;
       // ignore: avoid_print
       print('QA-STEP $step $name');
-      await binding.takeScreenshot('$os-${step.toString().padLeft(2, '0')}-$name');
+      // Android's screenshot helper fails now and then with "Could not copy the pixels". Only that call is retried.
+      for (var attempt = 1; ; attempt++) {
+        try {
+          await binding.takeScreenshot('$os-${step.toString().padLeft(2, '0')}-$name');
+          break;
+        } on PlatformException catch (error) {
+          if (attempt == 4) rethrow;
+          // ignore: avoid_print
+          print('QA-SHOT-RETRY step $step attempt $attempt: ${error.message}');
+          await tester.pump(const Duration(seconds: 1));
+        }
+      }
     }
 
     Future<void> nav(String label) async {
