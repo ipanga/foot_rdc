@@ -6,7 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
 import 'package:foot_rdc/features/football/presentation/widgets/football_widgets.dart';
+import 'package:foot_rdc/features/editorial/presentation/providers/editorial_providers.dart';
 import 'package:foot_rdc/features/home/presentation/app_tabs.dart';
+import 'package:foot_rdc/features/home/presentation/screens/home_screen.dart';
+import 'package:foot_rdc/features/news/presentation/providers/article_cache_provider.dart';
+import 'package:foot_rdc/features/news/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/news/data/models/article_model.dart';
 import 'package:foot_rdc/features/news/presentation/screens/article_detail_screen.dart';
 import 'package:foot_rdc/main.dart';
@@ -212,7 +216,29 @@ void main() {
     await shot('lien-edito');
     await back();
 
+    // A tab reopened after its cache expired refreshes in place. Forced, so the check does not depend on device speed.
+    await nav('Accueil');
+    final container = ProviderScope.containerOf(tester.element(find.byType(HomeScreen)));
+    await wait(find.byType(ArticleListItem));
+    container.read(articleCacheProvider.notifier).clearCache();
+    await tester.pump();
+    await tester.pump();
+    await wait(find.byType(ArticleListItem));
+    for (var i = 0; i < 20 && container.read(articleCacheProvider).articles.isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    expect(container.read(articleCacheProvider).articles, isNotEmpty);
+    await nav('Édito');
+    final edito2 = editorialCacheProvider(EditorialChannel.edito.slug);
+    container.read(edito2.notifier).clearCache();
+    await tester.pump();
+    await tester.pump();
+    for (var i = 0; i < 40 && container.read(edito2).articles.isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    expect(container.read(edito2).articles, isNotEmpty);
     await nav('Accueil');
     await tester.pump(const Duration(seconds: 2));
+    await shot('accueil-apres-actualisation');
   });
 }

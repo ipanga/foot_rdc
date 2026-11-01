@@ -350,6 +350,7 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
 
     if (cacheState.articles.isNotEmpty &&
         (_listItems.isEmpty ||
+            !identical(_listItems.first, cacheState.articles.first) ||
             _listItems.where((e) => e is! NativeAd).length !=
                 cacheState.articles.length)) {
       _updateListWithAds(cacheState.articles);
@@ -428,7 +429,10 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
 
               final article = item as Article;
               // The first article is the hero; the Linafoot snapshot sits a few stories down.
-              if (identical(article, cacheState.articles.first)) return const SizedBox.shrink();
+              // While a refresh is in flight the cache is empty and the list keeps the previous articles.
+              if (cacheState.articles.isNotEmpty && identical(article, cacheState.articles.first)) {
+                return const SizedBox.shrink();
+              }
               final row = ArticleListItem(
                 article: article,
                 onTap: () {
