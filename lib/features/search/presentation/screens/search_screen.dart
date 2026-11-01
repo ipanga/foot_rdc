@@ -306,7 +306,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
             ),
           ),
-          if (_query != null) FootballSearchResults(query: _query!),
+          if (_currentSearchTerm != null)
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.4),
+              child: SingleChildScrollView(child: FootballSearchResults(query: _currentSearchTerm!)),
+            ),
           Expanded(
             child: Builder(
               builder: (context) {

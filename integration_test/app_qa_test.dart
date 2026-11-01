@@ -130,7 +130,7 @@ void main() {
 
     await nav('Édito');
     await wait(find.text('ÉDITO'));
-    await tester.pump(const Duration(seconds: 4));
+    await wait(find.textContaining('Édito :'), seconds: 40);
     await shot('edito');
 
     await tester.tap(find.textContaining('Édito :').first);
