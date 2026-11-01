@@ -33,7 +33,8 @@ class ArticleListItem extends StatelessWidget {
           borderRadius: AppDesignSystem.borderRadiusXl,
           child: AnimatedContainer(
             duration: AppDesignSystem.durationFast,
-            height: AppDesignSystem.articleCardHeight,
+            // Grows with system text size, so a title is never cut through a line.
+            height: MediaQuery.textScalerOf(context).scale(AppDesignSystem.articleCardHeight),
             decoration: BoxDecoration(
               color: isDark
                   ? AppColors.surfaceElevatedDark
