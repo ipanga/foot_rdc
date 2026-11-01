@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../home/presentation/providers/home_providers.dart';
+import '../../../home/presentation/app_tabs.dart';
 import '../../domain/models.dart';
 import '../football_labels.dart';
 import '../football_routes.dart';
@@ -24,7 +24,11 @@ class HomeMatchStrip extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader('Matchs', action: 'Tout voir', onAction: () => ref.read(currentPageProvider.notifier).state = 1),
+        SectionHeader(
+          'Matchs',
+          action: 'Tout voir',
+          onAction: () => ref.read(currentTabProvider.notifier).state = AppTab.matches,
+        ),
         SizedBox(
           height: 100,
           child: ListView.separated(
@@ -53,11 +57,7 @@ class HomeLinafootSnapshot extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
-          'Linafoot',
-          action: 'Classements',
-          onAction: () => ref.read(currentPageProvider.notifier).state = 2,
-        ),
+        SectionHeader('Linafoot', action: 'Classements', onAction: () => openStandings(context)),
         for (final table in tables.take(2)) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
 import 'package:foot_rdc/features/football/presentation/widgets/football_widgets.dart';
+import 'package:foot_rdc/features/home/presentation/app_tabs.dart';
 import 'package:foot_rdc/features/news/data/models/article_model.dart';
 import 'package:foot_rdc/features/news/presentation/screens/article_detail_screen.dart';
 import 'package:foot_rdc/main.dart';
@@ -12,6 +14,19 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
+
+const footballApi = 'https://footrdc.com/wp-json/rdcfootball/v1';
+const wordpressApi = 'https://footrdc.com/wp-json/wp/v2';
+
+Future<List<dynamic>> publicJson(String url) async {
+  final client = HttpClient();
+  try {
+    final response = await (await client.getUrl(Uri.parse(url))).close();
+    return jsonDecode(await response.transform(utf8.decoder).join()) as List<dynamic>;
+  } finally {
+    client.close();
+  }
+}
 
 /// Real navigation against the public Production API, read-only. Device QA for iOS and Android.
 void main() {
@@ -61,13 +76,16 @@ void main() {
     }
 
     Future<void> back() async {
-      appNavigatorKey.currentState!.pop();
+      // The route Android's back button takes.
+      await tester.binding.handlePopRoute();
       for (var i = 0; i < 8; i++) {
         await tester.pump(const Duration(milliseconds: 150));
       }
     }
 
     await wait(find.text('Matchs'));
+    final positions = [for (final tab in AppTab.values) tester.getCenter(find.text(tab.label).last).dx];
+    expect(positions, [...positions]..sort(), reason: 'tabs read ${AppTab.values.map((t) => t.label)}');
     await wait(find.textContaining('Tout voir'));
     await shot('accueil');
 
@@ -139,6 +157,18 @@ void main() {
     await shot('article');
     await back();
 
+    // A sub-tab survives a trip through other tabs.
+    await nav('Matchs');
+    await tab('Résultats');
+    await wait(find.byType(MatchRow));
+    await nav('Accueil');
+    await tester.pump(const Duration(seconds: 1));
+    await nav('Matchs');
+    await tester.pump(const Duration(seconds: 1));
+    final results = tester.widget<TabBar>(find.byType(TabBar).first);
+    expect(DefaultTabController.of(tester.element(find.byWidget(results))).index, 2);
+    await shot('etat-onglet-conserve');
+
     await nav('Plus');
     await wait(find.text('Clubs suivis'));
     await shot('plus');
@@ -151,7 +181,8 @@ void main() {
     await shot('recherche');
     await back();
 
-    // Deep links arrive through the same stream as notifications.
+    // Deep links arrive through the same stream as notifications, and must not depend on the open tab.
+    await nav('Édito');
     pushLinks.add('footrdc://club/2221');
     await wait(find.text('Etoile de Kivu'));
     await shot('lien-club');
@@ -159,6 +190,26 @@ void main() {
     pushLinks.add('footrdc://standings');
     await wait(find.textContaining('Groupe A'));
     await shot('lien-classement');
+    await back();
+    await nav('Matchs');
+    final finished = await publicJson('$footballApi/matches/finished?season_id=324&limit=1');
+    pushLinks.add('footrdc://match/${finished[0]['id']}');
+    await wait(find.text('Fil du match'));
+    await shot('lien-match');
+    await back();
+    await nav('Linafoot');
+    final article = await publicJson('$wordpressApi/posts?per_page=1&_fields=id');
+    pushLinks.add('footrdc://article/${article[0]['id']}');
+    await wait(find.byType(ArticleDetailScreen), seconds: 40);
+    await tester.pump(const Duration(seconds: 2));
+    await shot('lien-article');
+    await back();
+    await nav('Plus');
+    final edito = await publicJson('$wordpressApi/posts?categories=47&per_page=1&_fields=link');
+    pushLinks.add(edito[0]['link'] as String);
+    await wait(find.byType(ArticleDetailScreen), seconds: 40);
+    await tester.pump(const Duration(seconds: 2));
+    await shot('lien-edito');
     await back();
 
     await nav('Accueil');

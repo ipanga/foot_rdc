@@ -70,7 +70,7 @@ class _DeepLinkHandlerState extends ConsumerState<DeepLinkHandler> {
       case ClubLink(:final id):
         push(ClubDetailScreen(clubId: id));
       case LinafootLink(:final standings):
-        push(LinafootScreen(initialTab: standings ? 3 : 0));
+        push(LinafootScreen(initialTab: standings ? LinafootScreen.standingsTab : 0));
       case ArticleLink(:final id):
         await _openArticle(() => _article(const {}, '/$id'), push);
       case ArticleSlugLink(:final slug):

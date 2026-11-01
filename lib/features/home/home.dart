@@ -1,3 +1,3 @@
 // Home feature barrel file
-export 'presentation/providers/home_providers.dart';
+export 'presentation/app_tabs.dart';
 export 'presentation/screens/home_screen.dart';

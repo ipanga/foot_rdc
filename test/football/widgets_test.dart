@@ -14,6 +14,9 @@ import 'package:foot_rdc/features/football/presentation/screens/match_detail_scr
 import 'package:foot_rdc/features/football/presentation/screens/matches_screen.dart';
 import 'package:foot_rdc/features/football/presentation/screens/player_detail_screen.dart';
 import 'package:foot_rdc/features/football/presentation/widgets/football_widgets.dart';
+import 'package:foot_rdc/features/football/presentation/widgets/home_football.dart';
+import 'package:foot_rdc/features/home/presentation/app_tabs.dart';
+import 'package:foot_rdc/shared/widgets/premium_bottom_nav_bar.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -356,6 +359,150 @@ void main() {
     }
   });
 
+  group('Bottom tabs', () {
+    test('the order is the owner\'s', () {
+      expect(AppTab.values.map((t) => t.label), ['Accueil', 'Édito', 'Matchs', 'Linafoot', 'Plus']);
+    });
+
+    testWidgets('the bar shows them in that order and reports the tab by name', (tester) async {
+      AppTab? tapped;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            bottomNavigationBar: PremiumBottomNavBar(
+              currentIndex: AppTab.home.index,
+              enableHaptics: false,
+              onTap: (index) => tapped = AppTab.values[index],
+              items: [for (final tab in AppTab.values) appTabNavItem(tab)],
+            ),
+          ),
+        ),
+      );
+      final x = [for (final tab in AppTab.values) tester.getCenter(find.text(tab.label)).dx];
+      expect(x, [...x]..sort());
+      for (final tab in AppTab.values) {
+        await tester.tap(find.text(tab.label));
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(tapped, tab);
+      }
+    });
+
+    testWidgets('each tab shows its own page, is built once and keeps its state', (tester) async {
+      final built = <AppTab>[];
+      Widget pages(AppTab current) => MaterialApp(
+        home: TabPages(
+          current: current,
+          builder: (tab) {
+            built.add(tab);
+            return _Counter(key: ValueKey(tab), name: tab.label);
+          },
+        ),
+      );
+      await tester.pumpWidget(pages(AppTab.home));
+      expect(built, [AppTab.home]);
+      await tester.pumpWidget(pages(AppTab.matches));
+      await tester.tap(find.text('Matchs 0'));
+      await tester.pump();
+      await tester.pumpWidget(pages(AppTab.edito));
+      expect(find.text('Édito 0'), findsOneWidget);
+      expect(find.text('Matchs 1'), findsNothing);
+      await tester.pumpWidget(pages(AppTab.matches));
+      expect(find.text('Matchs 1'), findsOneWidget);
+      expect(built.toSet(), {AppTab.home, AppTab.matches, AppTab.edito}, reason: 'unvisited tabs stay unbuilt');
+    });
+
+    testWidgets('Tout voir opens Matchs by name', (tester) async {
+      final (repo, _, _) = contractRepository();
+      final container = ProviderContainer(overrides: [footballRepositoryProvider.overrideWith((ref) async => repo)]);
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: Scaffold(body: HomeMatchStrip())),
+        ),
+      );
+      await settle(tester);
+      await tester.tap(find.text('Tout voir'));
+      expect(container.read(currentTabProvider), AppTab.matches);
+      await tester.pumpWidget(const SizedBox());
+      await settle(tester);
+    });
+
+    testWidgets('Classements opens the standings', (tester) async {
+      final (repo, _, _) = contractRepository();
+      await tester.pumpWidget(app(const Scaffold(body: SingleChildScrollView(child: HomeLinafootSnapshot())), repo));
+      await settle(tester);
+      await tester.tap(find.text('Classements'));
+      await settle(tester);
+      final tabs = tester.widget<TabBar>(find.byType(TabBar));
+      expect(tabs.controller!.index, LinafootScreen.standingsTab);
+      await tester.pumpWidget(const SizedBox());
+      await settle(tester);
+    });
+
+    test('live polling stops on tabs without live scores and resumes', () async {
+      final data = productionContract();
+      final (repo, adapter, _) = contractRepository(data: {...data, 'live': data['finished']});
+      final container = ProviderContainer(
+        overrides: [
+          footballRepositoryProvider.overrideWith((ref) async => repo),
+          livePollIntervalProvider.overrideWithValue(const Duration(milliseconds: 10)),
+        ],
+      );
+      addTearDown(container.dispose);
+      final sub = container.listen(liveMatchesProvider(324), (_, _) {});
+      bool isLive(Uri uri) => uri.path.endsWith('/live');
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(adapter.calls.where(isLive), isNotEmpty);
+      container.read(currentTabProvider.notifier).state = AppTab.edito;
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      final calls = adapter.calls.where(isLive).length;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(adapter.calls.where(isLive).length, calls);
+      container.read(currentTabProvider.notifier).state = AppTab.matches;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(adapter.calls.where(isLive).length, greaterThan(calls));
+      sub.close();
+    });
+
+    test('returning to a tab refreshes old data and leaves fresh data alone', () async {
+      final clock = _Clock();
+      final (repo, adapter, _) = contractRepository(clock: clock.now);
+      final container = ProviderContainer(overrides: [footballRepositoryProvider.overrideWith((ref) async => repo)]);
+      addTearDown(container.dispose);
+      final sub = container.listen(standingsProvider(324), (_, _) {});
+      await container.read(standingsProvider(324).future);
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      final first = adapter.calls.length;
+      container.read(footballRefreshProvider.notifier).state++;
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      expect(adapter.calls.length, first, reason: 'fresh data makes no request');
+      clock.advance(const Duration(minutes: 3));
+      container.read(footballRefreshProvider.notifier).state++;
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      expect(adapter.calls.length, greaterThan(first));
+      sub.close();
+    });
+  });
+
+  group('Links do not depend on tabs', () {
+    test('every link kind parses to its destination', () {
+      expect(DeepLink.parse('footrdc://match/6476'), isA<MatchLink>());
+      expect(DeepLink.parse('footrdc://club/4'), isA<ClubLink>());
+      expect(DeepLink.parse('footrdc://article/12'), isA<ArticleLink>());
+      expect(DeepLink.parse('footrdc://standings'), isA<LinafootLink>());
+      expect(DeepLink.parse('https://footrdc.com/edito-merci-les-leopards/'), isA<ArticleSlugLink>());
+    });
+
+    test('a notification link comes from whichever field carries it', () {
+      expect(notificationLink({'link': 'footrdc://club/4'}, 'https://footrdc.com/x/'), 'footrdc://club/4');
+      expect(notificationLink({'url': 'footrdc://match/1'}, null), 'footrdc://match/1');
+      expect(notificationLink(null, 'https://footrdc.com/x/'), 'https://footrdc.com/x/');
+      expect(notificationLink({'link': 7}, null), isNull);
+      expect(notificationLink(null, null), isNull);
+    });
+  });
+
   testWidgets('a message fits a very small space', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
@@ -500,4 +647,24 @@ void main() {
       }
     });
   });
+}
+
+class _Clock {
+  DateTime _value = DateTime.now();
+  DateTime now() => _value;
+  void advance(Duration by) => _value = _value.add(by);
+}
+
+class _Counter extends StatefulWidget {
+  final String name;
+  const _Counter({super.key, required this.name});
+  @override
+  State<_Counter> createState() => _CounterState();
+}
+
+class _CounterState extends State<_Counter> {
+  var _count = 0;
+  @override
+  Widget build(BuildContext context) =>
+      TextButton(onPressed: () => setState(() => _count++), child: Text('${widget.name} $_count'));
 }

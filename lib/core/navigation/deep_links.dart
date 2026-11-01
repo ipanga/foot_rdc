@@ -56,3 +56,9 @@ class LinafootLink extends DeepLink {
   final bool standings;
   const LinafootLink({this.standings = false});
 }
+
+/// The link carried by a push notification, whichever field the sender used.
+String? notificationLink(Map<String, dynamic>? data, String? launchUrl) {
+  final link = data?['link'] ?? data?['url'] ?? launchUrl;
+  return link is String ? link : null;
+}

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/network/dio_client.dart';
+import '../../home/presentation/app_tabs.dart';
 import '../data/football_client.dart';
 import '../data/football_repository.dart';
 import '../domain/models.dart';
@@ -15,7 +16,12 @@ final footballRepositoryProvider = FutureProvider<FootballRepository>((ref) asyn
   return FootballRepository(FootballClient(http, PreferencesFootballCache(await SharedPreferences.getInstance())));
 });
 
+/// Tabs stay alive, so this is what refreshes them: raised when the reader returns to a football tab or the app.
+/// Data still within its cache lifetime makes no request.
+final footballRefreshProvider = StateProvider<int>((ref) => 0);
+
 Stream<Loaded<T>> _swr<T>(Ref ref, Future<T> Function(FootballRepository repo, CachePolicy policy) load) async* {
+  ref.watch(footballRefreshProvider);
   final repo = await ref.watch(footballRepositoryProvider.future);
   yield* staleWhileRevalidate((policy) => load(repo, policy));
 }
@@ -153,10 +159,11 @@ Stream<Loaded<MatchDetail>> _loadDetail(FootballRepository repo, int id) => stal
 final liveMatchesProvider = StreamProvider.autoDispose.family<List<Match>, int>((ref, season) async* {
   var closed = false;
   ref.onDispose(() => closed = true);
+  ref.watch(footballRefreshProvider);
   final repo = await ref.watch(footballRepositoryProvider.future);
   final interval = ref.watch(livePollIntervalProvider);
   while (!closed) {
-    if (ref.read(appForegroundProvider)) {
+    if (ref.read(appForegroundProvider) && ref.read(currentTabProvider).showsLiveScores) {
       List<Match> rows;
       try {
         rows = (await repo.window('live', season)).rows;

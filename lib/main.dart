@@ -16,6 +16,7 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
+import 'package:foot_rdc/core/navigation/deep_links.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
 
 Future<void> main() async {
@@ -57,9 +58,8 @@ Future<void> main() async {
 
   // Add click listener
   OneSignal.Notifications.addClickListener((event) {
-    final data = event.notification.additionalData;
-    final link = data?['link'] ?? data?['url'] ?? event.notification.launchUrl;
-    if (link is String) pushLinks.add(link);
+    final link = notificationLink(event.notification.additionalData, event.notification.launchUrl);
+    if (link != null) pushLinks.add(link);
     if (kDebugMode) {
       print(
         "OneSignal notification clicked: ${event.notification.notificationId}",

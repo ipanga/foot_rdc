@@ -11,6 +11,8 @@ import 'clubs_screen.dart';
 
 /// Linafoot hub. The selected season drives every tab, so seasons can never mix.
 class LinafootScreen extends ConsumerStatefulWidget {
+  static const standingsTab = 3;
+
   final int initialTab;
   const LinafootScreen({super.key, this.initialTab = 0});
   @override
