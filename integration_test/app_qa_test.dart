@@ -97,9 +97,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await shot('linafoot-classement-complet');
     await tab('Clubs');
-    await wait(find.text('Blessing'));
+    await wait(find.text('AC Rangers'));
     await shot('linafoot-clubs');
-    await tester.tap(find.text('Blessing'));
+    await tester.enterText(find.byType(TextField).first, 'Blessing');
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 150));
+    }
+    await tester.tap(find.text('Blessing').last);
     await wait(find.text('Prochain match'));
     await shot('club-apercu');
     await tab('Effectif');
