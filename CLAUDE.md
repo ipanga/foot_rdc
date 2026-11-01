@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Flutter app (Dart SDK `^3.9.2`) for FootRDC — a football news / matches / rankings reader backed by the public WordPress + SportsPress REST API at `footrdc.com`. Targets Android, iOS, web, macOS, Windows, Linux. Push via OneSignal, ads via Google Mobile Ads, crash/auth init via Firebase, local storage via Hive.
+Flutter app (Dart SDK `^3.9.2`) for FootRDC — a football news and competition app. News comes from WordPress REST and football from the RDC Football REST API, both at `footrdc.com`. Read `PROJECT_CONTEXT.md`, `DEVELOPMENT_STATUS.md` and `DECISIONS.md` first. Targets Android, iOS, web, macOS, Windows, Linux. Push via OneSignal, ads via Google Mobile Ads, crash/auth init via Firebase, local storage via Hive.
 
 ## Commands
 
@@ -24,7 +24,7 @@ flutter build apk                                  # release Android build
 flutter build ios                                  # release iOS build
 ```
 
-Generated files (`*.g.dart`) live next to their sources and are checked in — keep them in sync with the source after edits. Current generated files: `features/news/data/models/article_model.g.dart`, `features/news/presentation/providers/news_providers.g.dart`, `features/matches/presentation/providers/match_providers.g.dart`, `features/rankings/data/models/ranking_model.g.dart`.
+Generated files (`*.g.dart`) live next to their sources and are checked in — keep them in sync with the source after edits.
 
 ## Architecture
 
@@ -32,7 +32,7 @@ Generated files (`*.g.dart`) live next to their sources and are checked in — k
 `lib/` is split into three top-level layers:
 - `lib/core/` — cross-cutting infra: `constants/` (API URLs, league/season IDs, AdMob unit IDs), `network/` (`DioClient`, `NetworkExceptionHandler`, sealed `NetworkException` hierarchy with French user-facing messages), `errors/` (`Failure` for `Either`-returning repos, `LoggerRiverpod` provider observer), `theme/` (Material 3 light/dark), `utils/`.
 - `lib/shared/` — UI/state shared across features: `providers/` (theme, notifications), `widgets/` (`PremiumBottomNavBar`, `PremiumTabBar`, `AppDrawer`, `CustomSearchBar`, `AppCard`, `AppSnackbar`, `NewsAppBar`, `AnimatedWidgets`).
-- `lib/features/<feature>/` — one folder per feature (`home`, `news`, `editorial`, `matches`, `rankings`, `saved_articles`, `search`), each with `data/{datasources,models,repositories}`, `domain/{entities,repositories,usecases}`, `presentation/{providers,screens,widgets}`. Some feature folders (e.g. `matches`, `saved_articles`, `editorial`) keep the data/domain shells but currently put their fetching logic directly in `presentation/providers/` — follow the existing pattern within a feature when extending it. The `editorial` feature reuses the `Article` entity from `news/` for its content stream — keep them in sync if `Article` shape changes.
+- `lib/features/<feature>/` — one folder per feature (`home`, `news`, `editorial`, `football`, `more`, `saved_articles`, `search`), each with `data/{datasources,models,repositories}`, `domain/{entities,repositories,usecases}`, `presentation/{providers,screens,widgets}`. Some feature folders (e.g. `matches`, `saved_articles`, `editorial`) keep the data/domain shells but currently put their fetching logic directly in `presentation/providers/` — follow the existing pattern within a feature when extending it. The `editorial` feature reuses the `Article` entity from `news/` for its content stream — keep them in sync if `Article` shape changes.
 
 Some features expose a barrel file (`features/home/home.dart`, `features/saved_articles/saved_articles.dart`); `core/core.dart` and `shared/shared.dart` are partial barrels — prefer importing the concrete file when the export isn't listed there.
 
@@ -48,17 +48,13 @@ All HTTP traffic goes through `DioClient` (`core/network/dio_client.dart`), expo
 ### Connectivity
 OS-level network state is exposed by `ConnectivityService` (`core/network/connectivity_service.dart`) via `connectivity_plus`, mapped to a binary `ConnectivityStatus` (`connected` / `disconnected`). The Riverpod entry point is `connectivityStatusProvider` (`shared/providers/connectivity_provider.dart`) — a `StreamProvider<ConnectivityStatus>` that emits the current state on subscribe and re-emits on every interface change. `HomeScreen` `ref.listen`s on it and triggers a single-edge cache refresh of the active tab on `disconnected → connected`. The `ConnectivityBanner` widget (`shared/widgets/connectivity_banner.dart`) renders above the persistent ad in `HomeScreen`'s bottomNavigationBar Column — height 0 dp online, ~32 dp red "Pas de connexion internet" when offline, briefly green "Connexion rétablie" on restore. Per-screen empty/error states already cover the no-cache offline case via existing retry buttons.
 
-API endpoints and the active league/season IDs (`currentSeasonId`, `groupeALeagueId`, `groupeBLeagueId`, `playOffLeagueId`, `currentPhaseLeagueId`, `bonASavoirCategorySlug`) live in `core/constants/api_constants.dart` — update there, not inline. The editorial feature resolves `bonASavoirCategorySlug` to a numeric category ID at runtime via `editorialCategoryIdProvider` (`features/editorial/presentation/providers/editorial_providers.dart`); the result is cached for the session.
+WordPress endpoints and category slugs live in `core/constants/api_constants.dart`. Football has no hard-coded league or season IDs: `FootballRepository` discovers them from the RDC Football API.
 
 ### Local storage — Hive
 `main()` calls `Hive.initFlutter`, registers `ArticleModelAdapter` (typeId 0), and opens `Box<ArticleModel>('articles')` before `runApp`. Saved articles flow: `ArticleLocalDataSource` (raw box access) → `ArticleRepositoryImpl` (returns `Either<Failure, T>` via `dartz`) → use cases in `features/news/domain/usecases/`. Box keys are `article.id` (legacy entries used auto-generated keys — `deleteArticle`/`isArticleSaved` already handle both). If you add a new Hive model, bump `typeId`, register its adapter in `main`, and re-run `build_runner` for the `.g.dart`.
 
 ### Navigation & shell
-There is no router package. `HomeScreen` (`features/home/presentation/screens/home_screen.dart`) is the root; it holds an `IndexedPages`-style list driven by `currentPageProvider` (a `StateProvider<int>`) and renders `PremiumBottomNavBar` with five tabs: **Accueil (0) → À Savoir (1) → Matchs (2) → Classement (3) → Enregistrés (4)**. Tab order is wired to the cache-refresh logic in `HomeScreen`'s lifecycle observer (`switch (currentPage) { case 0: articles; case 1: editorial; case 2: matches; case 3: rankings; }`) and to the `onTap` handler — keep them aligned if you reorder.
-
-`SearchScreen` is **not** a tab — it's a standalone route pushed via `Navigator.push` from `NewsAppBar`'s search icon (visible on Accueil). Don't add it back to the bottom nav.
-
-The **Matchs** and **Classement** tabs are themselves tab-bars with three sub-tabs each: **Play-off (0) → Groupe A (1) → Groupe B (2)**. Play-off is the default because the competition is in Play-Off phase. The mapping is centralised at `_tabLeagueIds` inside each screen and ultimately backed by `ApiConstants.currentPhaseLeagueId` (= `playOffLeagueId` today). Bump that constant when the phase rotates.
+There is no router package. `HomeScreen` is the root, with five tabs driven by `currentPageProvider`: Accueil, Matchs, Linafoot, Édito, Plus. Édito must stay a bottom tab. Season state lives in `selectedSeasonIdProvider`; everything in the Linafoot hub derives from `activeSeasonProvider`. Deep links go through `core/navigation`.
 
 ### Third-party services initialized in `main.dart`
 - **Firebase** — `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` from generated `firebase_options.dart`; config in `firebase.json`.
