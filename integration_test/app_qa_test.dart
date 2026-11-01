@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
 import 'package:foot_rdc/features/football/presentation/widgets/football_widgets.dart';
 import 'package:foot_rdc/features/editorial/presentation/providers/editorial_providers.dart';
+import 'package:foot_rdc/features/editorial/presentation/providers/editorial_cache_provider.dart';
 import 'package:foot_rdc/features/home/presentation/app_tabs.dart';
 import 'package:foot_rdc/features/home/presentation/screens/home_screen.dart';
 import 'package:foot_rdc/features/news/presentation/providers/article_cache_provider.dart';
