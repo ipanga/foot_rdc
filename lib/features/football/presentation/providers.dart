@@ -123,6 +123,8 @@ final livePollIntervalProvider = Provider<Duration>((ref) => const Duration(seco
 /// The match on screen. While the server says it is live it refreshes; it stops when the match ends or the screen
 /// closes, and waits while the app is in the background.
 final matchDetailProvider = StreamProvider.autoDispose.family<Loaded<MatchDetail>, int>((ref, id) async* {
+  var closed = false;
+  ref.onDispose(() => closed = true);
   final repo = await ref.watch(footballRepositoryProvider.future);
   final interval = ref.watch(livePollIntervalProvider);
   late Loaded<MatchDetail> current;
@@ -132,6 +134,7 @@ final matchDetailProvider = StreamProvider.autoDispose.family<Loaded<MatchDetail
   }
   while (current.value.match.status.isLive) {
     await Future<void>.delayed(interval);
+    if (closed) return;
     if (!ref.read(appForegroundProvider)) continue;
     try {
       current = Loaded(MatchDetail(await repo.match(id, live: true), await repo.events(id, live: true)));
@@ -148,20 +151,23 @@ Stream<Loaded<MatchDetail>> _loadDetail(FootballRepository repo, int id) => stal
 
 /// Live matches of a season: polls only while a match is live and the screen is open.
 final liveMatchesProvider = StreamProvider.autoDispose.family<List<Match>, int>((ref, season) async* {
+  var closed = false;
+  ref.onDispose(() => closed = true);
   final repo = await ref.watch(footballRepositoryProvider.future);
-  while (true) {
-    List<Match> rows;
-    try {
-      rows = (await repo.window('live', season)).rows;
-    } on FootballFailure {
-      rows = const [];
+  final interval = ref.watch(livePollIntervalProvider);
+  while (!closed) {
+    if (ref.read(appForegroundProvider)) {
+      List<Match> rows;
+      try {
+        rows = (await repo.window('live', season)).rows;
+      } on FootballFailure {
+        rows = const [];
+      }
+      if (closed) return;
+      yield rows;
+      if (rows.isEmpty) return;
     }
-    yield rows;
-    if (rows.isEmpty) return;
-    await Future<void>.delayed(ref.read(livePollIntervalProvider));
-    while (!ref.read(appForegroundProvider)) {
-      await Future<void>.delayed(ref.read(livePollIntervalProvider));
-    }
+    await Future<void>.delayed(interval);
   }
 });
 

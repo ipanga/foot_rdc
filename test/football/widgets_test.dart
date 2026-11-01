@@ -244,6 +244,8 @@ void main() {
       await tester.pumpWidget(app(const ClubDetailScreen(clubId: 4), repo));
       await settle(tester);
       expect(find.text('FC Saint Eloi Lupopo'), findsWidgets);
+      await tester.ensureVisible(find.widgetWithText(Tab, 'Effectif'));
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.tap(find.widgetWithText(Tab, 'Effectif'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));

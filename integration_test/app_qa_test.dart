@@ -52,6 +52,8 @@ void main() {
     }
 
     Future<void> tab(String label) async {
+      await tester.ensureVisible(find.widgetWithText(Tab, label).first);
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.tap(find.widgetWithText(Tab, label).first);
       await tester.pump(const Duration(milliseconds: 500));
     }
