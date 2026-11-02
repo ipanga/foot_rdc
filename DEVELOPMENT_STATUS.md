@@ -1,4 +1,4 @@
-NEXT_ACTION: Owner creates ~/.footrdc-release/release.env by following 'Owner setup' in docs/release/MOBILE_RELEASE_AUTOMATION_PLAN.md and confirms in chat that it exists, without pasting values. Then run `bundle exec fastlane ios beta` and `bundle exec fastlane android internal`, one at a time. After upload, follow docs/release/INTERNAL_BETA_TEST_PLAN.md, including the fixtures on 4 Nov 2026 12:00 UTC.
+NEXT_ACTION: Owner fills ASC_ISSUER_ID, ASC_KEY_ID and ASC_KEY_PATH in ~/.footrdc-release/release.env, then says so in chat without pasting values. Then run the read-only App Store Connect validation for the FootRDC record, highest build and internal groups. Keep build 31 if it is free on both stores. Google needs the FootRDC-only service account in PLAY_JSON_PATH. No upload until the owner instructs it.
 
 # Development status
 

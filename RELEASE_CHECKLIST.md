@@ -11,18 +11,18 @@ No upload without explicit owner approval.
 - [ ] Bundle and package IDs correct; signing identity correct
 - [ ] Explicit target track confirmed: TestFlight or Play Internal, never public by default
 
-## Internal beta state
+## Internal beta state, 2 Nov 2026
 
 | Item | State |
 |---|---|
-| Android upload keystore and `key.properties` | Present, opens, alias matches, AAB signed with it |
-| Apple Distribution identity in Keychain | Present, TOOTIYE ENTERPRISES LTD |
-| App Store Connect API keys | Four exist; none designated for FootRDC |
-| App Store Connect Issuer ID | Not found on this Mac |
-| FootRDC App Store provisioning profiles | Absent; the lane creates them once the key is set |
-| Google Play service account for FootRDC | Absent. A Teka one exists and was not used |
-| Export compliance confirmation | Owner to give |
-| `~/.footrdc-release/release.env` | Absent |
-| Physical iPhone | Known to Xcode but not connected |
-| Physical Android phone | None connected |
-| OneSignal test | Prepared in `docs/release/INTERNAL_BETA_TEST_PLAN.md`; not sent |
+| Android upload key | Keystore and AAB signer equal the expected SHA-256 |
+| Apple Distribution certificate | Team `YK6Z393A4D`, TOOTIYE ENTERPRISES LTD, valid to 3 Jul 2027 |
+| Bundle IDs and local entitlements | Correct: push, and the OneSignal App Group on app and extension |
+| Apple key candidates on this Mac | `8C5KR2Q4J4`, `N576C758F4`, `UATJB3DX55`, `W2NZKDGF6S`, `78KG84553N`. Type and role unknown |
+| App Store Connect Issuer ID | Not in the Teka release files. Owner to supply |
+| Apple API validation | Not run: it needs the Issuer ID |
+| Google Play service account for FootRDC | None found in FootRDC folders. Owner to create |
+| Build 31 free on each store | Unknown until the store credentials work |
+| Export compliance technical review | Standard HTTPS only. Owner confirmation pending |
+| `~/.footrdc-release/release.env` | Created, private, values empty |
+| Physical iPhone and Android, real push, live match | Not run |
