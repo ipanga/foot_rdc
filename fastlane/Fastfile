@@ -108,7 +108,7 @@ end
 # Signing changes for the build are put back afterwards, so the tree stays clean.
 def build_signed_ipa(key)
   profiles = [["Runner", BUNDLE_ID], ["OneSignalNotificationServiceExtension", EXTENSION_ID]].map do |target, id|
-    get_provisioning_profile(api_key: key, app_identifier: id, team_id: TEAM_ID, force: false, readonly: false)
+    get_provisioning_profile(api_key: key, app_identifier: id, team_id: TEAM_ID)
     name = Actions.lane_context[Actions::SharedValues::SIGH_NAME]
     update_code_signing_settings(path: File.join(REPO, "ios/Runner.xcodeproj"), use_automatic_signing: false,
       targets: [target], build_configurations: ["Release"], team_id: TEAM_ID, code_sign_identity: "Apple Distribution", profile_name: name)
