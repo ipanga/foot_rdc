@@ -1,6 +1,7 @@
 # Internal beta only. This file has no path to App Review or a public Google Play track.
 # test/release_safety_test.dart fails if one is added.
 require "plist"
+require "shellwords"
 require "tmpdir"
 
 BRANCH = "feat/rdc-football-mobile-redesign"
@@ -64,9 +65,12 @@ def validate_repository
   run("flutter test --no-pub")
 end
 
+# Compiled property lists are binary.
+def read_plist(path) = Plist.parse_xml(Actions.sh("plutil -convert xml1 -o - #{path.shellescape}", log: false))
+
 def check_ios_bundle(app)
-  main = Plist.parse_xml(File.join(app, "Info.plist"))
-  extension = Plist.parse_xml(Dir[File.join(app, "PlugIns/*.appex/Info.plist")].first)
+  main = read_plist(File.join(app, "Info.plist"))
+  extension = read_plist(Dir[File.join(app, "PlugIns/*.appex/Info.plist")].first)
   wanted = version
   [[main, BUNDLE_ID], [extension, EXTENSION_ID]].each do |info, id|
     stop("Wrong bundle ID: #{info['CFBundleIdentifier']}") unless info["CFBundleIdentifier"] == id
