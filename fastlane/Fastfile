@@ -20,7 +20,8 @@ ANDROID_CREDENTIALS = %w[PLAY_JSON_PATH].freeze
 # Runs from the repository root, whichever folder fastlane changed to.
 def in_repo(&block) = Dir.chdir(File.expand_path("..", __dir__), &block)
 
-def run(command) = in_repo { Actions.sh(command, log: true) }
+# Flutter calls CocoaPods, which must not inherit fastlane's Ruby settings.
+def run(command) = in_repo { Bundler.with_unbundled_env { Actions.sh(command, log: true) } }
 
 def capture(command) = in_repo { `#{command}`.strip }
 
