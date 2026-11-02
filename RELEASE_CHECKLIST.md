@@ -6,24 +6,21 @@ No upload without explicit owner approval.
 - [x] `flutter analyze` no errors or warnings; `flutter test` green
 - [x] Integration QA green on iOS and Android
 - [x] `SPORTSPRESS_USAGE_REMAINING: 0`
-- [ ] Version and build number valid and unique (31 set; uniqueness is checked against the stores at upload)
+- [x] Version and build number valid and unique
 - [x] Release notes ready
-- [ ] Bundle and package IDs correct; signing identity correct
+- [x] Bundle and package IDs correct; signing identity correct
 - [ ] Explicit target track confirmed: TestFlight or Play Internal, never public by default
 
-## Internal beta state, 3 Nov 2026 local validation
+## Internal beta state, 5.12.11 (31), commit `2925323`
 
 | Item | State |
 |---|---|
-| Apple authentication, FootRDC record | Pass |
-| Highest Apple build | 30 (5.12.10). App Store live version is 1.1.3, so the 5.12.10 train is open |
-| TestFlight internal group | Main testers, automatic distribution on |
-| Apple portal access | **Blocked: Account Holder must accept the latest Program License Agreement** |
-| Google authentication, FootRDC record | Pass, service account `footrdc-play-internal` |
-| Highest Google versionCode | 30, on production. Internal, alpha and beta are empty |
-| Testing tracks | Accepted in a discarded draft edit |
-| Production | Refused: `The caller does not have permission` |
-| Android upload key | Local keystore and AAB equal the expected SHA-256. Google confirms its side at first upload |
-| Export compliance gate | Pass, owner confirmed |
-| Build number | 31, unused on both stores |
+| TestFlight | Build 31 valid, `IN_BETA_TESTING` for internal testers |
+| Main testers | Internal, automatic distribution on, 2 testers |
+| Apple review submissions | None: no beta review, no new App Store version |
+| Google Play internal | 5.12.11, versionCode 31, status completed |
+| Google Play production | Unchanged: 5.12.10, versionCode 30 |
+| Google Play alpha and beta | Empty |
+| Android upload key | Accepted by Google at upload |
+| Export compliance | Declared no non-exempt encryption, confirmed by the owner |
 | Physical iPhone and Android, real push, live match | Not run |

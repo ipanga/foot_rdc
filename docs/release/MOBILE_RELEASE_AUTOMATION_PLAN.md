@@ -78,7 +78,11 @@ Then run:
 bundle exec fastlane beta_all
 ```
 
-The Fastlane signing and upload steps have not yet run against Apple or Google, because they need these credentials. Expect the first real run to need attention, and run `ios beta` and `android internal` separately the first time.
+Both lanes have uploaded for real, with `5.12.11 (31)`.
+
+## Apple version trains
+
+A build number alone is not enough. Apple can close a version for new builds, and the App Store versions list does not show this. `5.12.10` was closed although it never appeared in that list. The only reliable answer is the upload itself: error 90186 means set a higher version in `pubspec.yaml`, run `tool/set_build_number.sh <number>`, commit and push.
 
 ## Security
 

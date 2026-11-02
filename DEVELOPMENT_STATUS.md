@@ -1,25 +1,25 @@
-NEXT_ACTION: Account Holder accepts the latest Apple Program License Agreement at developer.apple.com/account. Then run `bundle exec fastlane ios beta dry_run:true`; when it passes, run the first real uploads separately: `bundle exec fastlane ios beta`, then `bundle exec fastlane android internal`. Do not run beta_all until both have worked once. Build 31 is unused on both stores.
+NEXT_ACTION: Owner and testers install 5.12.11 (31) from TestFlight and Google Play internal testing, then follow docs/release/INTERNAL_BETA_TEST_PLAN.md: physical phone checklist, one OneSignal test to a single device, and the live match on 4 Nov 2026 12:00 UTC. Record results in TEST_MATRIX.md. Public release needs a separate explicit owner decision. For the next internal build, raise the number with tool/set_build_number.sh; beta_all may be used now that both lanes have worked.
 
 # Development status
 
 | | |
 |---|---|
 | Branch | `feat/rdc-football-mobile-redesign` (from `develop` 7e9f137), pushed to `origin`; head holds the exact SHA |
-| Current phase | Internal beta: stopped before upload; Android ready, iOS blocked by Apple's agreement |
-| Latest app code commit | `9d572f3`; release tooling pushed at `a360d21` |
-| Version | Flutter `5.12.10+31`; iOS CFBundleVersion 31, CFBundleShortVersionString 5.12.10; Android versionCode 31, versionName 5.12.10 |
+| Current phase | Internal beta live on both stores; physical testing next |
+| Latest app code commit | `9d572f3`; uploaded source revision `2925323` |
+| Version | Flutter `5.12.11+31`; iOS CFBundleVersion 31, CFBundleShortVersionString 5.12.11; Android versionCode 31, versionName 5.12.11 |
 | Tests | `flutter test`: 79 passed, 0 failed. `flutter analyze`: 33 infos, 0 errors, 0 warnings |
 | Device QA | 9 of 9 runs pass on the final code, 0 exceptions, 0 overflows. See `TEST_MATRIX.md` |
 | Emulators | iPhone 18 Pro booted; Pixel_8_Pro restored to default size and text |
 | API | Production read-only; no writes made |
 | SportsPress usage | `SPORTSPRESS_USAGE_REMAINING: 0` |
 | iOS support | Minimum deployment target iOS 15.0; target device family iPhone 11 and newer supported iPhones |
-| Release automation | Fastlane in `fastlane/`; `android internal dry_run:true` passes with live store gates; `ios beta dry_run:true` stops at Apple's agreement |
+| Release automation | Fastlane in `fastlane/`; `ios beta` and `android internal` have both uploaded for real |
 | Bottom tabs | Accueil, Édito, Matchs, Linafoot, Plus |
 
 ## Known blockers
 
-iOS: Apple refuses certificate, profile and identifier access until the Account Holder accepts the latest Program License Agreement. Android has no blocker. See `RELEASE_CHECKLIST.md`.
+None for internal testing.
 
 ## Deferred
 
@@ -39,15 +39,15 @@ See `DECISIONS.md` and the limitations in the final report.
 | 7 Emulator QA, performance, regression | PARTIAL: performance measured in part | `5f79298` |
 | 8 Store automation prep | PASS: plan only, nothing uploaded | `06f653a` |
 | Final iOS and navigation adjustment | PASS | `3aa200f` to `9054081` |
-| Internal beta preparation | PARTIAL: Android ready, iOS blocked, not uploaded | `29398b5` to `a360d21` |
+| Internal beta | PASS: uploaded to TestFlight internal and Google Play internal | `2925323` |
 
 ## Final checkpoint
 
-PHASE STATUS: internal beta preparation PARTIAL; Android ready, iOS blocked by Apple's agreement
+PHASE STATUS: internal beta PASS on both stores; physical testing not started
 TESTS: 79 passed, 0 failed
-IOS: authenticated; portal access refused until the agreement is accepted
-ANDROID: live gates and signed AAB pass
+IOS: 5.12.11 (31) in TestFlight, internal testing
+ANDROID: 5.12.11 (31) in Google Play internal testing
 API: Production read-only
-KNOWN ISSUES: real signing and upload steps have not yet run against Apple or Google
+KNOWN ISSUES: physical phones, real push and a live match are unverified
 NEXT_ACTION: as above
-COMMIT: `a360d21` tested; later commits on this branch are documentation
+COMMIT: `2925323` uploaded; later commits on this branch are documentation

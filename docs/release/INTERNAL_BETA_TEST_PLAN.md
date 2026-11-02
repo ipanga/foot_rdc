@@ -1,6 +1,6 @@
 # Internal beta test plan
 
-For build `5.12.10 (31)` or later, installed from TestFlight or Google Play internal testing. Nothing here publishes anything.
+For build `5.12.11 (31)` or later, installed from TestFlight or Google Play internal testing. Nothing here publishes anything.
 
 Record results in `TEST_MATRIX.md`: device model, OS version, build number, pass or fail, and a screenshot of any problem.
 

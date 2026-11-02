@@ -25,7 +25,7 @@ Production is read-only for this project: public GET requests only.
 ## Identifiers
 
 - iOS bundle: `com.tootiyesolutions.footrdc`; Android application id: `com.tootiyesolutions.footrdc`.
-- Version `5.12.10+30`. Do not change the semantic version during development.
+- Version `5.12.11+31`. Do not change the semantic version during development.
 - Competition 1 (Linafoot). Seasons are discovered from the API, never hard-coded: current flag `is_current`.
 
 ## iOS support

@@ -44,8 +44,15 @@ Failure states are injected at the HTTP layer on the device. The cache and scree
 | Check | Result |
 |---|---|
 | `bundle exec fastlane android internal dry_run:true` | Pass, including live Google gates |
-| `bundle exec fastlane ios beta dry_run:true` | Stops at the Apple gate: Program License Agreement |
+| `bundle exec fastlane ios beta dry_run:true` | Stopped at Apple's agreement, then passed once it was accepted |
 | Fastlane parameters for every signing and upload step | Valid against the installed version |
+
+## Internal uploads, `2925323`, 5.12.11 (31)
+
+| Check | Result |
+|---|---|
+| `bundle exec fastlane ios beta` | Pass; read back from Apple: valid, `IN_BETA_TESTING`, no review submission |
+| `bundle exec fastlane android internal` | Pass; read back from Google: internal 31 completed, production 30 unchanged |
 
 ## Test harness notes
 

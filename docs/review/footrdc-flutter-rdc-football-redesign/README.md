@@ -1,8 +1,8 @@
 # FootRDC Flutter: RDC Football migration and redesign
 
-Final report, updated 2 Nov 2026. Branch `feat/rdc-football-mobile-redesign`, app code `9d572f3`, tests at `9054081`, version `5.12.10+31`.
+Final report, updated 2 Nov 2026. Branch `feat/rdc-football-mobile-redesign`, app code `9d572f3`, tests at `9054081`, version `5.12.11+31`.
 
-The app now runs on the RDC Football API with five tabs, including Édito. Every automated test and all nine device runs pass on the final code. It has not been tried on a physical phone or during a live match, and nothing was uploaded to Apple or Google.
+The app now runs on the RDC Football API with five tabs, including Édito. Every automated test and all nine device runs pass on the final code. It has not been tried on a physical phone or during a live match, and it is not publicly released.
 
 ## Status
 
@@ -30,8 +30,8 @@ The app now runs on the RDC Football API with five tabs, including Édito. Every
 | REGRESSION TESTS | PASS |
 | PERFORMANCE | PARTIAL: no profile build on a physical phone |
 | RELEASE AUTOMATION PLAN | READY |
-| TESTFLIGHT UPLOAD | NOT EXECUTED |
-| GOOGLE PLAY UPLOAD | NOT EXECUTED |
+| TESTFLIGHT UPLOAD | INTERNAL ONLY: PASS |
+| GOOGLE PLAY UPLOAD | INTERNAL ONLY: PASS |
 
 `SPORTSPRESS_USAGE_REMAINING: 0` across `lib`, `test`, `integration_test` and `tool`. The word remains only in documents describing the past.
 
@@ -139,8 +139,8 @@ Delivery stays on OneSignal. Tapping a notification opens the matching article, 
 
 ## Release readiness
 
-Build 31 passes every local gate for an internal test build, but is not uploaded: store credentials are missing. Not ready for public release. Before a public release: run on physical iPhone and Android phones, follow one live match, send one real push notification, and raise the version. Plan: `docs/release/MOBILE_RELEASE_AUTOMATION_PLAN.md`. Checklist: `RELEASE_CHECKLIST.md`.
+`5.12.11 (31)` is in TestFlight internal testing and Google Play internal testing. Not ready for public release. Before a public release: run on physical iPhone and Android phones, follow one live match, send one real push notification, and raise the version. Plan: `docs/release/MOBILE_RELEASE_AUTOMATION_PLAN.md`. Checklist: `RELEASE_CHECKLIST.md`.
 
 Future CI/CD: `.github/workflows/ci.yml` stays as analysis and tests. Fastlane beta and internal lanes come after the owner adds signing credentials outside Git.
 
-Nothing was submitted to Apple or Google.
+Nothing was submitted for App Review or any public Google Play track.
