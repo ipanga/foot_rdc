@@ -30,14 +30,22 @@ def capture(command) = in_repo { `#{command}`.strip }
 def stop(message) = UI.user_error!(message)
 
 # Reads the local file without printing a value. Stops, naming only what is missing.
-def require_credentials(names)
-  if File.exist?(CREDENTIALS_FILE)
-    stop("#{CREDENTIALS_FILE} must be readable only by you (chmod 600)") unless (File.stat(CREDENTIALS_FILE).mode & 0o077).zero?
-    File.foreach(CREDENTIALS_FILE) do |line|
-      key, value = line.strip.split("=", 2)
-      ENV[key] ||= value if key && value && !key.start_with?("#")
-    end
+def load_credentials
+  return unless File.exist?(CREDENTIALS_FILE)
+  stop("#{CREDENTIALS_FILE} must be readable only by you (chmod 600)") unless (File.stat(CREDENTIALS_FILE).mode & 0o077).zero?
+  File.foreach(CREDENTIALS_FILE) do |line|
+    key, value = line.strip.split("=", 2)
+    ENV[key] ||= value if key && value && !key.start_with?("#")
   end
+end
+
+def credentials_set?(names)
+  load_credentials
+  names.all? { |name| ENV[name].to_s.strip != "" }
+end
+
+def require_credentials(names)
+  load_credentials
   missing = names.reject { |name| ENV[name].to_s.strip != "" }
   stop("Missing credentials: #{missing.join(', ')}. Nothing was uploaded. See #{SETUP_DOC}") unless missing.empty?
   names.grep(/_PATH$/).each do |name|
@@ -126,17 +134,41 @@ def check_signed_ipa(ipa)
   end
 end
 
+# Read-only. Runs before any build, so a blocked account stops the lane at once.
+def check_apple_portal(key)
+  require "spaceship"
+  Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: key)
+  serial = capture("security find-certificate -c 'Apple Distribution: TOOTIYE' -p | openssl x509 -noout -serial").sub("serial=", "").upcase.sub(/\A0+/, "")
+  portal = Spaceship::ConnectAPI::Certificate.all(filter: { certificateType: "DISTRIBUTION" }).map { |c| c.serial_number.upcase.sub(/\A0+/, "") }
+  stop("The local Apple Distribution certificate is not on the Apple portal") unless portal.include?(serial)
+  { BUNDLE_ID => %w[PUSH_NOTIFICATIONS APP_GROUPS], EXTENSION_ID => %w[APP_GROUPS] }.each do |id, needed|
+    bundle = Spaceship::ConnectAPI::BundleId.find(id)
+    stop("#{id} is not registered") unless bundle
+    missing = needed - bundle.get_capabilities.map(&:capability_type)
+    stop("#{id} lacks #{missing.join(', ')}") unless missing.empty?
+  end
+rescue Spaceship::AccessForbiddenError => error
+  stop("Apple refused portal access: #{error.message.gsub(/\s+/, ' ')[0, 240]}")
+end
+
+def ios_store_gates
+  stop("Export compliance must be confirmed by the owner") unless ENV["FOOTRDC_EXPORT_COMPLIANCE_CONFIRMED"] == "yes"
+  key = api_key
+  latest = latest_testflight_build_number(api_key: key, app_identifier: BUNDLE_ID, initial_build_number: 0)
+  stop("Build #{version[:build]} is not above TestFlight build #{latest}") unless version[:build] > latest.to_i
+  check_apple_portal(key)
+  UI.success("Apple gates passed: authenticated, build #{version[:build]} is above #{latest}, portal access and capabilities are in place.")
+  key
+end
+
 def ios_beta(dry_run:)
+  key = ios_store_gates if !dry_run || credentials_set?(IOS_CREDENTIALS)
   run("flutter build ios --release --no-codesign")
   in_repo { check_ios_bundle("build/ios/iphoneos/Runner.app") }
   if dry_run
     UI.success("iOS dry run passed. Nothing was signed or uploaded.")
     return
   end
-  stop("Export compliance must be confirmed by the owner") unless ENV["FOOTRDC_EXPORT_COMPLIANCE_CONFIRMED"] == "yes"
-  key = api_key
-  latest = latest_testflight_build_number(api_key: key, app_identifier: BUNDLE_ID, initial_build_number: 0)
-  stop("Build #{version[:build]} is not above TestFlight build #{latest}") unless version[:build] > latest.to_i
   build_signed_ipa(key)
   ipa = in_repo { File.expand_path(Dir[File.join(IPA_DIR, "*.ipa")].first.to_s) }
   stop("No IPA was produced") unless File.file?(ipa)
@@ -158,15 +190,21 @@ def highest_play_build(json_key)
   end.max.to_i
 end
 
+def android_store_gates
+  json_key = File.expand_path(ENV["PLAY_JSON_PATH"])
+  latest = highest_play_build(json_key)
+  stop("Build #{version[:build]} is not above Google Play build #{latest}") unless version[:build] > latest
+  UI.success("Google gates passed: authenticated, build #{version[:build]} is above #{latest}.")
+  json_key
+end
+
 def android_internal(dry_run:)
+  json_key = android_store_gates if !dry_run || credentials_set?(ANDROID_CREDENTIALS)
   build_android
   if dry_run
     UI.success("Android dry run passed. The AAB is signed with the upload key. Nothing was uploaded.")
     return
   end
-  json_key = File.expand_path(ENV["PLAY_JSON_PATH"])
-  latest = highest_play_build(json_key)
-  stop("Build #{version[:build]} is not above Google Play build #{latest}") unless version[:build] > latest
   upload_to_play_store(package_name: BUNDLE_ID, aab: in_repo { File.expand_path(AAB) }, json_key: json_key, track: "internal",
     release_status: "completed", skip_upload_apk: true, skip_upload_metadata: true, skip_upload_images: true,
     skip_upload_screenshots: true, skip_upload_changelogs: true)
