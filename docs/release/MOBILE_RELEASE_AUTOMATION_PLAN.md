@@ -12,7 +12,7 @@ Run from the repository root, on the Mac's default Ruby. Run `bundle install` on
 | `bundle exec fastlane android internal` | Gates, signed AAB, Google Play internal testing only |
 | `bundle exec fastlane beta_all` | Both, from one source revision |
 
-Add `dry_run:true` to any of them to run the gates and builds without uploading. It needs no store credentials.
+Add `dry_run:true` to any of them to run the gates and builds without uploading. It needs no store credentials, and when they are set it also runs the read-only store gates.
 
 To raise the build number: `tool/set_build_number.sh <number>`, commit, push. Do not edit the number by hand: the push extension must carry the same version.
 
@@ -28,10 +28,10 @@ Any failure stops the lane before upload.
 | `flutter analyze`, `flutter test` (includes release safety tests) | Always |
 | iOS release build; bundle IDs, version and minimum iOS 15.0 on app and extension | Always |
 | Signed AAB; signature equals the FootRDC upload certificate, never the debug key | Always |
-| Build number above every TestFlight build | Upload only |
-| Build number above every Google Play track | Upload only |
+| Build number above every TestFlight build and Google Play track | Before any build, when credentials are set |
+| Apple portal access, local certificate on the portal, push and App Group capabilities | Before any build, when credentials are set |
 | IPA push entitlement is `production` | Upload only |
-| Owner has confirmed export compliance | Upload only |
+| Owner has confirmed export compliance | Before any build, when credentials are set |
 
 ## Owner setup
 

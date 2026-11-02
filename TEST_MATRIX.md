@@ -39,6 +39,14 @@ Failure states are injected at the HTTP layer on the device. The cache and scree
 | Live match | NOT AVAILABLE: first useful fixtures 4 Nov 2026 12:00 UTC |
 | Physical performance | NOT RUN |
 
+## Store preflight, `a360d21`
+
+| Check | Result |
+|---|---|
+| `bundle exec fastlane android internal dry_run:true` | Pass, including live Google gates |
+| `bundle exec fastlane ios beta dry_run:true` | Stops at the Apple gate: Program License Agreement |
+| Fastlane parameters for every signing and upload step | Valid against the installed version |
+
 ## Test harness notes
 
 Two Pixel runs stopped on `Could not copy the pixels` from Flutter's Android screenshot helper. The app was running normally. Only that call now retries, up to three times, and logs each retry. The final run needed none.

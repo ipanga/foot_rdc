@@ -11,18 +11,19 @@ No upload without explicit owner approval.
 - [ ] Bundle and package IDs correct; signing identity correct
 - [ ] Explicit target track confirmed: TestFlight or Play Internal, never public by default
 
-## Internal beta state, 2 Nov 2026
+## Internal beta state, 3 Nov 2026 local validation
 
 | Item | State |
 |---|---|
-| Android upload key | Keystore and AAB signer equal the expected SHA-256 |
-| Apple Distribution certificate | Team `YK6Z393A4D`, TOOTIYE ENTERPRISES LTD, valid to 3 Jul 2027 |
-| Bundle IDs and local entitlements | Correct: push, and the OneSignal App Group on app and extension |
-| Apple key candidates on this Mac | `8C5KR2Q4J4`, `N576C758F4`, `UATJB3DX55`, `W2NZKDGF6S`, `78KG84553N`. Type and role unknown |
-| App Store Connect Issuer ID | Not in the Teka release files. Owner to supply |
-| Apple API validation | Not run: it needs the Issuer ID |
-| Google Play service account for FootRDC | None found in FootRDC folders. Owner to create |
-| Build 31 free on each store | Unknown until the store credentials work |
-| Export compliance technical review | Standard HTTPS only. Owner confirmation pending |
-| `~/.footrdc-release/release.env` | Created, private, values empty |
+| Apple authentication, FootRDC record | Pass |
+| Highest Apple build | 30 (5.12.10). App Store live version is 1.1.3, so the 5.12.10 train is open |
+| TestFlight internal group | Main testers, automatic distribution on |
+| Apple portal access | **Blocked: Account Holder must accept the latest Program License Agreement** |
+| Google authentication, FootRDC record | Pass, service account `footrdc-play-internal` |
+| Highest Google versionCode | 30, on production. Internal, alpha and beta are empty |
+| Testing tracks | Accepted in a discarded draft edit |
+| Production | Refused: `The caller does not have permission` |
+| Android upload key | Local keystore and AAB equal the expected SHA-256. Google confirms its side at first upload |
+| Export compliance gate | Pass, owner confirmed |
+| Build number | 31, unused on both stores |
 | Physical iPhone and Android, real push, live match | Not run |
