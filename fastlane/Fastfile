@@ -4,6 +4,7 @@ require "plist"
 require "shellwords"
 require "tmpdir"
 
+REPO = `git rev-parse --show-toplevel`.strip
 BRANCH = "feat/rdc-football-mobile-redesign"
 BUNDLE_ID = "com.tootiyesolutions.footrdc"
 EXTENSION_ID = "#{BUNDLE_ID}.OneSignalNotificationServiceExtension"
@@ -19,7 +20,7 @@ IOS_CREDENTIALS = %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_PATH FOOTRDC_EXPORT_COMPLI
 ANDROID_CREDENTIALS = %w[PLAY_JSON_PATH].freeze
 
 # Runs from the repository root, whichever folder fastlane changed to.
-def in_repo(&block) = Dir.chdir(File.expand_path("..", __dir__), &block)
+def in_repo(&block) = Dir.chdir(REPO, &block)
 
 # Flutter calls CocoaPods, which must not inherit fastlane's Ruby settings.
 def run(command) = in_repo { Bundler.with_unbundled_env { Actions.sh(command, log: true) } }
@@ -101,7 +102,7 @@ def build_signed_ipa(key)
   profiles = [["Runner", BUNDLE_ID], ["OneSignalNotificationServiceExtension", EXTENSION_ID]].map do |target, id|
     get_provisioning_profile(api_key: key, app_identifier: id, team_id: TEAM_ID, force: false, readonly: false)
     name = Actions.lane_context[Actions::SharedValues::SIGH_NAME]
-    update_code_signing_settings(path: File.expand_path("../ios/Runner.xcodeproj", __dir__), use_automatic_signing: false,
+    update_code_signing_settings(path: File.join(REPO, "ios/Runner.xcodeproj"), use_automatic_signing: false,
       targets: [target], build_configurations: ["Release"], team_id: TEAM_ID, code_sign_identity: "Apple Distribution", profile_name: name)
     [id, name]
   end.to_h
