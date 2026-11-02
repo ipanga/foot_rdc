@@ -24,8 +24,19 @@ Reason: same real navigation on iOS and Android, repeatable. Alternative: manual
 ## 2026-11-01 Project stays on CocoaPods
 Reason: `google_mobile_ads` has no Swift Package Manager support and fails `pod install` when the global SwiftPM setting is on. Set per project in `pubspec.yaml`, leaving the machine's global Flutter config alone. Revisit when the ads plugin adopts SwiftPM; Flutter says disabling it will eventually stop being allowed.
 
-## 2026-11-01 Minimum iOS is 15.0
-Reason: Xcode 27 refuses targets below 15.0, so the project could not build on this Mac. Effect: devices on iOS 13 and 14 stop receiving updates; they keep the installed version. Alternative: keep an older Xcode. Rejected: App Store builds need a current toolchain.
+## 2026-11-02 iOS support policy
+
+**Minimum deployment target: iOS 15.0.** **Target device family: iPhone 11 and newer supported iPhones.**
+
+Every target in the Xcode project is 15.0, including the app and the push extension. Correction: the entry here on 1 Nov said the minimum rose to 15.0. The app target was in fact 15.6, so 15.0 lowers it. No pod or plugin declares more than iOS 13. The Podfile raises older pods to 15.0, because Xcode 27 refuses less, and leaves alone any pod that needs more.
+
+## 2026-11-02 Tab order and tab identity
+
+Order, by owner requirement: Accueil, Édito, Matchs, Linafoot, Plus. Tabs are named by the `AppTab` enum, so moving one changes a single line and no code depends on a position.
+
+## 2026-11-02 Tabs stay alive
+
+Each tab is built on first visit and then kept, so a sub-tab, scroll position and season survive switching. Before this, every switch rebuilt the tab. Football data refreshes on returning to a tab or the app, and data still within its cache lifetime makes no request. Live polling runs only on Accueil and Matchs.
 
 ## 2026-11-01 Sponsor carousel hidden on Home
 Reason: its three slots point at placeholder addresses on footrdc.com and render as an empty box. The code stays behind `_sponsorsReady` until real images and links exist.

@@ -28,6 +28,10 @@ Production is read-only for this project: public GET requests only.
 - Version `5.12.10+30`. Do not change the semantic version during development.
 - Competition 1 (Linafoot). Seasons are discovered from the API, never hard-coded: current flag `is_current`.
 
+## iOS support
+
+**Minimum deployment target: iOS 15.0.** **Target device family: iPhone 11 and newer supported iPhones.**
+
 ## Stack
 
 Flutter 3.44.2, Dart 3.12.2. Riverpod (code-gen and manual), Dio (`DioClient`), Hive (saved articles), SharedPreferences (football cache), Firebase core and messaging, OneSignal, Google Mobile Ads, connectivity_plus. No router package: `Navigator` plus `onGenerateRoute`. No analytics SDK.
@@ -51,5 +55,6 @@ Production API by default. `RDCF_API_ORIGIN` remains for local work. iOS simulat
 - No mutation of Production. No change to the Sportmonks scheduler.
 - ActuRDC, SportRDC and Tootiye are out of scope.
 - `ios/Podfile.lock` carried an uncommitted change before this work began; do not commit it by accident.
+- Bottom tabs, in order: Accueil, Édito, Matchs, Linafoot, Plus. Name them with `AppTab`, never by position.
 - Édito stays a bottom tab. Design is FootRDC's own; never copy another app's assets.
 - macOS has no `timeout`; long commands use `tool/qa_drive.sh` or `perl -e 'alarm N; exec @ARGV'`.

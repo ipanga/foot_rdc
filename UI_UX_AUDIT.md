@@ -24,4 +24,4 @@ See `docs/mobile-redesign/01-UX-AUDIT.md` and `02-TARGET-ARCHITECTURE.md`.
 
 ## Outcome
 
-Tabs are now Accueil, Matchs, Linafoot, Édito, Plus. All the problems above are resolved except that notification permission is still requested at launch, though it no longer blocks the first frame. Before and after screens are in `docs/mobile-redesign/screens/`.
+Tabs are now Accueil, Édito, Matchs, Linafoot, Plus. All the problems above are resolved except that notification permission is still requested at launch, though it no longer blocks the first frame. Before and after screens are in `docs/mobile-redesign/screens/`.

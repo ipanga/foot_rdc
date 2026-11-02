@@ -54,7 +54,7 @@ WordPress endpoints and category slugs live in `core/constants/api_constants.dar
 `main()` calls `Hive.initFlutter`, registers `ArticleModelAdapter` (typeId 0), and opens `Box<ArticleModel>('articles')` before `runApp`. Saved articles flow: `ArticleLocalDataSource` (raw box access) → `ArticleRepositoryImpl` (returns `Either<Failure, T>` via `dartz`) → use cases in `features/news/domain/usecases/`. Box keys are `article.id` (legacy entries used auto-generated keys — `deleteArticle`/`isArticleSaved` already handle both). If you add a new Hive model, bump `typeId`, register its adapter in `main`, and re-run `build_runner` for the `.g.dart`.
 
 ### Navigation & shell
-There is no router package. `HomeScreen` is the root, with five tabs driven by `currentPageProvider`: Accueil, Matchs, Linafoot, Édito, Plus. Édito must stay a bottom tab. Season state lives in `selectedSeasonIdProvider`; everything in the Linafoot hub derives from `activeSeasonProvider`. Deep links go through `core/navigation`.
+There is no router package. `HomeScreen` is the root, with five tabs named by `AppTab` and driven by `currentTabProvider`: Accueil, Édito, Matchs, Linafoot, Plus. Refer to a tab by name, never by position. Édito must stay a bottom tab. Season state lives in `selectedSeasonIdProvider`; everything in the Linafoot hub derives from `activeSeasonProvider`. Deep links go through `core/navigation`.
 
 ### Third-party services initialized in `main.dart`
 - **Firebase** — `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` from generated `firebase_options.dart`; config in `firebase.json`.

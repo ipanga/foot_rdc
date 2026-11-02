@@ -14,9 +14,9 @@ Enregistrés
 
 ```text
 Accueil   hero, match strip, news, Linafoot snapshot
+Édito     WordPress category `editorial`
 Matchs    Aujourd'hui | À venir | Résultats, live on top
 Linafoot  Aperçu | Calendrier | Résultats | Classements | Clubs, with season selector
-Édito     WordPress category `editorial`
 Plus      Clubs, Favoris, Enregistrés, Bon à savoir, Recherche, Réglages
 ```
 
