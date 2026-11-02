@@ -1,0 +1,197 @@
+# Internal beta only. This file has no path to App Review or a public Google Play track.
+# test/release_safety_test.dart fails if one is added.
+require "plist"
+require "tmpdir"
+
+BRANCH = "feat/rdc-football-mobile-redesign"
+BUNDLE_ID = "com.tootiyesolutions.footrdc"
+EXTENSION_ID = "#{BUNDLE_ID}.OneSignalNotificationServiceExtension"
+TEAM_ID = "YK6Z393A4D"
+ANDROID_CERT_SHA256 = "85:E1:96:1C:E0:A2:43:A7:6C:72:C6:8B:E4:B6:64:ED:FB:80:B1:33:F2:6A:50:84:27:1C:51:67:71:EF:CE:A7"
+PLAY_TRACKS = %w[internal alpha beta production].freeze
+AAB = "build/app/outputs/bundle/release/app-release.aab"
+IPA_DIR = "build/ios/ipa"
+NOTES = "fastlane/release-notes-fr.txt"
+CREDENTIALS_FILE = File.expand_path("~/.footrdc-release/release.env")
+SETUP_DOC = "docs/release/MOBILE_RELEASE_AUTOMATION_PLAN.md"
+IOS_CREDENTIALS = %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_PATH FOOTRDC_EXPORT_COMPLIANCE_CONFIRMED].freeze
+ANDROID_CREDENTIALS = %w[PLAY_JSON_PATH].freeze
+
+# Runs from the repository root, whichever folder fastlane changed to.
+def in_repo(&block) = Dir.chdir(File.expand_path("..", __dir__), &block)
+
+def run(command) = in_repo { Actions.sh(command, log: true) }
+
+def capture(command) = in_repo { `#{command}`.strip }
+
+def stop(message) = UI.user_error!(message)
+
+# Reads the local file without printing a value. Stops, naming only what is missing.
+def require_credentials(names)
+  if File.exist?(CREDENTIALS_FILE)
+    stop("#{CREDENTIALS_FILE} must be readable only by you (chmod 600)") unless (File.stat(CREDENTIALS_FILE).mode & 0o077).zero?
+    File.foreach(CREDENTIALS_FILE) do |line|
+      key, value = line.strip.split("=", 2)
+      ENV[key] ||= value if key && value && !key.start_with?("#")
+    end
+  end
+  missing = names.reject { |name| ENV[name].to_s.strip != "" }
+  stop("Missing credentials: #{missing.join(', ')}. Nothing was uploaded. See #{SETUP_DOC}") unless missing.empty?
+  names.grep(/_PATH$/).each do |name|
+    stop("#{name} does not point to a file. Nothing was uploaded.") unless File.file?(File.expand_path(ENV[name]))
+  end
+end
+
+def version
+  match = capture("sed -nE 's/^version: ([0-9.]+)\\+([0-9]+)$/\\1 \\2/p' pubspec.yaml").split
+  stop("pubspec.yaml version must look like 5.12.10+31") unless match.length == 2
+  { name: match[0], build: match[1].to_i }
+end
+
+def validate_repository
+  stop("Git tree is not clean") unless capture("git status --porcelain").empty?
+  stop("Release branch must be #{BRANCH}") unless capture("git branch --show-current") == BRANCH
+  run("git fetch -q origin #{BRANCH}")
+  stop("HEAD is not the pushed commit on origin/#{BRANCH}") unless capture("git rev-parse HEAD") == capture("git rev-parse origin/#{BRANCH}")
+  stop("#{NOTES} is missing") unless in_repo { File.file?(NOTES) && File.size(NOTES).positive? }
+  stop("SportsPress reference in lib") unless capture("grep -rIil sportspress lib || true").empty?
+  stop("Debug endpoint in lib") unless capture("grep -rInE 'localhost|127\\.0\\.0\\.1|10\\.0\\.2\\.2|ngrok|staging\\.' lib || true").empty?
+  api = capture("grep -c \"defaultValue: 'https://footrdc.com/wp-json/rdcfootball/v1'\" lib/features/football/data/football_client.dart")
+  stop("Football API default is not Production") unless api == "1"
+  run("flutter pub get")
+  run("flutter analyze --no-pub --no-fatal-infos")
+  run("flutter test --no-pub")
+end
+
+def check_ios_bundle(app)
+  main = Plist.parse_xml(File.join(app, "Info.plist"))
+  extension = Plist.parse_xml(Dir[File.join(app, "PlugIns/*.appex/Info.plist")].first)
+  wanted = version
+  [[main, BUNDLE_ID], [extension, EXTENSION_ID]].each do |info, id|
+    stop("Wrong bundle ID: #{info['CFBundleIdentifier']}") unless info["CFBundleIdentifier"] == id
+    same = info["CFBundleShortVersionString"] == wanted[:name] && info["CFBundleVersion"] == wanted[:build].to_s
+    stop("#{id} has the wrong version") unless same
+    stop("#{id} minimum iOS must be 15.0") unless info["MinimumOSVersion"] == "15.0"
+  end
+end
+
+def check_android_signature
+  signer = capture("keytool -printcert -jarfile #{AAB} 2>/dev/null | sed -nE 's/^[[:space:]]*SHA256: //p' | head -1")
+  stop("The AAB is not signed with the FootRDC upload key. Check android/key.properties.") unless signer == ANDROID_CERT_SHA256
+end
+
+def build_android
+  stop("android/key.properties is missing. A release build would use the debug key.") unless in_repo { File.file?("android/key.properties") }
+  run("flutter build appbundle --release")
+  check_android_signature
+end
+
+def api_key
+  { key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key: File.read(File.expand_path(ENV["ASC_KEY_PATH"])),
+    is_key_content_base64: false, duration: 1200, in_house: false }
+end
+
+# Signing changes for the build are put back afterwards, so the tree stays clean.
+def build_signed_ipa(key)
+  profiles = [["Runner", BUNDLE_ID], ["OneSignalNotificationServiceExtension", EXTENSION_ID]].map do |target, id|
+    get_provisioning_profile(api_key: key, app_identifier: id, team_id: TEAM_ID, force: false, readonly: false)
+    name = Actions.lane_context[Actions::SharedValues::SIGH_NAME]
+    update_code_signing_settings(path: File.expand_path("../ios/Runner.xcodeproj", __dir__), use_automatic_signing: false,
+      targets: [target], build_configurations: ["Release"], team_id: TEAM_ID, code_sign_identity: "Apple Distribution", profile_name: name)
+    [id, name]
+  end.to_h
+  Dir.mktmpdir do |dir|
+    options = File.join(dir, "export.plist")
+    File.write(options, { "method" => "app-store-connect", "teamID" => TEAM_ID, "signingStyle" => "manual",
+      "provisioningProfiles" => profiles, "uploadSymbols" => true, "destination" => "export" }.to_plist)
+    run("flutter build ipa --release --export-options-plist=#{options}")
+  end
+ensure
+  run("git checkout -- ios/Runner.xcodeproj/project.pbxproj")
+end
+
+def check_signed_ipa(ipa)
+  Dir.mktmpdir do |dir|
+    Actions.sh("unzip -q #{ipa.shellescape} -d #{dir.shellescape}", log: false)
+    app = Dir[File.join(dir, "Payload/*.app")].first
+    check_ios_bundle(app)
+    entitlements = Plist.parse_xml(Actions.sh("codesign -d --entitlements - --xml #{app.shellescape} 2>/dev/null", log: false))
+    stop("Push entitlement is not production") unless entitlements && entitlements["aps-environment"] == "production"
+  end
+end
+
+def ios_beta(dry_run:)
+  run("flutter build ios --release --no-codesign")
+  in_repo { check_ios_bundle("build/ios/iphoneos/Runner.app") }
+  if dry_run
+    UI.success("iOS dry run passed. Nothing was signed or uploaded.")
+    return
+  end
+  stop("Export compliance must be confirmed by the owner") unless ENV["FOOTRDC_EXPORT_COMPLIANCE_CONFIRMED"] == "yes"
+  key = api_key
+  latest = latest_testflight_build_number(api_key: key, app_identifier: BUNDLE_ID, initial_build_number: 0)
+  stop("Build #{version[:build]} is not above TestFlight build #{latest}") unless version[:build] > latest.to_i
+  build_signed_ipa(key)
+  ipa = in_repo { File.expand_path(Dir[File.join(IPA_DIR, "*.ipa")].first.to_s) }
+  stop("No IPA was produced") unless File.file?(ipa)
+  check_signed_ipa(ipa)
+  # Internal only. submit_beta_review defaults to true in pilot and must stay false. Internal groups receive builds
+  # through their own automatic distribution setting, so no group is named here.
+  upload_to_testflight(api_key: key, ipa: ipa, app_identifier: BUNDLE_ID, changelog: in_repo { File.read(NOTES).strip },
+    skip_submission: false, skip_waiting_for_build_processing: false, distribute_external: false, submit_beta_review: false,
+    uses_non_exempt_encryption: false)
+  UI.success("TestFlight internal upload done: #{version[:name]} (#{version[:build]}).")
+end
+
+def highest_play_build(json_key)
+  PLAY_TRACKS.flat_map do |track|
+    google_play_track_version_codes(package_name: BUNDLE_ID, track: track, json_key: json_key)
+  rescue StandardError => error
+    raise unless error.message.match?(/not found|does not exist|no release/i)
+    []
+  end.max.to_i
+end
+
+def android_internal(dry_run:)
+  build_android
+  if dry_run
+    UI.success("Android dry run passed. The AAB is signed with the upload key. Nothing was uploaded.")
+    return
+  end
+  json_key = File.expand_path(ENV["PLAY_JSON_PATH"])
+  latest = highest_play_build(json_key)
+  stop("Build #{version[:build]} is not above Google Play build #{latest}") unless version[:build] > latest
+  upload_to_play_store(package_name: BUNDLE_ID, aab: in_repo { File.expand_path(AAB) }, json_key: json_key, track: "internal",
+    release_status: "completed", skip_upload_apk: true, skip_upload_metadata: true, skip_upload_images: true,
+    skip_upload_screenshots: true, skip_upload_changelogs: true)
+  UI.success("Google Play internal upload done: #{version[:name]} (#{version[:build]}).")
+end
+
+platform :ios do
+  desc "Gates, signed build, TestFlight internal only. dry_run:true stops before signing."
+  lane :beta do |options|
+    dry_run = options[:dry_run].to_s == "true"
+    require_credentials(IOS_CREDENTIALS) unless dry_run
+    validate_repository
+    ios_beta(dry_run: dry_run)
+  end
+end
+
+platform :android do
+  desc "Gates, signed AAB, Google Play internal testing only. dry_run:true stops before upload."
+  lane :internal do |options|
+    dry_run = options[:dry_run].to_s == "true"
+    require_credentials(ANDROID_CREDENTIALS) unless dry_run
+    validate_repository
+    android_internal(dry_run: dry_run)
+  end
+end
+
+desc "Both internal betas from one source revision. Checks both credential sets before anything is built."
+lane :beta_all do |options|
+  dry_run = options[:dry_run].to_s == "true"
+  require_credentials(IOS_CREDENTIALS + ANDROID_CREDENTIALS) unless dry_run
+  validate_repository
+  ios_beta(dry_run: dry_run)
+  android_internal(dry_run: dry_run)
+end

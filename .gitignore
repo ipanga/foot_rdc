@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Release tooling: credentials stay in ~/.footrdc-release, never here
+.bundle/
+vendor/bundle/
+fastlane/report.xml
+fastlane/README.md
+fastlane/.env*
+*.p8
+*.mobileprovision
+*.ipa
+*.aab
