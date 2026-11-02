@@ -1,90 +1,85 @@
-# Mobile release automation plan
+# Mobile release automation
 
-Status: plan only. Nothing here has been executed, and no credential has been requested or stored. TestFlight and Google Play uploads need explicit owner approval.
+Internal beta only: TestFlight internal testers and Google Play internal testing. No lane can reach App Review or a public Google Play track, and `test/release_safety_test.dart` fails if one is added. Public release is not authorized.
 
-## Current state
+## Commands
 
-| Item | Value |
+Run from the repository root, on the Mac's default Ruby. Run `bundle install` once first.
+
+| Command | Does |
 |---|---|
-| Version | `5.12.10+30` in `pubspec.yaml` |
-| iOS bundle ID | `com.tootiyesolutions.footrdc` |
-| Android application ID | `com.tootiyesolutions.footrdc` |
-| iOS team | `YK6Z393A4D`; extension `...OneSignalNotificationServiceExtension` also needs signing |
-| Android signing | `android/key.properties` when present; local and untracked |
-| CI | `.github/workflows/ci.yml`: analyze, test, debug build; no release |
-| Fastlane | Gem present on this Mac; not configured in the project |
+| `bundle exec fastlane ios beta` | Gates, signed IPA, TestFlight internal only |
+| `bundle exec fastlane android internal` | Gates, signed AAB, Google Play internal testing only |
+| `bundle exec fastlane beta_all` | Both, from one source revision |
 
-## Target commands
+Add `dry_run:true` to any of them to run the gates and builds without uploading. It needs no store credentials.
 
-| Command | Does | Never does |
-|---|---|---|
-| `release ios-beta` | Tests, signed IPA, upload to TestFlight | Submit to App Review |
-| `release android-internal` | Tests, signed AAB, upload to Play Internal testing | Promote to Production |
-| `release beta-all` | Validation, then both of the above | Anything public |
+To raise the build number: `tool/set_build_number.sh <number>`, commit, push. Do not edit the number by hand: the push extension must carry the same version.
 
-`release` alone must fail with a usage message. Public submission stays a separate manual action.
+## Gates
 
-## Fastlane lanes
+Any failure stops the lane before upload.
 
-```ruby
-platform :ios do
-  lane :beta do
-    # guard, tests, flutter build ipa, upload_to_testflight(skip_submission: true)
-  end
-end
+| Gate | When |
+|---|---|
+| Store credentials present, private file, paths valid | First, before any build |
+| Clean tree, release branch, HEAD equals the pushed commit | Always |
+| Release notes present; no SportsPress or debug endpoint in `lib`; Production API default | Always |
+| `flutter analyze`, `flutter test` (includes release safety tests) | Always |
+| iOS release build; bundle IDs, version and minimum iOS 15.0 on app and extension | Always |
+| Signed AAB; signature equals the FootRDC upload certificate, never the debug key | Always |
+| Build number above every TestFlight build | Upload only |
+| Build number above every Google Play track | Upload only |
+| IPA push entitlement is `production` | Upload only |
+| Owner has confirmed export compliance | Upload only |
 
-platform :android do
-  lane :internal do
-    # guard, tests, flutter build appbundle, upload_to_play_store(track: "internal", release_status: "draft")
-  end
-end
+## Owner setup
 
-lane :beta_all do
-  # shared validation once, then ios beta and android internal
-end
+Values go only in `~/.footrdc-release/release.env`, outside the repository. Never paste them in chat.
+
+```bash
+mkdir -m 700 ~/.footrdc-release
+touch ~/.footrdc-release/release.env
+chmod 600 ~/.footrdc-release/release.env
+open -e ~/.footrdc-release/release.env
 ```
 
-## Guards before any upload
+Contents, with your own values:
 
-All must pass, or the script stops before building:
-
-- Git tree clean, branch is the approved release branch
-- `flutter analyze` has no errors or warnings; `flutter test` passes; device QA passes
-- Version valid; build number greater than the last uploaded one
-- Release notes file exists for this version
-- Bundle and package IDs match this document
-- Signing identity present; credentials found outside the repository
-- Target track named explicitly, and confirmation typed
-
-Missing credentials fail closed with a message naming the variable, never its value.
-
-## Versioning
-
-The semantic version changes only by owner decision. The build number is the same integer on both stores (`+31`, `+32`, ...), taken from the highest value in `App Store Connect` and Play, then written with `--build-number`, so every upload is unique. iOS `CFBundleVersion` and Android `versionCode` both come from it.
-
-## What the owner will need to provide
-
-Keep these outside the repository, in macOS Keychain or a local `~/.footrdc-release/` folder with mode 700. Never paste them into chat.
+```text
+ASC_KEY_ID=
+ASC_ISSUER_ID=
+ASC_KEY_PATH=
+FOOTRDC_EXPORT_COMPLIANCE_CONFIRMED=
+PLAY_JSON_PATH=
+```
 
 **Apple**
-- App Store Connect API key with App Manager access: the `.p8` file, Key ID and Issuer ID
-- Distribution certificate and provisioning profiles for the app and the OneSignal extension, or automatic signing under team `YK6Z393A4D`
-- Confirmation that the TestFlight app record exists, and the internal tester group
+
+1. In App Store Connect, Users and Access > Integrations > Team Keys, choose or create a key with the App Manager role. Note its Key ID and the Issuer ID shown above the list.
+2. Put the `.p8` file somewhere private and set `ASC_KEY_PATH` to it. If one of the four keys already in `~/.appstoreconnect/private_keys` is a suitable team key, you may name that one. They were not assumed to be for FootRDC.
+3. Set `FOOTRDC_EXPORT_COMPLIANCE_CONFIRMED=yes` only if you confirm the app uses no encryption beyond standard HTTPS. The lane declares this to Apple.
+4. Confirm the FootRDC app record exists for `com.tootiyesolutions.footrdc`.
+5. In Certificates, Identifiers & Profiles, confirm the app and `com.tootiyesolutions.footrdc.OneSignalNotificationServiceExtension` both have the App Group `group.com.tootiyesolutions.footrdc.onesignal`, and the app has Push Notifications.
+6. In TestFlight, have an internal group with automatic distribution turned on. Builds reach internal groups only that way.
 
 **Google**
-- Google Play Developer API enabled and linked to the Play Console
-- Service account JSON with release permissions for this app only
-- Upload keystore, alias and passwords, matching `android/key.properties`
-- Internal testing track created with testers
+
+1. In Google Cloud, create a service account for FootRDC and download its JSON key. The Teka service account on this Mac was not used and should stay with Teka.
+2. In Play Console, Users and permissions, invite that account with access to FootRDC only and permission to release to testing tracks.
+3. Set `PLAY_JSON_PATH` to the JSON file.
+4. Under Test and release > Testing > Internal testing, add testers.
+5. Under App integrity, confirm the upload key SHA-256 equals:
+   `85:E1:96:1C:E0:A2:43:A7:6C:72:C6:8B:E4:B6:64:ED:FB:80:B1:33:F2:6A:50:84:27:1C:51:67:71:EF:CE:A7`
+
+Then run:
+
+```bash
+bundle exec fastlane beta_all
+```
+
+The Fastlane signing and upload steps have not yet run against Apple or Google, because they need these credentials. Expect the first real run to need attention, and run `ios beta` and `android internal` separately the first time.
 
 ## Security
 
-Never commit `.p8` keys, keystores, keystore passwords, service-account JSON, certificates or private keys. `.gitignore` must cover them before Fastlane is added. Logs must not print secrets. If CI is added later, use its secret store with environment protection and a required reviewer.
-
-## Rollout order
-
-1. Add a Fastlane config, no credentials, dry-run the guards.
-2. Owner provides credentials locally.
-3. First manual `ios beta` to TestFlight with owner present.
-4. First manual `android internal`.
-5. Only then consider `beta_all`, and CI much later.
+Never commit `.p8` keys, keystores, keystore passwords, service-account JSON, certificates or private keys. `.gitignore` covers them, and a test fails if one is tracked.

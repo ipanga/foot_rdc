@@ -1,6 +1,6 @@
 # FootRDC Flutter: RDC Football migration and redesign
 
-Final report, updated 2 Nov 2026. Branch `feat/rdc-football-mobile-redesign`, app code `9d572f3`, tests at `9054081`, version `5.12.10+30`.
+Final report, updated 2 Nov 2026. Branch `feat/rdc-football-mobile-redesign`, app code `9d572f3`, tests at `9054081`, version `5.12.10+31`.
 
 The app now runs on the RDC Football API with five tabs, including Édito. Every automated test and all nine device runs pass on the final code. It has not been tried on a physical phone or during a live match, and nothing was uploaded to Apple or Google.
 
@@ -96,7 +96,7 @@ All on the final app code. Screens are under `docs/mobile-redesign/screens/`.
 
 0 exceptions and 0 layout overflows in those runs. Bottom navigation on Accueil, Édito and Linafoot for three devices: `final-navigation/`. Before screens: `baseline/`.
 
-Unit and widget tests: 75 passed. Analyzer: 0 errors, 0 warnings, 33 style infos. Release build against the iOS 27 SDK succeeds, with minimum 15.0 on the app and the push extension. Details: `TEST_MATRIX.md`.
+Unit and widget tests: 79 passed at `ece67f1`. Analyzer: 0 errors, 0 warnings, 33 style infos. Release build against the iOS 27 SDK succeeds, with minimum 15.0 on the app and the push extension. Details: `TEST_MATRIX.md`.
 
 ### Bugs found by device runs and fixed
 
@@ -139,7 +139,7 @@ Delivery stays on OneSignal. Tapping a notification opens the matching article, 
 
 ## Release readiness
 
-Ready for an internal test build, not yet for public release. Before a public release: run on physical iPhone and Android phones, follow one live match, send one real push notification, and raise the version. Plan: `docs/release/MOBILE_RELEASE_AUTOMATION_PLAN.md`. Checklist: `RELEASE_CHECKLIST.md`.
+Build 31 passes every local gate for an internal test build, but is not uploaded: store credentials are missing. Not ready for public release. Before a public release: run on physical iPhone and Android phones, follow one live match, send one real push notification, and raise the version. Plan: `docs/release/MOBILE_RELEASE_AUTOMATION_PLAN.md`. Checklist: `RELEASE_CHECKLIST.md`.
 
 Future CI/CD: `.github/workflows/ci.yml` stays as analysis and tests. Fastlane beta and internal lanes come after the owner adds signing credentials outside Git.
 

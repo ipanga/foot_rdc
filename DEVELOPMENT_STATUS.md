@@ -1,23 +1,25 @@
-NEXT_ACTION: Owner approves an internal build. Then, with signing credentials added outside Git: raise the build number, build, and send to TestFlight internal testers and Google Play internal testing only, following docs/release/MOBILE_RELEASE_AUTOMATION_PLAN.md and RELEASE_CHECKLIST.md. Testers check physical iPhone 11 and Android phones, one live match, and one real push. No upload before that approval.
+NEXT_ACTION: Owner creates ~/.footrdc-release/release.env by following 'Owner setup' in docs/release/MOBILE_RELEASE_AUTOMATION_PLAN.md and confirms in chat that it exists, without pasting values. Then run `bundle exec fastlane ios beta` and `bundle exec fastlane android internal`, one at a time. After upload, follow docs/release/INTERNAL_BETA_TEST_PLAN.md, including the fixtures on 4 Nov 2026 12:00 UTC.
 
 # Development status
 
 | | |
 |---|---|
-| Branch | `feat/rdc-football-mobile-redesign` (from `develop` 7e9f137), not pushed |
-| Current phase | All phases done; stopped at the release gate |
-| Latest app code commit | `9d572f3`, tests at `9054081` |
-| Tests | `flutter test`: 75 passed, 0 failed. `flutter analyze`: 33 infos, 0 errors, 0 warnings |
+| Branch | `feat/rdc-football-mobile-redesign` (from `develop` 7e9f137), pushed to `origin`; head holds the exact SHA |
+| Current phase | Internal beta: stopped before upload, credentials missing |
+| Latest app code commit | `9d572f3`; tested code and release tooling pushed at `ece67f1` |
+| Version | Flutter `5.12.10+31`; iOS CFBundleVersion 31, CFBundleShortVersionString 5.12.10; Android versionCode 31, versionName 5.12.10 |
+| Tests | `flutter test`: 79 passed, 0 failed. `flutter analyze`: 33 infos, 0 errors, 0 warnings |
 | Device QA | 9 of 9 runs pass on the final code, 0 exceptions, 0 overflows. See `TEST_MATRIX.md` |
 | Emulators | iPhone 18 Pro booted; Pixel_8_Pro restored to default size and text |
 | API | Production read-only; no writes made |
 | SportsPress usage | `SPORTSPRESS_USAGE_REMAINING: 0` |
 | iOS support | Minimum deployment target iOS 15.0; target device family iPhone 11 and newer supported iPhones |
+| Release automation | Fastlane in `fastlane/`; `beta_all dry_run:true` passes; uploads await credentials |
 | Bottom tabs | Accueil, Édito, Matchs, Linafoot, Plus |
 
 ## Known blockers
 
-None for a test build. Open limits are in the final report.
+Uploads are blocked by missing credentials, listed in `RELEASE_CHECKLIST.md`.
 
 ## Deferred
 
@@ -37,14 +39,15 @@ See `DECISIONS.md` and the limitations in the final report.
 | 7 Emulator QA, performance, regression | PARTIAL: performance measured in part | `5f79298` |
 | 8 Store automation prep | PASS: plan only, nothing uploaded | `06f653a` |
 | Final iOS and navigation adjustment | PASS | `3aa200f` to `9054081` |
+| Internal beta preparation | PARTIAL: dry run passes, not uploaded | `29398b5` to `ece67f1` |
 
 ## Final checkpoint
 
-PHASE STATUS: final iOS and navigation adjustment PASS; stopped at the release gate
-TESTS: 75 passed, 0 failed
-IOS: PASS on iPhone 11 (iOS 27.0 and 18.5), iPhone 18 Pro, iPhone 17e, iPad
-ANDROID: PASS on Pixel 8 Pro and on 360x640 dp with text at 130%
-API: Production read-only, contract tests pass
-KNOWN ISSUES: see final report
+PHASE STATUS: internal beta preparation PARTIAL; automation ready, upload blocked on credentials
+TESTS: 79 passed, 0 failed
+IOS: release build passes unsigned; signing blocked
+ANDROID: signed AAB passes with the upload key; upload blocked
+API: Production read-only
+KNOWN ISSUES: signing and upload steps have not yet run against Apple or Google
 NEXT_ACTION: as above
-COMMIT: see `git log`; app code `9d572f3`
+COMMIT: `ece67f1` tested; later commits on this branch are documentation
