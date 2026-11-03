@@ -191,6 +191,22 @@ void main() {
     });
   });
 
+  testWidgets('club news offline with nothing saved shows a clear message, not a raw error', (tester) async {
+    final (repo, adapter, _) = contractRepository(
+      data: {
+        ...productionContract(),
+        'team_news': [newsRow(1)],
+      },
+    );
+    adapter.offline = true;
+    await openNews(tester, repo);
+    expect(find.textContaining('Pas de connexion'), findsWidgets);
+    expect(find.textContaining('Exception'), findsNothing);
+    expect(find.textContaining('Dio'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await settle(tester);
+  });
+
   group('Related clubs on an article', () {
     testWidgets('each club opens the native club screen; no section without clubs', (tester) async {
       final (repo, _, _) = contractRepository();
