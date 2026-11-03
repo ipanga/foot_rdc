@@ -1,4 +1,4 @@
-NEXT_ACTION: Owner reviews club-linked news on Staging (until 4 Nov 2026 10:18 UTC) and the review queue, then decides on the Production package (RDC Football Core 0.11.0 / UI 0.18.0) and a backfill window. The app branch feat/article-clubs is local, not released; it needs the Production API change first, then a new internal build. Internal beta 5.12.11 (31) testing continues per docs/release/INTERNAL_BETA_TEST_PLAN.md.
+NEXT_ACTION: Production now serves club news and related_clubs (RDC Football Core 0.11.0 / UI 0.18.0 since 3 Nov 2026). Next mobile step, only on owner approval: rebase feat/article-clubs onto the release line, raise the build number with tool/set_build_number.sh, rerun the device QA against Production, then `bundle exec fastlane ios beta` and `bundle exec fastlane android internal`. Internal beta 5.12.11 (31) testing continues per docs/release/INTERNAL_BETA_TEST_PLAN.md.
 
 # Development status
 
@@ -41,14 +41,14 @@ See `DECISIONS.md` and the limitations in the final report.
 | Final iOS and navigation adjustment | PASS | `3aa200f` to `9054081` |
 | Internal beta | PASS: uploaded to TestFlight internal and Google Play internal | `2925323` |
 
-## Club-linked news (3 Nov 2026, Staging only)
+## Club-linked news (3 Nov 2026)
 
 | Item | State |
 |---|---|
-| Server | RDC Football Core 0.11.0 / UI 0.18.0 on Staging; Production unchanged |
+| Server | RDC Football Core 0.11.0 / UI 0.18.0 on Production since 3 Nov 2026 11:39 UTC |
 | App | `Article.relatedClubs`, club "Actualités" cards with paging, "Clubs liés" on articles; branch `feat/article-clubs` |
 | Device QA against Staging | iOS and Android pass 5 of 5 steps, 0 exceptions, 0 overflows |
-| Release dependency | Production must serve `related_clubs` and the richer `/teams/{id}/news` before an app build uses them; older builds ignore the new fields |
+| Release dependency | Met: Production serves `related_clubs` and the richer `/teams/{id}/news`; the released 5.12.11 parsers pass on the live responses |
 
 ## Final checkpoint
 

@@ -11,12 +11,12 @@
 
 `SPORTSPRESS_USAGE_REMAINING: 0` in `lib/` (grep for `sportspress`, `sp_event`, `eventsEndpoint`, `tablesEndpoint`).
 
-## Article ↔ club (Staging, 3 Nov 2026)
+## Article ↔ club (Production API since 3 Nov 2026)
 
 | Feature | Source | Status | Tests |
 |---|---|---|---|
-| Club "Actualités" | `teams/{id}/news?limit=15&page=n`: id, title, url, published_at, excerpt, image, category, related_clubs | Branch `feat/article-clubs`; Staging only | widget, device (Staging) |
-| "Clubs liés" on articles | `related_clubs` on `/wp/v2/posts` | Branch `feat/article-clubs`; Staging only | parsing, widget, device (Staging) |
+| Club "Actualités" | `teams/{id}/news?limit=15&page=n`: id, title, url, published_at, excerpt, image, category, related_clubs | Branch `feat/article-clubs`; app not released yet | widget, device (Staging) |
+| "Clubs liés" on articles | `related_clubs` on `/wp/v2/posts` | Branch `feat/article-clubs`; app not released yet | parsing, widget, device (Staging) |
 
 ## New capabilities now exposed
 
