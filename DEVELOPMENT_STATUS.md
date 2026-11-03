@@ -40,6 +40,7 @@ See `DECISIONS.md` and the limitations in the final report.
 | 8 Store automation prep | PASS: plan only, nothing uploaded | `06f653a` |
 | Final iOS and navigation adjustment | PASS | `3aa200f` to `9054081` |
 | Internal beta | PASS: uploaded to TestFlight internal and Google Play internal | `2925323` |
+| UI refinement (ads policy, navigation, settings, Matchs/Classement) | PASS, awaiting approval; see `docs/ui-refinement/REPORT.md` | `feat/ui-refinement` |
 
 ## Club-linked news (3 Nov 2026)
 
@@ -60,4 +61,3 @@ API: Production read-only
 KNOWN ISSUES: physical phones, real push and a live match are unverified
 NEXT_ACTION: as above
 COMMIT: `2925323` uploaded; later commits on this branch are documentation
-| UI refinement (ads policy, navigation, settings, Matchs/Classement) | PASS, awaiting approval; see `docs/ui-refinement/REPORT.md` | `feat/ui-refinement` |
