@@ -6,7 +6,6 @@ import 'package:foot_rdc/features/news/presentation/providers/article_cache_prov
 import 'package:foot_rdc/features/home/presentation/app_tabs.dart';
 import 'package:foot_rdc/shared/providers/connectivity_provider.dart';
 import 'package:foot_rdc/shared/widgets/connectivity_banner.dart';
-import 'package:foot_rdc/shared/widgets/persistent_banner_ad.dart';
 import 'package:foot_rdc/shared/widgets/premium_bottom_nav_bar.dart';
 import 'package:foot_rdc/features/editorial/presentation/providers/editorial_providers.dart';
 import 'package:foot_rdc/features/editorial/presentation/screens/editorial_list_screen.dart';
@@ -89,7 +88,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
           mainAxisSize: MainAxisSize.min,
           children: [
             const ConnectivityBanner(),
-            const PersistentBannerAd(),
             // Tab labels have a fixed height, so they do not grow with system text size, as on native tab bars.
             MediaQuery.withClampedTextScaling(
               maxScaleFactor: 1.0,

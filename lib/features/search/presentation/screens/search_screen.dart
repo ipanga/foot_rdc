@@ -6,13 +6,13 @@ import 'package:foot_rdc/features/news/presentation/screens/article_detail_scree
 import 'package:foot_rdc/features/news/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/news/presentation/providers/news_providers.dart';
 import 'package:foot_rdc/shared/widgets/custom_search_bar.dart';
-import 'package:foot_rdc/core/constants/ad_constants.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:foot_rdc/shared/widgets/ads.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -68,22 +68,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     for (int i = 0; i < articles.length; i++) {
       _listItems.add(articles[i]);
       if ((i + 1) % _adFrequency == 0 && i >= 4 && i < articles.length - 1) {
-        final nativeAd = NativeAd(
-          adUnitId: AdConstants.nativeAdUnitId,
-          listener: NativeAdListener(
-            onAdLoaded: (ad) {
-              if (mounted) {
-                _nativeAdLoaded[ad as NativeAd] = true;
-                setState(() {});
-              }
-            },
-            onAdFailedToLoad: (ad, error) {
-              ad.dispose();
-            },
-          ),
-          request: const AdRequest(),
-          nativeTemplateStyle: NativeTemplateStyle(templateType: TemplateType.medium),
-        )..load();
+        final nativeAd = createNativeAd(
+          onLoaded: (ad) {
+            if (!mounted) return;
+            setState(() => _nativeAdLoaded[ad] = true);
+          },
+          // A failed ad takes no space: the slot disappears instead of showing an empty box.
+          onFailed: (ad) {
+            if (!mounted) return;
+            setState(() => _nativeAdLoaded.remove(ad));
+          },
+        );
         _nativeAdLoaded[nativeAd] = false;
         _listItems.insert(i + 1, nativeAd);
       }
@@ -524,30 +519,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildNativeAdItem(NativeAd item, bool isDark) {
-    final isLoaded = _nativeAdLoaded[item] == true;
-    return Container(
-      height: 320,
-      margin: const EdgeInsets.symmetric(horizontal: AppDesignSystem.space16, vertical: AppDesignSystem.space8),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceContainerDark : AppColors.surfaceContainerLight,
-        borderRadius: AppDesignSystem.borderRadiusLg,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: isLoaded
-          ? AdWidget(ad: item)
-          : Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Theme.of(context).colorScheme.primary.withAlpha(128),
-                ),
-              ),
-            ),
-    );
-  }
+  Widget _buildNativeAdItem(NativeAd item, bool isDark) =>
+      NativeAdSlot(ad: item, loaded: _nativeAdLoaded[item]);
 
   Widget _buildErrorState(Object error, bool isDark, ColorScheme colorScheme, ThemeData theme) {
     final title = _friendlyTitle(error);

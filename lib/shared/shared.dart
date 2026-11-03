@@ -5,4 +5,4 @@ export 'providers/theme_provider.dart';
 export 'widgets/app_drawer.dart';
 export 'widgets/connectivity_banner.dart';
 export 'widgets/custom_search_bar.dart';
-export 'widgets/persistent_banner_ad.dart';
+export 'widgets/ads.dart';

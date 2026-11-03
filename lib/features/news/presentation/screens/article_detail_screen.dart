@@ -11,7 +11,7 @@ import 'package:foot_rdc/core/utils/string_utils.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
-import 'package:foot_rdc/shared/widgets/persistent_banner_ad.dart';
+import 'package:foot_rdc/shared/widgets/ads.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -544,6 +544,9 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
                       },
                     ),
 
+                    // One inline banner at the end of the article body, before the related clubs.
+                    const InlineBannerAd(),
+
                     RelatedClubsSection(clubs: widget.article.relatedClubs),
 
                     const SizedBox(height: AppDesignSystem.space24),
@@ -556,7 +559,6 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: const PersistentBannerAd(),
     );
   }
 
