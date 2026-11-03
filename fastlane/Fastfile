@@ -69,6 +69,8 @@ def validate_repository
   stop("Debug endpoint in lib") unless capture("grep -rInE 'localhost|127\\.0\\.0\\.1|10\\.0\\.2\\.2|ngrok|staging\\.' lib || true").empty?
   api = capture("grep -c \"defaultValue: 'https://footrdc.com/wp-json/rdcfootball/v1'\" lib/features/football/data/football_client.dart")
   stop("Football API default is not Production") unless api == "1"
+  site = capture("grep -c \"defaultValue: 'https://footrdc.com/wp-json'\" lib/core/constants/api_constants.dart")
+  stop("WordPress API default is not Production") unless site == "1"
   run("flutter pub get")
   run("flutter analyze --no-pub --no-fatal-infos")
   run("flutter test --no-pub")
