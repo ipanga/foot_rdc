@@ -53,7 +53,7 @@ void main() {
     await tester.scrollUntilVisible(find.byType(InlineBannerAd), 600, scrollable: find.byType(Scrollable).first);
     for (
       var i = 0;
-      i < 60 && find.descendant(of: find.byType(InlineBannerAd), matching: find.byType(AdWidget)).evaluate().isEmpty;
+      i < 120 && find.descendant(of: find.byType(InlineBannerAd), matching: find.byType(AdWidget)).evaluate().isEmpty;
       i++
     ) {
       await tester.pump(const Duration(milliseconds: 250));

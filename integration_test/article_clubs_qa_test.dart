@@ -77,8 +77,22 @@ void main() {
     Future<void> toRelatedClubs() async {
       await wait(find.byType(ArticleDetailScreen));
       await tester.pump(const Duration(seconds: 2));
-      await tester.scrollUntilVisible(find.byType(RelatedClubsSection), 400, scrollable: find.byType(Scrollable).first);
+      final article = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(find.byType(RelatedClubsSection), 400, scrollable: article);
+      // The inline ad above the section can be tall (250 on Android): bring the club cards fully on screen.
+      if (find.text('Voir le club').evaluate().isNotEmpty) {
+        await tester.scrollUntilVisible(find.text('Voir le club').last, 200, scrollable: article);
+        await tester.drag(article, const Offset(0, -200));
+      }
       await tester.pump(const Duration(seconds: 1));
+    }
+
+    /// Taps a widget only when it is on screen, so a tap can never land elsewhere (an ad, for instance).
+    Future<void> tapVisible(Finder finder) async {
+      await tester.ensureVisible(finder);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(finder.hitTestable(), findsOneWidget, reason: 'target on screen before tapping');
+      await tester.tap(finder);
     }
 
     await wait(find.text('Accueil'));
@@ -115,10 +129,16 @@ void main() {
     expect(find.text('Clubs liés'), findsOneWidget);
     expect(find.text('FC Saint Eloi Lupopo'), findsWidgets);
     await shot('article-clubs-lies');
-    await tester.tap(find.text('Voir le club').first);
-    await wait(find.byType(ClubDetailScreen).last);
+    await tapVisible(find.text('Voir le club').first);
+    for (var i = 0; i < 100 && find.byType(ClubDetailScreen, skipOffstage: false).evaluate().length < 2; i++) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
     await tester.pump(const Duration(seconds: 2));
-    expect(find.byType(ClubDetailScreen, skipOffstage: false), findsNWidgets(2), reason: 'the club opens above the article');
+    expect(
+      find.byType(ClubDetailScreen, skipOffstage: false),
+      findsNWidgets(2),
+      reason: 'the club opens above the article',
+    );
     await shot('club-depuis-article');
     await back();
     expect(find.byType(ArticleDetailScreen), findsOneWidget, reason: 'back returns to the article');
@@ -132,8 +152,8 @@ void main() {
     await toRelatedClubs();
     expect(find.text('Voir le club'), findsOneWidget);
     await shot('article-un-club');
-    await tester.tap(find.text('Voir le club'));
-    await wait(find.text('AS Vita Club'));
+    await tapVisible(find.text('Voir le club'));
+    await wait(find.descendant(of: find.byType(AppBar), matching: find.text('AS Vita Club')));
     await tester.pump(const Duration(seconds: 2));
     expect(find.byType(ClubDetailScreen), findsOneWidget);
     expect(find.descendant(of: find.byType(AppBar), matching: find.text('AS Vita Club')), findsOneWidget);
@@ -147,7 +167,7 @@ void main() {
     expect(find.text('Voir le club'), findsNWidgets(4));
     await shot('article-plusieurs-clubs');
     // The renamed club without a crest opens under its current name.
-    await tester.tap(find.text('AF Ufalya Simba'));
+    await tapVisible(find.text('AF Ufalya Simba'));
     await wait(find.descendant(of: find.byType(AppBar), matching: find.text('AF Ufalya Simba')));
     await tester.pump(const Duration(seconds: 2));
     await shot('club-af-ufalya-simba');

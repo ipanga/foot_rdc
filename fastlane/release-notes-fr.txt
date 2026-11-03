@@ -1,1 +1,1 @@
-Version de test interne : nouvelle navigation, données RDC Football, fiches clubs et joueurs, recherche unifiée.
+Version de test interne : nouvelle barre d'onglets (Accueil, Édito, Matchs, Classement, Plus), menu de l'accueil remplacé par Plus, réglages Thème et Notifications séparés, barre de retour fixe dans les articles, publicités intégrées au contenu, matchs et classements par saison et par groupe.
