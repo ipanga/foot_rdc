@@ -22,11 +22,13 @@ class MatchesScreen extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('Matchs'),
           actions: const [SeasonButton()],
-          bottom: const TabBar(
+          // Three equal tabs: on a small screen with large text, a label shrinks to fit instead of being cut.
+          bottom: TabBar(
             tabs: [
-              Tab(text: "Aujourd'hui"),
-              Tab(text: 'Calendrier'),
-              Tab(text: 'Résultats'),
+              for (final label in const ["Aujourd'hui", 'Calendrier', 'Résultats'])
+                Tab(
+                  child: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
+                ),
             ],
           ),
         ),
