@@ -11,7 +11,7 @@ Screens: `docs/ui-refinement/screens/<phase>/`.
 |---|---|---|---|
 | 0 | Audit, baseline screenshots | done | `456efb2` |
 | 1 | Ads policy remediation and placement | done: no pinned banner; native frame 320–400 unclipped; inline banner after article body; 5 tests; device QA iOS + Android (400×400 native, inline banner loaded) | phase 1 commit |
-| 2 | Article back navigation | pending | |
+| 2 | Article back navigation | done: pinned collapsing bar (back, title, save, share); feed offset kept after back (Pixel 1673.5→1673.5, iPhone 11 1760→1760); system back; 2 tests | phase 2 commit |
 | 3 | Home: drawer removal, AppBar | pending | |
 | 4 | Plus: Thèmes, Notifications | pending | |
 | 5 | Matchs and Classement reorganisation | pending | |

@@ -31,6 +31,70 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
   String _contentText() => widget.article.content;
   String _titleText() => widget.article.title;
 
+  /// Header image height. Back, save and share stay in a pinned bar once the
+  /// image has scrolled away.
+  static const _headerHeight = 250.0;
+  final _scroll = ScrollController();
+  bool _collapsed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(() {
+      final top = MediaQuery.paddingOf(context).top;
+      final collapsed = _scroll.hasClients &&
+          _scroll.offset > _headerHeight - kToolbarHeight - top;
+      if (collapsed != _collapsed) setState(() => _collapsed = collapsed);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggleSaved(bool isSaved) async {
+    final notifier = ref.read(articleSavedListNotifierProvider.notifier);
+    if (isSaved) {
+      await notifier.removeArticle(widget.article);
+    } else {
+      await notifier.addNewArticle(widget.article);
+    }
+    if (!mounted) return;
+    AppSnackbar.showSuccess(
+      context,
+      message: isSaved
+          ? 'Article retiré des articles enregistrés'
+          : 'Article enregistré',
+      icon: isSaved ? Icons.bookmark_remove : Icons.bookmark_added,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  /// A round, translucent button: readable over the header image, plain on
+  /// the collapsed bar.
+  Widget _barButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+    required Color background,
+    required Color color,
+  }) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Material(
+          color: _collapsed ? Colors.transparent : background,
+          shape: const CircleBorder(),
+          child: IconButton(
+            icon: Icon(icon),
+            color: color,
+            tooltip: tooltip,
+            onPressed: onPressed,
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final imageUrl = _imageUrl();
@@ -46,8 +110,6 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
     final savedArticles = ref.watch(articleSavedListNotifierProvider);
     final isSaved = savedArticles.any((a) => a.id == widget.article.id);
 
-    final double topPadding = MediaQuery.of(context).padding.top;
-
     final Color overlayBg = isDark
         ? Colors.black.withAlpha(140)
         : Colors.white.withAlpha(217);
@@ -58,118 +120,86 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
       body: SafeArea(
         top: false,
         bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              AnnotatedRegion<SystemUiOverlayStyle>(
-                value: theme.brightness == Brightness.dark
-                    ? SystemUiOverlayStyle.light
-                    : SystemUiOverlayStyle.dark,
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      child: (imageUrl != null && imageUrl.isNotEmpty)
-                          ? Image.network(
-                              imageUrl,
-                              height: 250 + topPadding,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                height: 250 + topPadding,
-                                width: double.infinity,
-                                color: theme.colorScheme.surfaceContainerHighest,
-                              ),
-                            )
-                          : Container(
-                              height: 250 + topPadding,
-                              width: double.infinity,
-                              color: theme.colorScheme.surfaceContainerHighest,
-                            ),
-                    ),
-
-                    Positioned(
-                      left: 12,
-                      top: topPadding + 12,
-                      child: CircleAvatar(
-                        radius: 22,
-                        backgroundColor: overlayBg,
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          color: theme.colorScheme.onSurface,
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                    ),
-
-                    Positioned(
-                      right: 12,
-                      top: topPadding + 12,
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 22,
-                            backgroundColor: overlayBg,
-                            child: IconButton(
-                              icon: Icon(
-                                isSaved
-                                    ? Icons.bookmark
-                                    : Icons.bookmark_border,
-                              ),
-                              color: theme.colorScheme.onSurface,
-                              onPressed: () async {
-                                final notifier = ref.read(
-                                  articleSavedListNotifierProvider.notifier,
-                                );
-                                String message;
-                                IconData icon;
-
-                                if (isSaved) {
-                                  await notifier.removeArticle(widget.article);
-                                  message = 'Article retire des favoris';
-                                  icon = Icons.bookmark_remove;
-                                } else {
-                                  await notifier.addNewArticle(widget.article);
-                                  message = 'Article sauvegarde avec succes';
-                                  icon = Icons.bookmark_added;
-                                }
-
-                                if (context.mounted) {
-                                  AppSnackbar.showSuccess(
-                                    context,
-                                    message: message,
-                                    icon: icon,
-                                    duration: const Duration(seconds: 2),
-                                  );
-                                }
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Builder(
-                            builder: (buttonContext) {
-                              return CircleAvatar(
-                                radius: 22,
-                                backgroundColor: overlayBg,
-                                child: IconButton(
-                                  icon: const Icon(Icons.share),
-                                  color: theme.colorScheme.onSurface,
-                                  onPressed: () {
-                                    final box = buttonContext.findRenderObject() as RenderBox?;
-                                    final sharePositionOrigin = box != null
-                                        ? box.localToGlobal(Offset.zero) & box.size
-                                        : null;
-                                    _handleShare(context, theme, sharePositionOrigin);
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        child: CustomScrollView(
+          controller: _scroll,
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              expandedHeight: _headerHeight,
+              automaticallyImplyLeading: false,
+              backgroundColor:
+                  isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0.5,
+              systemOverlayStyle: theme.brightness == Brightness.dark
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark,
+              leading: _barButton(
+                icon: Icons.arrow_back,
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => Navigator.of(context).maybePop(),
+                background: overlayBg,
+                color: theme.colorScheme.onSurface,
+              ),
+              titleSpacing: 0,
+              title: AnimatedOpacity(
+                opacity: _collapsed ? 1 : 0,
+                duration: const Duration(milliseconds: 180),
+                child: Text(
+                  title.isEmpty ? '' : decodeHtmlEntities(title),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
+              actions: [
+                _barButton(
+                  icon: isSaved ? Icons.bookmark : Icons.bookmark_border,
+                  tooltip: isSaved
+                      ? 'Retirer des articles enregistrés'
+                      : 'Enregistrer l’article',
+                  onPressed: () => _toggleSaved(isSaved),
+                  background: overlayBg,
+                  color: theme.colorScheme.onSurface,
+                ),
+                Builder(
+                  builder: (buttonContext) => _barButton(
+                    icon: Icons.share,
+                    tooltip: 'Partager',
+                    onPressed: () {
+                      final box =
+                          buttonContext.findRenderObject() as RenderBox?;
+                      final origin = box != null
+                          ? box.localToGlobal(Offset.zero) & box.size
+                          : null;
+                      _handleShare(context, theme, origin);
+                    },
+                    background: overlayBg,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.parallax,
+                background: (imageUrl != null && imageUrl.isNotEmpty)
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => ColoredBox(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                        ),
+                      )
+                    : ColoredBox(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                      ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
 
               Container(
                 padding: const EdgeInsets.fromLTRB(
@@ -556,7 +586,9 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
 
               const SizedBox(height: 24),
             ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
