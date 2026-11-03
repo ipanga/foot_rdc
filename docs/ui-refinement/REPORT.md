@@ -25,3 +25,13 @@ Before/after page for review: https://claude.ai/artifact/N4dvYGe8CaXQuJ2sWFHnbn 
 | UNRESOLVED ISSUES | No physical device or iOS 15 runtime tested. Two one-off failures in the final pass (club news on Pixel, ads on iPhone 11) passed on rerun; causes not established (logs overwritten). Pixel default and iPhone 18 Pro navigation ran before the last Matchs tab-label fix (rechecked on iPhone 11 and small Pixel). Unused asset `menu-icon.svg` left in place |
 | TESTFLIGHT UPLOAD | NOT EXECUTED |
 | GOOGLE PLAY UPLOAD | NOT EXECUTED |
+
+## Internal beta 5.12.11 (33), 4 Nov 2026 (owner-approved)
+
+| Item | Result |
+|---|---|
+| Commit | `ff54f72` on `feat/rdc-football-mobile-redesign` (pushed); includes `feat/article-clubs` |
+| Pre-release checks | Club news on Android failed 3/3 before upload: the device test tapped "Voir le club" below the screen when the 250 px inline ad pushed the cards down. Test fixed (scroll cards on screen, never tap off screen); then 3/3 on Pixel, 1/1 on iPhone 11. No ad was clicked (no AdActivity in the logs). Ads on iPhone 11 2/2 with the banner loaded after a longer wait (test ads were slow, no load error). Navigation 17/17 on Pixel and iPhone 18 Pro; article back navigation and settings pass |
+| Ads | Native 400×400 inside Google's 320–400 frame; inline banner 374×58 or 374×250 on iPhone 11, 408×250 on Pixel, at the SDK-reported size; test ads only during QA |
+| TestFlight | 5.12.11 (33) VALID, export compliance set (no non-exempt encryption, as confirmed for earlier builds), internal IN_BETA_TESTING, Main testers has access to all builds. Not submitted for external review. The lane stopped on an SSL drop after the changelog; the compliance answer was then applied with the same value the lane uses |
+| Google Play | internal track 33, release completed; alpha and beta empty; production 30 unchanged |

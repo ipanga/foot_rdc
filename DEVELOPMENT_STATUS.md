@@ -1,21 +1,21 @@
-NEXT_ACTION: Owner reviews docs/ui-refinement/REPORT.md and the before/after page, then approves (or not) an internal beta build of feat/ui-refinement. No upload made.
+NEXT_ACTION: Owner and testers install 5.12.11 (33) from TestFlight (Main testers) and Google Play internal testing and run docs/release/INTERNAL_BETA_TEST_PLAN.md section 1 on physical phones. After a public release, request the AdMob review (docs/ui-refinement/ADS_REMEDIATION.md).
 
 # Development status
 
 | | |
 |---|---|
-| Branch | `feat/rdc-football-mobile-redesign`, pushed; tested code `4d58d36`, head `10c8f59` adds QA screens; `feat/article-clubs` merged into it |
-| Current phase | UI/UX refinement complete on `feat/ui-refinement` (local), awaiting owner approval; 5.12.11 (32) remains the latest internal beta |
-| Latest app code commit | `9d572f3`; uploaded source revision `2925323` |
-| Version | Flutter `5.12.11+32`; iOS CFBundleVersion 32, CFBundleShortVersionString 5.12.11; Android versionCode 32, versionName 5.12.11 |
-| Tests | `feat/ui-refinement`: `flutter test` 113 passed; `flutter analyze` 17 infos, 0 errors, 0 warnings |
-| Device QA | 9 of 9 runs pass on the final code, 0 exceptions, 0 overflows. See `TEST_MATRIX.md` |
+| Branch | `feat/rdc-football-mobile-redesign`, pushed, head `ff54f72` (fast-forwarded from `feat/ui-refinement`) |
+| Current phase | Internal beta 5.12.11 (33) with the UI refinement on both stores; physical testing next |
+| Latest app code commit | `a4dabbc`; uploaded source revision `ff54f72` |
+| Version | Flutter `5.12.11+33`; iOS CFBundleVersion 33, CFBundleShortVersionString 5.12.11; Android versionCode 33, versionName 5.12.11 |
+| Tests | `flutter test`: 113 passed, 0 failed. `flutter analyze`: 17 infos, 0 errors, 0 warnings |
+| Device QA | Pre-release runs on iPhone 11, iPhone 18 Pro, Pixel 8 Pro: all pass after the club-news test fix; screens in `docs/ui-refinement/screens/prerelease/` |
 | Emulators | iPhone 18 Pro booted; Pixel_8_Pro restored to default size and text |
 | API | Production read-only; no writes made |
 | SportsPress usage | `SPORTSPRESS_USAGE_REMAINING: 0` |
 | iOS support | Minimum deployment target iOS 15.0; target device family iPhone 11 and newer supported iPhones |
 | Release automation | Fastlane in `fastlane/`; `ios beta` and `android internal` have both uploaded for real |
-| Bottom tabs | Accueil, Édito, Matchs, Classement, Plus (on `feat/ui-refinement`; released build 32 still shows Linafoot) |
+| Bottom tabs | Accueil, Édito, Matchs, Classement, Plus |
 
 ## Known blockers
 
@@ -40,7 +40,8 @@ See `DECISIONS.md` and the limitations in the final report.
 | 8 Store automation prep | PASS: plan only, nothing uploaded | `06f653a` |
 | Final iOS and navigation adjustment | PASS | `3aa200f` to `9054081` |
 | Internal beta | PASS: uploaded to TestFlight internal and Google Play internal | `2925323` |
-| UI refinement (ads policy, navigation, settings, Matchs/Classement) | PASS, awaiting approval; see `docs/ui-refinement/REPORT.md` | `feat/ui-refinement` |
+| UI refinement (ads policy, navigation, settings, Matchs/Classement) | PASS, owner-approved; see `docs/ui-refinement/REPORT.md` | `456efb2` to `a4dabbc` |
+| Internal beta 5.12.11 (33) | PASS: TestFlight internal (Main testers, IN_BETA_TESTING) and Google Play internal (completed); production track 30 unchanged | `ff54f72` |
 
 ## Club-linked news (3 Nov 2026)
 
@@ -53,11 +54,11 @@ See `DECISIONS.md` and the limitations in the final report.
 
 ## Final checkpoint
 
-PHASE STATUS: internal beta PASS on both stores; physical testing not started
-TESTS: 79 passed, 0 failed
-IOS: 5.12.11 (31) in TestFlight, internal testing
-ANDROID: 5.12.11 (31) in Google Play internal testing
+PHASE STATUS: internal beta 5.12.11 (33) PASS on both stores; physical testing not started
+TESTS: 113 passed, 0 failed
+IOS: 5.12.11 (33) in TestFlight, internal testing (Main testers)
+ANDROID: 5.12.11 (33) in Google Play internal testing; production track still 30
 API: Production read-only
-KNOWN ISSUES: physical phones, real push and a live match are unverified
+KNOWN ISSUES: physical phones, real push, a live match and real (non-test) ads are unverified; AdMob restriction stays until a public release and a review request
 NEXT_ACTION: as above
-COMMIT: `2925323` uploaded; later commits on this branch are documentation
+COMMIT: `ff54f72` uploaded

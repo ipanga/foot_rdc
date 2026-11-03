@@ -1,6 +1,6 @@
 # Internal beta test plan
 
-For build `5.12.11 (31)` or later, installed from TestFlight or Google Play internal testing. Nothing here publishes anything.
+For build `5.12.11 (33)` or later (build 31–32 checks below still apply where noted), installed from TestFlight or Google Play internal testing. Nothing here publishes anything.
 
 Record results in `TEST_MATRIX.md`: device model, OS version, build number, pass or fail, and a screenshot of any problem.
 
@@ -10,25 +10,28 @@ Run once on an iPhone (iPhone 11 or newer preferred) and once on an Android phon
 
 | # | Check | Expected |
 |---|---|---|
-| 1 | First launch | Opens without a crash; tabs read Accueil, Édito, Matchs, Linafoot, Plus |
-| 2 | Accueil | Headline, match strip, news, Linafoot snapshot; "Tout voir" opens Matchs; "Classements" opens standings |
+| 1 | First launch | Opens without a crash; tabs read Accueil, Édito, Matchs, Classement, Plus; no menu button on Accueil |
+| 2 | Accueil | Logo left, search right; headline, match strip, news; "Tout voir" opens Matchs; "Classements" switches to the Classement tab |
 | 3 | Édito | Only Édito articles, different from the Accueil feed |
-| 4 | Matchs | Aujourd'hui, À venir and Résultats all load; open a finished match and see its events |
-| 5 | Linafoot | Standings for the current season, Groupe A and Groupe B; compact and full table |
-| 6 | Season | Switch to 2025–2026 and back; every Linafoot tab follows |
+| 4 | Matchs | Aujourd'hui, Calendrier and Résultats load; filters Tous / Groupe A / Groupe B; open a finished match and see its events |
+| 5 | Classement | Tabs Groupe A, Groupe B (and Play-offs when the season has them), Clubs; compact and full table; tap a club |
+| 6 | Season | In Matchs or Classement switch to 2025–2026: notice "Saison passée"; "Saison en cours" returns; both tabs follow |
 | 7 | Club | Open a club; check Aperçu, Actualités, Résultats, Calendrier, Classement, Effectif |
 | 8 | Squad and player | On a club with a squad, such as TP Mazembe or Tanganyika, open a player |
 | 9 | Follow | Star a club, close the app, reopen; it is still in Plus > Clubs suivis; unstar it |
-| 10 | Search | Plus > Recherche, "Mazembe": clubs and articles appear; open each |
-| 11 | Article | Open one from Accueil and one from Édito; images load; back returns to the same place |
-| 12 | Club news | Open an article from a club's Actualités; it opens in the app |
-| 13 | Deep links | Open these from Notes or Messages: `footrdc://club/2221`, `footrdc://standings`, and any footrdc.com article link |
+| 10 | Search | Search icon on Accueil or Plus > Recherche, "Mazembe": clubs and articles appear; open each |
+| 11 | Article | Scroll deep into a long article: back, save and share stay at the top; back returns to the same place in the feed; iOS edge swipe works |
+| 12 | Club news | Open an article from a club's Actualités; "Clubs liés" at the end opens the club |
+| 13 | Deep links | Open from Notes or Messages: `footrdc://club/2221`, `footrdc://standings` (opens the Classement tab), any footrdc.com article link |
 | 14 | Tab state | In Matchs choose Résultats, go to Édito, come back; Résultats is still selected |
 | 15 | Resume | Leave the app for a few minutes, return; the screen is intact and data refreshes |
-| 16 | Offline | Turn on airplane mode, reopen a visited screen; saved data with a notice, not a raw error. Turn it off; data returns |
-| 17 | Ads | Real ads appear, not "Test mode". Do not tap them repeatedly |
-| 18 | Large text | Raise the system text size; nothing overlaps and tab labels stay whole |
-
+| 16 | Offline | Airplane mode, reopen a visited screen: saved data with a notice, not a raw error. Turn it off; data returns |
+| 17 | Ads | No banner above the tab bar. In the feed, ads labelled "PUBLICITÉ", whole, never cut at the edges; one ad after an article's text. Real ads, not "Test mode". Never tap ads to test them |
+| 18 | Large text | Raise the system text size: nothing overlaps; tab labels and Matchs labels stay whole |
+| 19 | Thème | Plus > Thème: Sombre, Clair, Automatique apply at once and survive closing the app; Automatique follows the phone's dark mode |
+| 20 | Notifications | Fresh install: the system asks once. Plus > Notifications shows "Préférence FootRDC" and "Autorisation de l'appareil". Turn off: no prompt at next launch. If refused in the system: "Ouvrir les réglages de l'appareil" appears |
+| 21 | À propos | Plus > À propos opens the FootRDC dialog and the footrdc.com link |
+| 22 | Dates | Articles show "14:05", "Hier" or "2 nov.", in French |
 Android only: the system back button leaves a pushed screen, then leaves the app from a tab.
 
 A club with no squad, a missing crest or no live match today is a data gap, not an app defect, as long as the screen shows a clean message or initials.
