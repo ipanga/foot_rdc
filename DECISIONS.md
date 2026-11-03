@@ -40,3 +40,7 @@ Each tab is built on first visit and then kept, so a sub-tab, scroll position an
 
 ## 2026-11-01 Sponsor carousel hidden on Home
 Reason: its three slots point at placeholder addresses on footrdc.com and render as an empty box. The code stays behind `_sponsorsReady` until real images and links exist.
+
+## 2026-11-03 Club news comes from editors' links, never from text
+
+The app shows `related_clubs` from the API and the club's linked articles from `/teams/{id}/news`. It never guesses clubs from article text. Club news opens articles by id inside the app, so the link host does not matter. Saved articles keep their clubs in an optional Hive field 13; articles saved earlier load with none.

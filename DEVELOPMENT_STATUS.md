@@ -1,14 +1,14 @@
-NEXT_ACTION: Owner and testers install 5.12.11 (31) from TestFlight and Google Play internal testing, then follow docs/release/INTERNAL_BETA_TEST_PLAN.md: physical phone checklist, one OneSignal test to a single device, and the live match on 4 Nov 2026 12:00 UTC. Record results in TEST_MATRIX.md. Public release needs a separate explicit owner decision. For the next internal build, raise the number with tool/set_build_number.sh; beta_all may be used now that both lanes have worked.
+NEXT_ACTION: Owner reviews club-linked news on Staging (until 4 Nov 2026 10:18 UTC) and the review queue, then decides on the Production package (RDC Football Core 0.11.0 / UI 0.18.0) and a backfill window. The app branch feat/article-clubs is local, not released; it needs the Production API change first, then a new internal build. Internal beta 5.12.11 (31) testing continues per docs/release/INTERNAL_BETA_TEST_PLAN.md.
 
 # Development status
 
 | | |
 |---|---|
-| Branch | `feat/rdc-football-mobile-redesign` (from `develop` 7e9f137), pushed to `origin`; head holds the exact SHA |
+| Branch | `feat/rdc-football-mobile-redesign` (released line, pushed); `feat/article-clubs` (club news, local, not released) |
 | Current phase | Internal beta live on both stores; physical testing next |
 | Latest app code commit | `9d572f3`; uploaded source revision `2925323` |
 | Version | Flutter `5.12.11+31`; iOS CFBundleVersion 31, CFBundleShortVersionString 5.12.11; Android versionCode 31, versionName 5.12.11 |
-| Tests | `flutter test`: 79 passed, 0 failed. `flutter analyze`: 33 infos, 0 errors, 0 warnings |
+| Tests | `flutter test`: 87 passed, 0 failed on `feat/article-clubs` (79 on the released line). `flutter analyze`: 33 infos, 0 errors, 0 warnings |
 | Device QA | 9 of 9 runs pass on the final code, 0 exceptions, 0 overflows. See `TEST_MATRIX.md` |
 | Emulators | iPhone 18 Pro booted; Pixel_8_Pro restored to default size and text |
 | API | Production read-only; no writes made |
@@ -40,6 +40,15 @@ See `DECISIONS.md` and the limitations in the final report.
 | 8 Store automation prep | PASS: plan only, nothing uploaded | `06f653a` |
 | Final iOS and navigation adjustment | PASS | `3aa200f` to `9054081` |
 | Internal beta | PASS: uploaded to TestFlight internal and Google Play internal | `2925323` |
+
+## Club-linked news (3 Nov 2026, Staging only)
+
+| Item | State |
+|---|---|
+| Server | RDC Football Core 0.11.0 / UI 0.18.0 on Staging; Production unchanged |
+| App | `Article.relatedClubs`, club "Actualités" cards with paging, "Clubs liés" on articles; branch `feat/article-clubs` |
+| Device QA against Staging | iOS and Android pass 5 of 5 steps, 0 exceptions, 0 overflows |
+| Release dependency | Production must serve `related_clubs` and the richer `/teams/{id}/news` before an app build uses them; older builds ignore the new fields |
 
 ## Final checkpoint
 

@@ -54,6 +54,17 @@ Failure states are injected at the HTTP layer on the device. The cache and scree
 | `bundle exec fastlane ios beta` | Pass; read back from Apple: valid, `IN_BETA_TESTING`, no review submission |
 | `bundle exec fastlane android internal` | Pass; read back from Google: internal 31 completed, production 30 unchanged |
 
+## Club-linked news, `feat/article-clubs`, against Staging
+
+| Check | Result |
+|---|---|
+| `flutter test` | 87 passed, 0 failed (8 new: parsing, legacy saved articles, paging, in-app opening, empty and offline states, navigation, 320 px) |
+| `flutter analyze` | 0 errors, 0 warnings, 33 infos |
+| iPhone 18 Pro, `integration_test/article_clubs_qa_test.dart` | Pass, 5 of 5 steps |
+| Pixel 8 Pro, same test | Pass, 5 of 5 steps |
+
+Steps: club Actualités, article with Clubs liés, club opened from the article and back twice (system back route), article with four clubs including one without crest, article without clubs. Staging was reached through a local SSH tunnel with debug-only defines; crests show initials there because Staging files sit behind Cloudflare Access.
+
 ## Test harness notes
 
 Two Pixel runs stopped on `Could not copy the pixels` from Flutter's Android screenshot helper. The app was running normally. Only that call now retries, up to three times, and logs each retry. The final run needed none.
