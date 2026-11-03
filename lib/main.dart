@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:foot_rdc/core/errors/logger_riverpod.dart';
 import 'package:foot_rdc/features/news/data/models/article_model.dart';
 import 'package:foot_rdc/features/home/presentation/screens/home_screen.dart';
+import 'package:foot_rdc/shared/providers/notification_provider.dart';
 import 'package:foot_rdc/shared/providers/theme_provider.dart';
 import 'package:foot_rdc/core/theme/app_theme.dart';
 import 'package:foot_rdc/firebase_options.dart';
@@ -67,9 +68,14 @@ Future<void> main() async {
     }
   });
 
-  // Request notification permission
-  // Never awaited: the system prompt must not hold back the first frame.
-  unawaited(OneSignal.Notifications.requestPermission(true));
+  // The system permission dialog, once: the system shows it only while the user has not answered. Never after the
+  // user turned notifications off in Plus › Notifications, and never a detour to the system settings at launch.
+  // Never awaited: the dialog must not hold back the first frame.
+  unawaited(
+    NotificationNotifier.mayPromptAtLaunch().then((ask) async {
+      if (ask) await OneSignal.Notifications.requestPermission(false);
+    }),
+  );
 
   // Log initial subscription state
   final subscriptionId = OneSignal.User.pushSubscription.id;

@@ -8,7 +8,6 @@ import 'package:foot_rdc/features/news/presentation/providers/article_cache_prov
 import 'package:foot_rdc/features/news/presentation/providers/news_providers.dart';
 import 'package:foot_rdc/features/news/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
-import 'package:foot_rdc/shared/widgets/app_drawer.dart';
 import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
 import 'package:foot_rdc/shared/widgets/news_app_bar.dart';
 import 'package:foot_rdc/features/search/presentation/screens/search_screen.dart';
@@ -363,7 +362,6 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
             ? AppColors.backgroundDark
             : AppColors.backgroundLight,
         appBar: _buildAppBar(),
-        drawer: const AppDrawer(),
         onDrawerChanged: (isOpen) {
           if (!isOpen) {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -451,7 +449,6 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
             ? AppColors.backgroundDark
             : AppColors.backgroundLight,
         appBar: _buildAppBar(),
-        drawer: const AppDrawer(),
         onDrawerChanged: (isOpen) {
           if (!isOpen) {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -572,7 +569,6 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: _buildAppBar(),
-      drawer: const AppDrawer(),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -644,7 +640,6 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: _buildAppBar(),
-      drawer: const AppDrawer(),
       onDrawerChanged: (isOpen) {
         if (!isOpen) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();

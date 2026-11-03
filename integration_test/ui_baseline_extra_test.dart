@@ -1,3 +1,8 @@
+/// Baseline capture of the UI before the refinement (commit 077a341). Kept as the record of how
+/// `docs/ui-refinement/screens/baseline/` was produced; the drawer and "Thème et notifications" no longer exist.
+@Skip('baseline of 077a341 only')
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/features/news/presentation/screens/article_detail_screen.dart';

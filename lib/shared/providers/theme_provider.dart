@@ -15,7 +15,8 @@ class ThemeNotifierCustom extends StateNotifier<ThemeModeCustom> {
     final prefs = await SharedPreferences.getInstance();
     final themeModeString = prefs.getString(_themeKey);
 
-    if (themeModeString != null) {
+    // A choice made while the saved value was loading wins.
+    if (themeModeString != null && !_chosen) {
       state = ThemeModeCustom.values.firstWhere(
         (mode) => mode.toString() == themeModeString,
         orElse: () => ThemeModeCustom.system,
@@ -23,7 +24,10 @@ class ThemeNotifierCustom extends StateNotifier<ThemeModeCustom> {
     }
   }
 
+  bool _chosen = false;
+
   Future<void> setTheme(ThemeModeCustom themeMode) async {
+    _chosen = true;
     state = themeMode;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_themeKey, themeMode.toString());

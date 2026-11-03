@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../shared/widgets/app_drawer.dart';
+import '../../shared/providers/notification_provider.dart';
+import '../../shared/providers/theme_provider.dart';
+
 import '../editorial/presentation/providers/editorial_providers.dart';
 import '../editorial/presentation/screens/editorial_list_screen.dart';
 import '../football/domain/models.dart';
@@ -10,6 +12,7 @@ import '../football/presentation/screens/clubs_screen.dart';
 import '../football/presentation/widgets/football_widgets.dart';
 import '../saved_articles/presentation/screens/saved_articles_screen.dart';
 import '../search/presentation/screens/search_screen.dart';
+import 'settings_screens.dart';
 
 /// Everything that does not need a tab of its own.
 class MoreScreen extends ConsumerWidget {
@@ -21,6 +24,8 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final followed = ref.watch(favoriteClubsProvider).length;
+    final theme = ref.watch(themeCustomNotifierProvider);
+    final notifications = ref.watch(notificationNotifierProvider);
     Widget tile(IconData icon, String title, Widget page, {String? subtitle}) => ListTile(
       leading: Icon(icon),
       title: Text(title),
@@ -45,7 +50,32 @@ class MoreScreen extends ConsumerWidget {
           tile(Icons.bookmark_border, 'Articles enregistrés', const _SavedPage()),
           tile(Icons.lightbulb_outline, 'Bon à savoir', EditorialListScreen(channel: EditorialChannel.bonASavoir)),
           const SectionHeader('Application'),
-          tile(Icons.tune, 'Thème et notifications', const _SettingsPage()),
+          tile(
+            Icons.palette_outlined,
+            'Thème',
+            const ThemeSettingsScreen(),
+            subtitle: switch (theme) {
+              ThemeModeCustom.system => 'Automatique',
+              ThemeModeCustom.light => 'Clair',
+              ThemeModeCustom.dark => 'Sombre',
+            },
+          ),
+          tile(
+            Icons.notifications_outlined,
+            'Notifications',
+            const NotificationSettingsScreen(),
+            subtitle: notifications.receiving
+                ? 'Activées'
+                : notifications.enabled
+                ? (notifications.hasPermission ? 'En cours d’activation' : 'Non autorisées par l’appareil')
+                : 'Désactivées',
+          ),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('À propos'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showFootRdcAbout(context),
+          ),
         ],
       ),
     );
@@ -56,15 +86,6 @@ class _SavedPage extends StatelessWidget {
   const _SavedPage();
   @override
   Widget build(BuildContext context) => const SavedArticlesScreen();
-}
-
-class _SettingsPage extends StatelessWidget {
-  const _SettingsPage();
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Thème et notifications')),
-    body: const AppDrawer(),
-  );
 }
 
 class _ClubsPage extends ConsumerWidget {
