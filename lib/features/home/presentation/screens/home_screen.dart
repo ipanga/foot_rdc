@@ -10,7 +10,7 @@ import 'package:foot_rdc/shared/widgets/premium_bottom_nav_bar.dart';
 import 'package:foot_rdc/features/editorial/presentation/providers/editorial_providers.dart';
 import 'package:foot_rdc/features/editorial/presentation/screens/editorial_list_screen.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
-import 'package:foot_rdc/features/football/presentation/screens/linafoot_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/classement_screen.dart';
 import 'package:foot_rdc/features/football/presentation/screens/matches_screen.dart';
 import 'package:foot_rdc/features/more/more_screen.dart';
 
@@ -59,7 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     AppTab.home => const NewsListScreen(),
     AppTab.edito => EditorialListScreen(key: _editoKey, channel: EditorialChannel.edito),
     AppTab.matches => const MatchesScreen(),
-    AppTab.linafoot => const LinafootScreen(),
+    AppTab.classement => const ClassementScreen(),
     AppTab.more => const MoreScreen(),
   };
 

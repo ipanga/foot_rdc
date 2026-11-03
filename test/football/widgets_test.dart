@@ -8,7 +8,7 @@ import 'package:foot_rdc/core/navigation/deep_links.dart';
 import 'package:foot_rdc/features/football/domain/models.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
 import 'package:foot_rdc/features/football/presentation/screens/club_detail_screen.dart';
-import 'package:foot_rdc/features/football/presentation/screens/linafoot_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/classement_screen.dart';
 import 'package:foot_rdc/features/football/presentation/screens/match_detail_screen.dart';
 import 'package:foot_rdc/features/football/presentation/screens/matches_screen.dart';
 import 'package:foot_rdc/features/football/presentation/screens/player_detail_screen.dart';
@@ -180,9 +180,10 @@ void main() {
 
     testWidgets('switching to 2025–2026 changes every request and shows the notice', (tester) async {
       final (repo, adapter, _) = contractRepository();
-      await tester.pumpWidget(app(const LinafootScreen(), repo));
+      await tester.pumpWidget(app(const ClassementScreen(), repo));
       await settle(tester);
-      expect(find.text('2026–2027 · Saison régulière'), findsOneWidget);
+      expect(find.text('2026–2027'), findsOneWidget);
+      expect(find.text('Saison passée · 2025–2026'), findsNothing);
       adapter.calls.clear();
       await tester.tap(find.byTooltip('Changer de saison'));
       await tester.pump();
@@ -192,6 +193,9 @@ void main() {
       expect(find.text('Saison passée · 2025–2026'), findsOneWidget);
       final seasons = adapter.calls.map((u) => u.queryParameters['season_id']).whereType<String>().toSet();
       expect(seasons, {'325'}, reason: 'no request may mix seasons');
+      await tester.tap(find.text('Saison en cours'));
+      await settle(tester);
+      expect(find.text('Saison passée · 2025–2026'), findsNothing);
       await tester.pumpWidget(const SizedBox());
       await settle(tester);
     });
@@ -199,9 +203,10 @@ void main() {
     testWidgets('standings tab shows provisional tables and the full view', (tester) async {
       tall(tester);
       final (repo, _, _) = contractRepository();
-      await tester.pumpWidget(app(const LinafootScreen(initialTab: 3), repo));
+      await tester.pumpWidget(app(const ClassementScreen(), repo));
       await settle(tester);
-      expect(find.text('Groupe A'), findsWidgets);
+      expect(find.widgetWithText(Tab, 'Groupe A'), findsOneWidget);
+      expect(find.widgetWithText(Tab, 'Clubs'), findsOneWidget);
       expect(find.textContaining('Classement provisoire'), findsOneWidget);
       await tester.tap(find.text('Tableau complet'));
       await tester.pump();
@@ -291,8 +296,7 @@ void main() {
             final (repo, _, _) = contractRepository();
             for (final screen in const <Widget>[
               MatchesScreen(),
-              LinafootScreen(),
-              LinafootScreen(initialTab: 3),
+              ClassementScreen(),
               ClubDetailScreen(clubId: 4),
               MatchDetailScreen(matchId: 6476),
             ]) {
@@ -330,7 +334,7 @@ void main() {
 
   group('Bottom tabs', () {
     test('the order is the owner\'s', () {
-      expect(AppTab.values.map((t) => t.label), ['Accueil', 'Édito', 'Matchs', 'Linafoot', 'Plus']);
+      expect(AppTab.values.map((t) => t.label), ['Accueil', 'Édito', 'Matchs', 'Classement', 'Plus']);
     });
 
     testWidgets('the bar shows them in that order and reports the tab by name', (tester) async {
@@ -397,14 +401,22 @@ void main() {
       await settle(tester);
     });
 
-    testWidgets('Classements opens the standings', (tester) async {
+    testWidgets('Classements switches to the Classement tab', (tester) async {
       final (repo, _, _) = contractRepository();
-      await tester.pumpWidget(app(const Scaffold(body: SingleChildScrollView(child: HomeLinafootSnapshot())), repo));
+      final container = ProviderContainer(overrides: [footballRepositoryProvider.overrideWith((ref) async => repo)]);
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: Scaffold(body: SingleChildScrollView(child: HomeLinafootSnapshot())),
+          ),
+        ),
+      );
       await settle(tester);
       await tester.tap(find.text('Classements'));
       await settle(tester);
-      final tabs = tester.widget<TabBar>(find.byType(TabBar));
-      expect(tabs.controller!.index, LinafootScreen.standingsTab);
+      expect(container.read(currentTabProvider), AppTab.classement);
       await tester.pumpWidget(const SizedBox());
       await settle(tester);
     });
@@ -509,10 +521,15 @@ void main() {
             data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.3)),
             child: child!,
           ),
-          home: const LinafootScreen(initialTab: 4),
+          home: const ClassementScreen(),
         ),
       ),
     );
+    await settle(tester);
+    // The Clubs tab can sit beyond the screen edge in the scrollable tab bar at this width.
+    await tester.ensureVisible(find.widgetWithText(Tab, 'Clubs'));
+    await settle(tester);
+    await tester.tap(find.widgetWithText(Tab, 'Clubs'));
     await settle(tester);
     expect(find.byType(TextField), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'zzz');

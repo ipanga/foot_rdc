@@ -28,7 +28,7 @@ class NoInternetException extends NetworkException {
 /// Request timeout
 class TimeoutException extends NetworkException {
   const TimeoutException({
-    super.message = 'La requete a expire',
+    super.message = 'La requête a expiré',
     super.originalError,
   });
 }
@@ -45,7 +45,7 @@ class ServerException extends NetworkException {
 /// Client error (4xx)
 class ClientException extends NetworkException {
   const ClientException({
-    super.message = 'Erreur de requete',
+    super.message = 'Erreur de requête',
     super.statusCode,
     super.originalError,
   });
@@ -54,7 +54,7 @@ class ClientException extends NetworkException {
 /// Not found error (404)
 class NotFoundException extends NetworkException {
   const NotFoundException({
-    super.message = 'Ressource non trouvee',
+    super.message = 'Ressource introuvable',
     super.statusCode = 404,
     super.originalError,
   });
@@ -63,7 +63,7 @@ class NotFoundException extends NetworkException {
 /// Unauthorized error (401)
 class UnauthorizedException extends NetworkException {
   const UnauthorizedException({
-    super.message = 'Non autorise',
+    super.message = 'Non autorisé',
     super.statusCode = 401,
     super.originalError,
   });
@@ -80,7 +80,7 @@ class UnknownException extends NetworkException {
 /// Request cancelled
 class RequestCancelledException extends NetworkException {
   const RequestCancelledException({
-    super.message = 'Requete annulee',
+    super.message = 'Requête annulée',
     super.originalError,
   });
 }
@@ -148,7 +148,7 @@ class NetworkExceptionHandler {
         );
       case 401:
         return UnauthorizedException(
-          message: serverMessage ?? 'Non autorise',
+          message: serverMessage ?? 'Non autorisé',
           originalError: error,
         );
       case 403:
@@ -159,7 +159,7 @@ class NetworkExceptionHandler {
         );
       case 404:
         return NotFoundException(
-          message: serverMessage ?? 'Ressource non trouvee',
+          message: serverMessage ?? 'Ressource introuvable',
           originalError: error,
         );
       case 500:

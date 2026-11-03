@@ -1,26 +1,27 @@
 String _two(int n) => n.toString().padLeft(2, '0');
 
 const List<String> _months = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
+  'janv.',
+  'févr.',
+  'mars',
+  'avr.',
+  'mai',
+  'juin',
+  'juil.',
+  'août',
+  'sept.',
+  'oct.',
+  'nov.',
+  'déc.',
 ];
 
-/// Formats a GMT DateTime for display in the device local timezone.
-///
-/// - If the date is the same day as the device local date, returns "HH:mm".
-/// - If older, returns "dd-MMM-yy" (e.g. 05-Sep-25).
-String formatArticleDate(DateTime gmtDate) {
-  // Ensure we interpret the input as UTC/GMT.
+/// An article's publication date, in French and in the device's time zone:
+/// - today: "14:05";
+/// - yesterday: "Hier";
+/// - this year: "2 nov.";
+/// - earlier: "2 nov. 2025".
+String formatArticleDate(DateTime gmtDate, {DateTime? now}) {
+  // The API gives GMT without a zone marker: read it as UTC.
   final utc = gmtDate.isUtc
       ? gmtDate
       : DateTime.utc(
@@ -33,21 +34,14 @@ String formatArticleDate(DateTime gmtDate) {
           gmtDate.millisecond,
           gmtDate.microsecond,
         );
-
   final local = utc.toLocal();
-  final now = DateTime.now();
+  final today = now ?? DateTime.now();
+  final day = DateTime(local.year, local.month, local.day);
+  final todayDay = DateTime(today.year, today.month, today.day);
+  final days = todayDay.difference(day).inDays;
 
-  final sameDay =
-      local.year == now.year &&
-      local.month == now.month &&
-      local.day == now.day;
-
-  if (sameDay) {
-    return '${_two(local.hour)}:${_two(local.minute)}';
-  } else {
-    final dd = _two(local.day);
-    final mmm = _months[local.month - 1];
-    final yy = _two(local.year % 100);
-    return '$dd-$mmm-$yy';
-  }
+  if (days == 0) return '${_two(local.hour)}:${_two(local.minute)}';
+  if (days == 1) return 'Hier';
+  final short = '${local.day} ${_months[local.month - 1]}';
+  return local.year == today.year ? short : '$short ${local.year}';
 }

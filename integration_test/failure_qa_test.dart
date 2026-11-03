@@ -10,7 +10,7 @@ import 'package:foot_rdc/core/network/dio_client.dart';
 import 'package:foot_rdc/features/football/data/football_client.dart';
 import 'package:foot_rdc/features/football/data/football_repository.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
-import 'package:foot_rdc/features/football/presentation/screens/linafoot_screen.dart';
+import 'package:foot_rdc/features/football/presentation/screens/classement_screen.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -69,7 +69,7 @@ void main() {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            home: LinafootScreen(initialTab: 3),
+            home: ClassementScreen(),
           ),
         ),
       );

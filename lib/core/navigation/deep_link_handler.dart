@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/football/presentation/screens/club_detail_screen.dart';
-import '../../features/football/presentation/screens/linafoot_screen.dart';
+import '../../features/home/presentation/app_tabs.dart';
 import '../../features/football/presentation/screens/match_detail_screen.dart';
 import '../../features/news/domain/entities/article.dart';
 import '../../features/news/presentation/screens/article_detail_screen.dart';
@@ -69,8 +69,10 @@ class _DeepLinkHandlerState extends ConsumerState<DeepLinkHandler> {
         push(MatchDetailScreen(matchId: id));
       case ClubLink(:final id):
         push(ClubDetailScreen(clubId: id));
-      case LinafootLink(:final standings):
-        push(LinafootScreen(initialTab: standings ? LinafootScreen.standingsTab : 0));
+      case LinafootLink():
+        // Linafoot and standings links open the Classement tab.
+        navigator.popUntil((route) => route.isFirst);
+        ref.read(currentTabProvider.notifier).state = AppTab.classement;
       case ArticleLink(:final id):
         await _openArticle(() => _article(const {}, '/$id'), push);
       case ArticleSlugLink(:final slug):

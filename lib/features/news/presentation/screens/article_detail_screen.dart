@@ -1053,7 +1053,7 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
       if (context.mounted) {
         AppSnackbar.showSuccess(
           context,
-          message: 'Lien copie dans le presse-papiers',
+          message: 'Lien copié dans le presse-papiers',
           icon: Icons.content_copy,
           duration: const Duration(seconds: 2),
         );

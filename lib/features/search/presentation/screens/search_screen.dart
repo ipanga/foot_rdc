@@ -319,7 +319,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         ),
                         const SizedBox(height: AppDesignSystem.space16),
                         Text(
-                          'Recherche en cours...',
+                          'Recherche en cours…',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                           ),

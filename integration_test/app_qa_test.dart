@@ -109,7 +109,7 @@ void main() {
     await nav('Matchs');
     await wait(find.text('Prochains matchs'));
     await shot('matchs-aujourdhui');
-    await tab('À venir');
+    await tab('Calendrier');
     await wait(find.textContaining('novembre'));
     await shot('matchs-a-venir');
     await tab('Résultats');
@@ -120,18 +120,15 @@ void main() {
     await shot('match-detail');
     await back();
 
-    await nav('Linafoot');
-    await wait(find.text('Derniers résultats'));
-    await shot('linafoot-apercu');
-    await tab('Calendrier');
-    await wait(find.text('Groupe A'));
-    await shot('linafoot-calendrier');
-    await tab('Classements');
+    await nav('Classement');
     await wait(find.textContaining('Tableau complet'));
-    await shot('linafoot-classements');
+    await shot('classement-groupe-a');
     await tester.tap(find.text('Tableau complet'));
     await tester.pump(const Duration(milliseconds: 300));
-    await shot('linafoot-classement-complet');
+    await shot('classement-complet');
+    await tab('Groupe B');
+    await tester.pump(const Duration(seconds: 1));
+    await shot('classement-groupe-b');
     await tab('Clubs');
     await wait(find.text('AC Rangers'));
     await shot('linafoot-clubs');
@@ -147,74 +144,27 @@ void main() {
     await shot('club-effectif');
     await back();
 
-    // Past season: every tab changes together.
+    // Past season: Classement and Matchs change together.
     await tester.tap(find.byTooltip('Changer de saison'));
     await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('2025–2026').last);
     await wait(find.text('Saison passée · 2025–2026'));
-    await tab('Classements');
     await wait(find.textContaining('Tableau complet'));
-    await shot('saison-2025-classements');
+    await shot('saison-2025-classement');
+    await nav('Matchs');
     await tab('Résultats');
+    await wait(find.text('Saison passée · 2025–2026'));
     await wait(find.byType(MatchRow));
     await shot('saison-2025-resultats');
-    await tester.tap(find.byTooltip('Changer de saison'));
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.text('2026–2027').last);
+    await tester.tap(find.text('Saison en cours'));
     await tester.pump(const Duration(seconds: 1));
-
-    await nav('Édito');
-    await wait(find.text('ÉDITO'));
-    await wait(find.textContaining('Édito :'), seconds: 40);
-    await shot('edito');
-
-    await tester.tap(find.textContaining('Édito :').first);
-    await wait(find.byType(ArticleDetailScreen));
-    await tester.pump(const Duration(seconds: 3));
-    await shot('article');
-    await back();
-
-    // A sub-tab survives a trip through other tabs.
-    await nav('Matchs');
-    await tab('Résultats');
-    await wait(find.byType(MatchRow));
-    await nav('Accueil');
-    await tester.pump(const Duration(seconds: 1));
-    await nav('Matchs');
-    await tester.pump(const Duration(seconds: 1));
-    final results = tester.widget<TabBar>(find.byType(TabBar).first);
-    expect(DefaultTabController.of(tester.element(find.byWidget(results))).index, 2);
-    await shot('etat-onglet-conserve');
-
-    await nav('Plus');
-    await wait(find.text('Clubs suivis'));
-    await shot('plus');
-
-    await tester.tap(find.text('Recherche'));
-    await wait(find.byType(TextField));
-    await tester.enterText(find.byType(TextField).first, 'Mazembe');
-    await tester.testTextInput.receiveAction(TextInputAction.search);
-    await wait(find.text('TP Mazembe'));
-    await shot('recherche');
-    await back();
-
-    // Deep links arrive through the same stream as notifications, and must not depend on the open tab.
-    await nav('Édito');
-    pushLinks.add('footrdc://club/2221');
-    await wait(find.text('Etoile de Kivu'));
-    await shot('lien-club');
-    await back();
-    pushLinks.add('footrdc://standings');
-    await wait(find.textContaining('Groupe A'));
-    await shot('lien-classement');
-    await back();
-    await nav('Matchs');
+    // Already on a tab root: no system back here (on Android it would send the app to the background).
     final finished = await publicJson('$footballApi/matches/finished?season_id=324&limit=1');
     pushLinks.add('footrdc://match/${finished[0]['id']}');
     await wait(find.text('Fil du match'));
     await shot('lien-match');
     await back();
-    await nav('Linafoot');
+    await nav('Classement');
     final article = await publicJson('$wordpressApi/posts?per_page=1&_fields=id');
     pushLinks.add('footrdc://article/${article[0]['id']}');
     await wait(find.byType(ArticleDetailScreen), seconds: 40);

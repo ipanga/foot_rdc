@@ -12,7 +12,7 @@ import '../football_routes.dart';
 import '../providers.dart';
 import '../widgets/football_widgets.dart';
 
-/// Club page: follows the season chosen in the Linafoot hub.
+/// Club page: follows the season chosen in Matchs or Classement.
 class ClubDetailScreen extends ConsumerWidget {
   final int clubId;
   const ClubDetailScreen({super.key, required this.clubId});

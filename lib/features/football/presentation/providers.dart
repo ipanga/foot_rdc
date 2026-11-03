@@ -28,7 +28,7 @@ Stream<Loaded<T>> _swr<T>(Ref ref, Future<T> Function(FootballRepository repo, C
 
 final seasonsProvider = StreamProvider<Loaded<List<Season>>>((ref) => _swr(ref, (r, p) => r.seasons(policy: p)));
 
-/// The season chosen in the Linafoot hub; null means the API's current season.
+/// The season chosen in Matchs or Classement; null means the API's current season.
 final selectedSeasonIdProvider = StateProvider<int?>((ref) => null);
 
 final currentSeasonProvider = Provider<AsyncValue<Season>>(

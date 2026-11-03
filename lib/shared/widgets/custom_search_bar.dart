@@ -21,7 +21,7 @@ class CustomSearchBar extends StatelessWidget {
     super.key,
     required this.controller,
     this.onSubmitted,
-    this.hintText = 'Rechercher...',
+    this.hintText = 'Rechercher…',
     this.labelText,
     this.validator,
   });

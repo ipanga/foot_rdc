@@ -616,7 +616,7 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
               FilledButton.icon(
                 onPressed: _loadInitialData,
                 icon: const Icon(Icons.refresh_rounded, size: 20),
-                label: const Text('Reessayer'),
+                label: const Text('Réessayer'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppDesignSystem.space24,

@@ -5,24 +5,27 @@ import '../../domain/models.dart';
 import '../football_routes.dart';
 import '../providers.dart';
 import '../widgets/football_widgets.dart';
-import '../widgets/paged_matches.dart';
+import '../widgets/season_widgets.dart';
 
-/// Matchs tab: what is on now, next and just finished, always in the current season.
+/// Matchs tab: today and live (always the current season), then the calendar and results of the selected season,
+/// filtered by phase or group. Club fixtures and results are on each club's page.
 class MatchesScreen extends ConsumerWidget {
   const MatchesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final season = ref.watch(currentSeasonProvider);
+    final current = ref.watch(currentSeasonProvider);
+    final season = ref.watch(activeSeasonProvider);
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Matchs'),
+          actions: const [SeasonButton()],
           bottom: const TabBar(
             tabs: [
               Tab(text: "Aujourd'hui"),
-              Tab(text: 'À venir'),
+              Tab(text: 'Calendrier'),
               Tab(text: 'Résultats'),
             ],
           ),
@@ -36,16 +39,25 @@ class MatchesScreen extends ConsumerWidget {
           ),
           data: (s) => TabBarView(
             children: [
-              _Today(season: s.id),
-              PagedMatchList(
-                identity: ('upcoming', s.id),
-                load: (repo, page, policy) => repo.window('upcoming', s.id, page: page, policy: policy),
-                emptyTitle: 'Aucun match à venir',
+              switch (current.valueOrNull) {
+                final c? => _Today(season: c.id),
+                null => const ListSkeleton(),
+              },
+              Column(
+                children: [
+                  PastSeasonBanner(season: s),
+                  Expanded(
+                    child: SeasonMatchList(key: ValueKey('f${s.id}'), season: s, view: 'fixtures'),
+                  ),
+                ],
               ),
-              PagedMatchList(
-                identity: ('finished', s.id),
-                load: (repo, page, policy) => repo.window('finished', s.id, page: page, policy: policy),
-                emptyTitle: 'Aucun résultat pour le moment',
+              Column(
+                children: [
+                  PastSeasonBanner(season: s),
+                  Expanded(
+                    child: SeasonMatchList(key: ValueKey('r${s.id}'), season: s, view: 'results'),
+                  ),
+                ],
               ),
             ],
           ),

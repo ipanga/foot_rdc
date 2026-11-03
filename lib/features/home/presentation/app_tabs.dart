@@ -7,14 +7,14 @@ enum AppTab {
   home('Accueil'),
   edito('Édito'),
   matches('Matchs'),
-  linafoot('Linafoot'),
+  classement('Classement'),
   more('Plus');
 
   final String label;
   const AppTab(this.label);
 
   /// Tabs that show football data, which refreshes when the reader comes back to them.
-  bool get showsFootball => this == home || this == matches || this == linafoot;
+  bool get showsFootball => this == home || this == matches || this == classement;
 
   /// Tabs that show live scores, so polling runs only while one of them is open.
   bool get showsLiveScores => this == home || this == matches;
@@ -34,12 +34,16 @@ PremiumNavItem appTabNavItem(AppTab tab) => switch (tab) {
     activeIconPath: 'assets/images/soccer-field-icon-filled.svg',
     label: tab.label,
   ),
-  AppTab.linafoot => PremiumNavItem.svg(
+  AppTab.classement => PremiumNavItem.svg(
     iconPath: 'assets/images/ranking-icon-outlined.svg',
     activeIconPath: 'assets/images/ranking-icon-filled.svg',
     label: tab.label,
   ),
-  AppTab.more => PremiumNavItem.icon(icon: Icons.menu_rounded, activeIcon: Icons.menu_rounded, label: tab.label),
+  AppTab.more => PremiumNavItem.icon(
+    icon: Icons.more_horiz_rounded,
+    activeIcon: Icons.more_horiz_rounded,
+    label: tab.label,
+  ),
 };
 
 /// Keeps each tab's state. A tab is built on its first visit, so opening the app loads only Accueil.
