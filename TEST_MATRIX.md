@@ -65,6 +65,17 @@ Failure states are injected at the HTTP layer on the device. The cache and scree
 
 Steps: club Actualités, article with Clubs liés, club opened from the article and back twice (system back route), article with four clubs including one without crest, article without clubs. Staging was reached through a local SSH tunnel with debug-only defines; crests show initials there because Staging files sit behind Cloudflare Access.
 
+## Build 32 against Production, 3 Nov 2026 (`4d58d36`)
+
+| Check | iPhone 18 Pro | Pixel 8 Pro |
+|---|---|---|
+| `article_clubs_qa_test.dart`: Lupopo Actualités, Charger plus, article with clubs, club from article and back (pages kept), one club (opens AS Vita Club), four clubs, AF Ufalya Simba without crest (renamed), no clubs | 9/9 | 9/9 |
+| `app_qa_test.dart`: Accueil, Édito, Matchs, match, Linafoot, standings, fixtures, results, clubs, squad, seasons, search, deep links, tab state | 25/25 | 25/25 |
+| `failure_qa_test.dart`: cache, offline, timeout, HTTP 500, invalid response | 6/6 | 6/6 |
+
+`flutter test` 87 passed (includes favorites, offline club news, parsing, paging); `flutter analyze` 0 errors, 0 warnings.
+Uploads: TestFlight 5.12.11 (32) `IN_BETA_TESTING`, Main testers, no beta review; Google Play internal 5.12.11 (32) completed, production unchanged (30).
+
 ## Test harness notes
 
 Two Pixel runs stopped on `Could not copy the pixels` from Flutter's Android screenshot helper. The app was running normally. Only that call now retries, up to three times, and logs each retry. The final run needed none.

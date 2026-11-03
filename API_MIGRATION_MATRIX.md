@@ -15,8 +15,8 @@
 
 | Feature | Source | Status | Tests |
 |---|---|---|---|
-| Club "Actualités" | `teams/{id}/news?limit=15&page=n`: id, title, url, published_at, excerpt, image, category, related_clubs | Branch `feat/article-clubs`; app not released yet | widget, device (Staging) |
-| "Clubs liés" on articles | `related_clubs` on `/wp/v2/posts` | Branch `feat/article-clubs`; app not released yet | parsing, widget, device (Staging) |
+| Club "Actualités" | `teams/{id}/news?limit=15&page=n`: id, title, url, published_at, excerpt, image, category, related_clubs | Internal beta 5.12.11 (32) | widget, device (Staging) |
+| "Clubs liés" on articles | `related_clubs` on `/wp/v2/posts` | Internal beta 5.12.11 (32) | parsing, widget, device (Staging) |
 
 ## New capabilities now exposed
 
