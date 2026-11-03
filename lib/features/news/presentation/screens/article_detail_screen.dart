@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:foot_rdc/features/football/presentation/widgets/related_clubs.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
 import 'package:foot_rdc/features/news/presentation/providers/article_provider.dart';
 import 'package:foot_rdc/core/utils/date_utils.dart';
@@ -542,6 +543,8 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
                         }
                       },
                     ),
+
+                    RelatedClubsSection(clubs: widget.article.relatedClubs),
 
                     const SizedBox(height: AppDesignSystem.space24),
                   ],

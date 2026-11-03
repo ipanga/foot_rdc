@@ -72,8 +72,10 @@ final clubProvider = StreamProvider.autoDispose.family<Loaded<Club>, int>(
 final clubProfileProvider = StreamProvider.autoDispose.family<Loaded<ClubProfile?>, int>(
   (ref, id) => _swr(ref, (r, p) => r.clubProfile(id, policy: p)),
 );
-final clubNewsProvider = StreamProvider.autoDispose.family<Loaded<List<ClubNewsItem>>, int>(
-  (ref, id) => _swr(ref, (r, p) => r.clubNews(id, policy: p)),
+
+/// One page of a club's linked articles: (club id, page).
+final clubNewsProvider = StreamProvider.autoDispose.family<Loaded<List<ClubNewsItem>>, (int, int)>(
+  (ref, key) => _swr(ref, (r, p) => r.clubNews(key.$1, page: key.$2, policy: p)),
 );
 final clubMatchesProvider = StreamProvider.autoDispose.family<Loaded<List<Match>>, (int, int, String)>(
   (ref, key) => _swr(ref, (r, p) async => (await r.clubMatches(key.$1, key.$2, key.$3, policy: p)).rows),

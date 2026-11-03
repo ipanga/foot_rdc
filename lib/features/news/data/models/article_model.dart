@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:hive/hive.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
 
@@ -44,6 +46,10 @@ class ArticleModel {
   @HiveField(12)
   final String imageUrl;
 
+  /// Related clubs as JSON; empty for articles saved before 5.12.11.
+  @HiveField(13)
+  final String relatedClubsJson;
+
   const ArticleModel({
     required this.id,
     required this.dateGmt,
@@ -58,6 +64,7 @@ class ArticleModel {
     required this.content,
     required this.excerpt,
     required this.imageUrl,
+    this.relatedClubsJson = '',
   });
 
   factory ArticleModel.fromEntity(Article article) {
@@ -75,6 +82,7 @@ class ArticleModel {
       content: article.content,
       excerpt: article.excerpt,
       imageUrl: article.imageUrl,
+      relatedClubsJson: article.relatedClubs.isEmpty ? '' : jsonEncode([for (final c in article.relatedClubs) c.toJson()]),
     );
   }
 
@@ -93,6 +101,15 @@ class ArticleModel {
       content: content,
       excerpt: excerpt,
       imageUrl: imageUrl,
+      relatedClubs: relatedClubsJson.isEmpty ? const [] : RelatedClub.listFrom(_decode(relatedClubsJson)),
     );
+  }
+
+  static Object? _decode(String text) {
+    try {
+      return jsonDecode(text);
+    } on FormatException {
+      return null;
+    }
   }
 }

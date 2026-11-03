@@ -69,8 +69,15 @@ class FootballRepository {
   Future<ClubProfile?> clubProfile(int id, {CachePolicy policy = CachePolicy.preferCache}) =>
       _one(FootballRequest('teams/$id/profile'), policy, clubProfileFrom);
 
-  Future<List<ClubNewsItem>> clubNews(int id, {CachePolicy policy = CachePolicy.preferCache}) => _list(
-    FootballRequest('teams/$id/news', query: const {'limit': 10}, ttl: const Duration(minutes: 15)),
+  /// Articles editors linked to the club, newest first, [clubNewsPageSize] per page.
+  static const clubNewsPageSize = 15;
+
+  Future<List<ClubNewsItem>> clubNews(int id, {int page = 1, CachePolicy policy = CachePolicy.preferCache}) => _list(
+    FootballRequest(
+      'teams/$id/news',
+      query: {'limit': clubNewsPageSize, 'page': page},
+      ttl: const Duration(minutes: 15),
+    ),
     policy,
     clubNewsFrom,
   );

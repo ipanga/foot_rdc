@@ -1,3 +1,27 @@
+/// A club an editor linked to the article (RDC Football `related_clubs`). The id is the canonical club id.
+class RelatedClub {
+  final int id;
+  final String name;
+  final String? crestUrl;
+  const RelatedClub({required this.id, required this.name, this.crestUrl});
+
+  static List<RelatedClub> listFrom(Object? raw) {
+    if (raw is! List) return const [];
+    final out = <RelatedClub>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final id = item['id'];
+      final name = item['name'];
+      if (id is! int || id <= 0 || name is! String || name.trim().isEmpty) continue;
+      final crest = item['crest'];
+      out.add(RelatedClub(id: id, name: name.trim(), crestUrl: crest is String && crest.startsWith('http') ? crest : null));
+    }
+    return out;
+  }
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'crest': crestUrl};
+}
+
 class Article {
   final int id;
   final DateTime dateGmt;
@@ -12,6 +36,7 @@ class Article {
   final String content;
   final String excerpt;
   final String imageUrl;
+  final List<RelatedClub> relatedClubs;
 
   const Article({
     required this.id,
@@ -27,6 +52,7 @@ class Article {
     required this.content,
     required this.excerpt,
     required this.imageUrl,
+    this.relatedClubs = const [],
   });
 
   factory Article.fromJson(Map<String, dynamic> json) {
@@ -53,6 +79,7 @@ class Article {
           (json['excerpt'] as Map<String, dynamic>?)?['rendered'] as String? ??
           '',
       imageUrl: _extractFeaturedImage(json),
+      relatedClubs: RelatedClub.listFrom(json['related_clubs']),
     );
   }
 
@@ -137,6 +164,7 @@ class Article {
       'content': {'rendered': content},
       'excerpt': {'rendered': excerpt},
       'imageUrl': imageUrl,
+      'related_clubs': [for (final c in relatedClubs) c.toJson()],
     };
   }
 
@@ -154,6 +182,7 @@ class Article {
     String? content,
     String? excerpt,
     String? imageUrl,
+    List<RelatedClub>? relatedClubs,
   }) {
     return Article(
       id: id ?? this.id,
@@ -169,6 +198,7 @@ class Article {
       content: content ?? this.content,
       excerpt: excerpt ?? this.excerpt,
       imageUrl: imageUrl ?? this.imageUrl,
+      relatedClubs: relatedClubs ?? this.relatedClubs,
     );
   }
 

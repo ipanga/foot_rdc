@@ -18,6 +18,9 @@ class ClubCrest extends StatelessWidget {
   @visibleForTesting
   static bool loadImages = true;
 
+  /// Whether network images are drawn (always in the app; off in widget tests).
+  static bool get showImages => loadImages;
+
   @override
   Widget build(BuildContext context) {
     final fallback = _Initials(name: name, size: size);

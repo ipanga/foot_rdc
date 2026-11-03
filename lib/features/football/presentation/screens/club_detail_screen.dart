@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/navigation/deep_link_handler.dart';
+import '../../data/football_repository.dart';
 import '../../domain/countries.dart';
 import '../../domain/models.dart';
 import '../football_labels.dart';
@@ -159,28 +161,131 @@ class _Overview extends ConsumerWidget {
   }
 }
 
-class _News extends ConsumerWidget {
+class _News extends ConsumerStatefulWidget {
   final int club;
   const _News({required this.club});
   @override
-  Widget build(BuildContext context, WidgetRef ref) => LoadedView<List<ClubNewsItem>>(
-    value: ref.watch(clubNewsProvider(club)),
-    onRetry: () => ref.invalidate(clubNewsProvider(club)),
-    builder: (rows) => rows.isEmpty
-        ? const MessageState(icon: Icons.article_outlined, title: 'Aucune actualité liée à ce club')
-        : ListView.separated(
-            itemCount: rows.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final item = rows[index];
-              return ListTile(
-                title: Text(item.title, maxLines: 3, overflow: TextOverflow.ellipsis),
-                subtitle: Text(shortDate(item.date)),
-                onTap: item.link.isEmpty ? null : () => pushLinks.add(item.link),
+  ConsumerState<_News> createState() => _NewsState();
+}
+
+class _NewsState extends ConsumerState<_News> {
+  int _pages = 1;
+
+  @override
+  Widget build(BuildContext context) {
+    final first = ref.watch(clubNewsProvider((widget.club, 1)));
+    return LoadedView<List<ClubNewsItem>>(
+      value: first,
+      onRetry: () => ref.invalidate(clubNewsProvider((widget.club, 1))),
+      builder: (_) {
+        final rows = <ClubNewsItem>[];
+        var more = false;
+        var loading = false;
+        for (var page = 1; page <= _pages; page++) {
+          final value = ref.watch(clubNewsProvider((widget.club, page)));
+          final list = value.valueOrNull?.value;
+          if (list == null) {
+            loading = value.isLoading;
+            break;
+          }
+          rows.addAll(list);
+          more = list.length == FootballRepository.clubNewsPageSize;
+        }
+        if (rows.isEmpty) {
+          return const MessageState(
+            icon: Icons.article_outlined,
+            title: 'Aucune actualité liée à ce club',
+            detail: 'Les articles apparaissent ici quand la rédaction les lie au club.',
+          );
+        }
+        return ListView.separated(
+          itemCount: rows.length + 1,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            if (index == rows.length) {
+              if (loading) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (!more) return const SizedBox(height: 24);
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: OutlinedButton(onPressed: () => setState(() => _pages++), child: const Text('Charger plus')),
+                ),
               );
-            },
-          ),
-  );
+            }
+            return ClubNewsTile(item: rows[index]);
+          },
+        );
+      },
+    );
+  }
+}
+
+/// A linked article: opens inside the app by its id, whatever host the link carries.
+class ClubNewsTile extends StatelessWidget {
+  final ClubNewsItem item;
+  const ClubNewsTile({super.key, required this.item});
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return InkWell(
+      onTap: () => pushLinks.add('footrdc://article/${item.id}'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: SizedBox(
+                width: 96,
+                height: 64,
+                child: item.imageUrl == null || !ClubCrest.showImages
+                    ? ColoredBox(
+                        color: scheme.surfaceContainerHighest,
+                        child: Icon(Icons.article_outlined, color: scheme.onSurfaceVariant),
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: item.imageUrl!,
+                        fit: BoxFit.cover,
+                        memCacheWidth: 288,
+                        errorWidget: (_, _, _) => ColoredBox(color: scheme.surfaceContainerHighest),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (item.category != null)
+                    Text(
+                      item.category!.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.labelSmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
+                    ),
+                  Text(
+                    item.title,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(shortDate(item.date), style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ClubMatches extends ConsumerWidget {

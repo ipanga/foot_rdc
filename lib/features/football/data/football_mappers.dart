@@ -196,4 +196,6 @@ ClubNewsItem clubNewsFrom(Map<String, dynamic> j) => ClubNewsItem(
   date: _date(j['published_at']),
   imageUrl: _optional(j['image']),
   link: _text(j['url']),
+  category: _optional(j['category']),
+  excerpt: _optional(j['excerpt']),
 );

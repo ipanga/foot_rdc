@@ -3,9 +3,14 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/core/network/dio_client.dart';
 import 'package:foot_rdc/features/football/data/football_client.dart';
 import 'package:foot_rdc/features/football/data/football_repository.dart';
+import 'package:foot_rdc/features/football/presentation/providers.dart';
 
 Map<String, dynamic> productionContract() => Map<String, dynamic>.from(
   jsonDecode(File('test/fixtures/production_contract.json').readAsStringSync())['data'] as Map,
@@ -90,4 +95,36 @@ class ContractAdapter implements HttpClientAdapter {
   http.dio.httpClientAdapter = adapter;
   final cache = MemoryFootballCache();
   return (FootballRepository(FootballClient(http, cache, clock: clock)), adapter, cache);
+}
+
+/// A screen inside the app shell's providers, French, at a phone size.
+Widget app(
+  Widget home,
+  FootballRepository repo, {
+  double scale = 1,
+  Size size = const Size(390, 844),
+  List<Override> extra = const [],
+}) => ProviderScope(
+  overrides: [footballRepositoryProvider.overrideWith((ref) async => repo), ...extra],
+  child: MediaQuery(
+    data: MediaQueryData(size: size, textScaler: TextScaler.linear(scale)),
+    child: MaterialApp(
+      locale: const Locale('fr'),
+      supportedLocales: const [Locale('fr')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: home,
+    ),
+  ),
+);
+
+/// Lets streams, timers and frames settle without waiting on real time.
+Future<void> settle(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 5)));
+    await tester.pump(const Duration(milliseconds: 50));
+  }
 }

@@ -298,7 +298,17 @@ class ClubNewsItem {
   final DateTime? date;
   final String? imageUrl;
   final String link;
-  const ClubNewsItem({required this.id, required this.title, this.date, this.imageUrl, this.link = ''});
+  final String? category;
+  final String? excerpt;
+  const ClubNewsItem({
+    required this.id,
+    required this.title,
+    this.date,
+    this.imageUrl,
+    this.link = '',
+    this.category,
+    this.excerpt,
+  });
 }
 
 /// A page of a longer list.

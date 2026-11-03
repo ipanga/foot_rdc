@@ -5,7 +5,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:foot_rdc/core/navigation/deep_links.dart';
-import 'package:foot_rdc/features/football/data/football_repository.dart';
 import 'package:foot_rdc/features/football/domain/models.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
 import 'package:foot_rdc/features/football/presentation/screens/club_detail_screen.dart';
@@ -22,29 +21,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support.dart';
 
-Widget app(
-  Widget home,
-  FootballRepository repo, {
-  double scale = 1,
-  Size size = const Size(390, 844),
-  List<Override> extra = const [],
-}) => ProviderScope(
-  overrides: [footballRepositoryProvider.overrideWith((ref) async => repo), ...extra],
-  child: MediaQuery(
-    data: MediaQueryData(size: size, textScaler: TextScaler.linear(scale)),
-    child: MaterialApp(
-      locale: const Locale('fr'),
-      supportedLocales: const [Locale('fr')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: home,
-    ),
-  ),
-);
-
 const home = MatchSide(teamId: 1, name: 'TP Mazembe', score: 2);
 const away = MatchSide(teamId: 2, name: 'AS Vita Club', score: 1);
 Match sample(MatchStatus status, {int? minute}) => Match(
@@ -57,13 +33,6 @@ Match sample(MatchStatus status, {int? minute}) => Match(
   minute: minute,
   kickoff: DateTime.utc(2026, 11, 4, 12),
 );
-
-Future<void> settle(WidgetTester tester) async {
-  for (var i = 0; i < 20; i++) {
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 5)));
-    await tester.pump(const Duration(milliseconds: 50));
-  }
-}
 
 void tall(WidgetTester tester) {
   tester.view.physicalSize = const Size(430, 2600);

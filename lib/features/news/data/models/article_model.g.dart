@@ -30,13 +30,14 @@ class ArticleModelAdapter extends TypeAdapter<ArticleModel> {
       content: fields[10] as String,
       excerpt: fields[11] as String,
       imageUrl: fields[12] as String,
+      relatedClubsJson: fields[13] as String? ?? '',
     );
   }
 
   @override
   void write(BinaryWriter writer, ArticleModel obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -62,7 +63,9 @@ class ArticleModelAdapter extends TypeAdapter<ArticleModel> {
       ..writeByte(11)
       ..write(obj.excerpt)
       ..writeByte(12)
-      ..write(obj.imageUrl);
+      ..write(obj.imageUrl)
+      ..writeByte(13)
+      ..write(obj.relatedClubsJson);
   }
 
   @override

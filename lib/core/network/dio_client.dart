@@ -11,6 +11,7 @@ final dioClientProvider = Provider<DioClient>((ref) {
 
 /// Centralized Dio HTTP client with interceptors and error handling
 class DioClient {
+  static const _hostHeader = String.fromEnvironment('FOOTRDC_HOST_HEADER');
   late final Dio _dio;
 
   DioClient({String? baseUrl, bool logResponses = true}) {
@@ -24,7 +25,12 @@ class DioClient {
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
     sendTimeout: const Duration(seconds: 30),
-    headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      // Local Staging checks through an SSH tunnel only (`--dart-define=FOOTRDC_HOST_HEADER=…`); empty in every release.
+      if (_hostHeader.isNotEmpty) ...{'Host': _hostHeader, 'X-Forwarded-Proto': 'https'},
+    },
     validateStatus: (status) => status != null && status < 500,
   );
 
