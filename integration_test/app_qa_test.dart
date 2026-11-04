@@ -107,7 +107,8 @@ void main() {
     await shot('accueil');
 
     await nav('Matchs');
-    await wait(find.text('Prochains matchs'));
+    // Today's matches when there are some, otherwise the empty day with the next matches.
+    await wait(find.byWidgetPredicate((w) => w is MatchRow || (w is Text && w.data == 'Prochains matchs')));
     await shot('matchs-aujourdhui');
     await tab('Calendrier');
     await wait(find.textContaining('novembre'));

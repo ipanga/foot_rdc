@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,7 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
+import 'package:foot_rdc/core/notifications/push_messages.dart';
 import 'package:foot_rdc/core/navigation/deep_links.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
 
@@ -36,7 +38,6 @@ Future<void> main() async {
     if (kDebugMode) {
       print("OneSignal subscription changed:");
       print("  - ID: ${state.current.id}");
-      print("  - Token: ${state.current.token}");
       print("  - Opted In: ${state.current.optedIn}");
     }
   });
@@ -71,31 +72,13 @@ Future<void> main() async {
   // The system permission dialog, once: the system shows it only while the user has not answered. Never after the
   // user turned notifications off in Plus › Notifications, and never a detour to the system settings at launch.
   // Never awaited: the dialog must not hold back the first frame.
+  // Same operating-system permission for OneSignal (older flow) and Firebase Cloud Messaging.
   unawaited(
     NotificationNotifier.mayPromptAtLaunch().then((ask) async {
-      if (ask) await OneSignal.Notifications.requestPermission(false);
+      if (ask) await FirebaseMessaging.instance.requestPermission(alert: true, badge: true, sound: true);
     }),
   );
-
-  // Log initial subscription state
-  final subscriptionId = OneSignal.User.pushSubscription.id;
-  final token = OneSignal.User.pushSubscription.token;
-  final optedIn = OneSignal.User.pushSubscription.optedIn;
-  if (kDebugMode) {
-    print("OneSignal Initial State:");
-    print("  - Subscription ID: $subscriptionId");
-    print("  - Token: $token");
-    print("  - Opted In: $optedIn");
-  }
-
-  if (token == null || optedIn == false) {
-    if (kDebugMode) {
-      print("WARNING: OneSignal subscription failed!");
-      print("  - Check iOS capabilities in Xcode");
-      print("  - Verify provisioning profile includes Push Notifications");
-      print("  - Check APNs configuration in OneSignal dashboard");
-    }
-  }
+  unawaited(setUpPushMessaging());
 
   await MobileAds.instance.initialize();
 
@@ -115,6 +98,8 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(themeCustomNotifierProvider);
+    // Starts notification registration (token, preferences, followed clubs) with the app.
+    ref.listen(notificationNotifierProvider, (_, _) {});
 
     return MaterialApp(
       title: 'FootRDC',
@@ -131,6 +116,7 @@ class MyApp extends ConsumerWidget {
           .read(themeCustomNotifierProvider.notifier)
           .getFlutterThemeMode(context),
       navigatorKey: appNavigatorKey,
+      scaffoldMessengerKey: appMessengerKey,
       home: const FootballLifecycle(child: DeepLinkHandler(child: HomeScreen())),
       debugShowCheckedModeBanner: false,
     );

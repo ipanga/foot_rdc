@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foot_rdc/core/notifications/push_messages.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -96,7 +97,9 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
       );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ContentLinkScope(link: 'footrdc://article/${widget.article.id}', child: _content(context));
+
+  Widget _content(BuildContext context) {
     final imageUrl = _imageUrl();
     final date = _dateText();
     final category = _categoryText();

@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="Foot RDC"
         android:name="${applicationName}"
@@ -39,9 +40,17 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- FootRDC notifications (FCM): default channel, monochrome small icon and accent color. The channels
+             « actualites » and « matchs » are created in MainActivity; the server names one in every message. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="high_importance_channel" />
+            android:value="actualites" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_footrdc" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/footrdc_notification" />
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-8433726715962091~3385387531"/>

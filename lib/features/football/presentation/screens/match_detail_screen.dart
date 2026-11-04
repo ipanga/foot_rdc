@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/notifications/push_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -13,7 +15,10 @@ class MatchDetailScreen extends ConsumerWidget {
   const MatchDetailScreen({super.key, required this.matchId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) =>
+      ContentLinkScope(link: 'footrdc://match/$matchId', child: _content(context, ref));
+
+  Widget _content(BuildContext context, WidgetRef ref) {
     final value = ref.watch(matchDetailProvider(matchId));
     return Scaffold(
       appBar: AppBar(title: const Text('Match')),

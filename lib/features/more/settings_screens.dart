@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/notifications/push.dart';
 import '../../shared/providers/notification_provider.dart';
 import '../../shared/providers/theme_provider.dart';
+import '../football/domain/models.dart';
+import '../football/presentation/providers.dart';
 import '../football/presentation/widgets/football_widgets.dart';
 
 /// Plus › Thème: automatic (follows the device), light or dark. Saved on the device.
@@ -47,7 +50,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
   }
 }
 
-/// Plus › Notifications: the app preference and the device permission, shown separately.
+/// Plus › Notifications: Actualités, Matchs Linafoot and Général. The device permission and the app's choices are
+/// shown apart; choices are saved on the device at once and sent to the FootRDC server.
 class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
   @override
@@ -55,8 +59,6 @@ class NotificationSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationSettingsScreenState extends ConsumerState<NotificationSettingsScreen> with WidgetsBindingObserver {
-  bool _busy = false;
-
   @override
   void initState() {
     super.initState();
@@ -75,97 +77,264 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
     if (state == AppLifecycleState.resumed) ref.read(notificationNotifierProvider.notifier).refresh();
   }
 
-  Future<void> _run(Future<void> Function() action) async {
-    setState(() => _busy = true);
-    try {
-      await action();
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+  static String _hm(int minutes) =>
+      '${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}';
+
+  Future<int?> _pickTime(int initial) async {
+    final t = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: initial ~/ 60, minute: initial % 60),
+      helpText: 'Choisir l’heure',
+      builder: (context, child) =>
+          MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), child: child!),
+    );
+    return t == null ? null : t.hour * 60 + t.minute;
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(notificationNotifierProvider);
     final notifier = ref.read(notificationNotifierProvider.notifier);
+    final followed = ref.watch(favoriteClubsProvider);
+    final p = state.prefs;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    void set(NotificationPrefs next) => notifier.setPrefs(next);
+
     final (IconData icon, Color color, String status) = switch (state) {
       _ when !state.enabled => (
         Icons.notifications_off_outlined,
         scheme.onSurfaceVariant,
-        'Désactivées dans FootRDC. Vous ne recevrez pas de notifications.',
+        'Toutes les notifications FootRDC sont désactivées.',
       ),
       _ when state.blockedByDevice => (
         Icons.block,
         scheme.error,
-        'Non autorisées par l’appareil. Autorisez FootRDC dans les réglages de l’appareil pour les recevoir.',
+        'Non autorisées par l’appareil. Autorisez FootRDC pour les recevoir.',
       ),
-      _ when state.receiving => (
-        Icons.notifications_active_outlined,
-        scheme.primary,
-        'Activées. Vous recevrez les notifications FootRDC sur cet appareil.',
-      ),
-      _ => (
-        Icons.hourglass_empty,
+      _ when state.permission == PushPermission.notDetermined => (
+        Icons.notifications_none,
         scheme.onSurfaceVariant,
-        'Autorisées par l’appareil. L’inscription aux notifications est en cours.',
+        'Autorisez les notifications pour recevoir vos alertes.',
       ),
+      _ => (Icons.notifications_active_outlined, scheme.primary, 'Activées sur cet appareil.'),
     };
+    final permissionLabel = switch (state.permission) {
+      PushPermission.granted => 'Accordée',
+      PushPermission.denied => 'Refusée',
+      PushPermission.notDetermined => 'Pas encore demandée',
+    };
+    final matchOn = p.enabled && p.matchAlerts;
+    Widget type(String key, String title, String subtitle, bool value, NotificationPrefs Function(bool) change) =>
+        SwitchListTile(
+          key: ValueKey('notif-$key'),
+          title: Text(title),
+          subtitle: Text(subtitle),
+          value: value,
+          onChanged: matchOn ? (v) => set(change(v)) : null,
+        );
+
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
       body: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
         children: [
-          SwitchListTile(
-            key: const ValueKey('notifications-switch'),
-            secondary: const Icon(Icons.notifications_outlined),
-            title: const Text('Notifications FootRDC'),
-            subtitle: const Text('Actualités et informations envoyées par la rédaction'),
-            value: state.enabled,
-            onChanged: _busy ? null : (value) => _run(() => notifier.setEnabled(value)),
-          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Semantics(
               liveRegion: true,
               child: Container(
+                key: const ValueKey('notif-status'),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(icon, color: color, size: 22),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(status, style: theme.textTheme.bodyMedium)),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(icon, color: color, size: 22),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(status, style: theme.textTheme.bodyMedium)),
+                      ],
+                    ),
+                    if (state.enabled && state.permission == PushPermission.notDetermined)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: FilledButton(
+                          onPressed: notifier.requestPermission,
+                          child: const Text('Autoriser les notifications'),
+                        ),
+                      ),
+                    if (state.blockedByDevice)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.notifications_active_outlined),
+                          label: const Text('Autoriser les notifications'),
+                          onPressed: notifier.allowOrOpenSettings,
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
           ),
-          if (state.blockedByDevice)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.settings_outlined),
-                label: const Text('Ouvrir les réglages de l’appareil'),
-                onPressed: _busy ? null : () => _run(notifier.openDeviceSettings),
-              ),
-            ),
-          const SectionHeader('Détail'),
-          ListTile(
-            dense: true,
-            title: const Text('Préférence FootRDC'),
-            trailing: Text(state.enabled ? 'Activée' : 'Désactivée'),
+          const SectionHeader('Actualités'),
+          SwitchListTile(
+            key: const ValueKey('notif-news'),
+            secondary: const Icon(Icons.article_outlined),
+            title: const Text('Articles à la Une'),
+            subtitle: const Text('Une notification quand un article « À la Une » est publié'),
+            value: p.news,
+            onChanged: p.enabled ? (v) => set(p.copyWith(news: v)) : null,
+          ),
+          const SectionHeader('Matchs Linafoot'),
+          SwitchListTile(
+            key: const ValueKey('notif-match'),
+            secondary: const Icon(Icons.sports_soccer),
+            title: const Text('Alertes de mes clubs'),
+            subtitle: const Text('Uniquement pour les clubs que vous suivez'),
+            value: p.matchAlerts,
+            onChanged: p.enabled ? (v) => set(p.copyWith(matchAlerts: v)) : null,
           ),
           ListTile(
-            dense: true,
+            key: const ValueKey('notif-clubs'),
+            leading: const Icon(Icons.star_border),
+            title: const Text('Clubs suivis'),
+            subtitle: Text(
+              followed.isEmpty
+                  ? 'Aucun club suivi : choisissez au moins un club'
+                  : '${followed.length} club${followed.length > 1 ? 's' : ''}',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FollowClubsScreen())),
+          ),
+          type('result', 'Résultats finaux', 'Le score final confirmé', p.result, (v) => p.copyWith(result: v)),
+          type(
+            'changes',
+            'Changements de match',
+            'Report, annulation ou nouvel horaire',
+            p.changes,
+            (v) => p.copyWith(changes: v),
+          ),
+          type(
+            'prematch',
+            'Rappel avant le match',
+            'Une heure avant le coup d’envoi',
+            p.prematch,
+            (v) => p.copyWith(prematch: v),
+          ),
+          type('kickoff', 'Coup d’envoi', 'Quand le match commence', p.kickoff, (v) => p.copyWith(kickoff: v)),
+          type('goals', 'Buts', 'Selon la disponibilité des données en direct', p.goals, (v) => p.copyWith(goals: v)),
+          const SectionHeader('Général'),
+          SwitchListTile(
+            key: const ValueKey('notif-all'),
+            secondary: const Icon(Icons.notifications_outlined),
+            title: const Text('Notifications FootRDC'),
+            subtitle: const Text('Activer ou désactiver toutes les notifications'),
+            value: p.enabled,
+            onChanged: notifier.setEnabled,
+          ),
+          ListTile(
+            leading: const Icon(Icons.verified_user_outlined),
             title: const Text('Autorisation de l’appareil'),
-            trailing: Text(state.hasPermission ? 'Accordée' : 'Non accordée'),
+            subtitle: Text(permissionLabel),
+            trailing: const Icon(Icons.open_in_new, size: 18),
+            onTap: notifier.openDeviceSettings,
+          ),
+          SwitchListTile(
+            key: const ValueKey('notif-quiet'),
+            secondary: const Icon(Icons.bedtime_outlined),
+            title: const Text('Heures calmes'),
+            subtitle: Text(
+              p.quietHours
+                  ? 'De ${_hm(p.quietStart!)} à ${_hm(p.quietEnd!)} : aucune notification'
+                  : 'Aucune notification pendant la nuit',
+            ),
+            value: p.quietHours,
+            onChanged: p.enabled
+                ? (v) => set(p.copyWith(quietStart: () => v ? 22 * 60 : null, quietEnd: () => v ? 7 * 60 : null))
+                : null,
+          ),
+          if (p.quietHours) ...[
+            ListTile(
+              key: const ValueKey('notif-quiet-start'),
+              contentPadding: const EdgeInsets.only(left: 72, right: 16),
+              title: const Text('Début'),
+              trailing: Text(_hm(p.quietStart!), style: theme.textTheme.titleMedium),
+              onTap: () async {
+                final m = await _pickTime(p.quietStart!);
+                if (m != null) set(p.copyWith(quietStart: () => m));
+              },
+            ),
+            ListTile(
+              key: const ValueKey('notif-quiet-end'),
+              contentPadding: const EdgeInsets.only(left: 72, right: 16),
+              title: const Text('Fin'),
+              trailing: Text(_hm(p.quietEnd!), style: theme.textTheme.titleMedium),
+              onTap: () async {
+                final m = await _pickTime(p.quietEnd!);
+                if (m != null) set(p.copyWith(quietEnd: () => m));
+              },
+            ),
+          ],
+          ListTile(
+            leading: const Icon(Icons.volume_up_outlined),
+            title: const Text('Son et vibration'),
+            subtitle: const Text('Réglés par le système, pour chaque type de notification'),
+            trailing: const Icon(Icons.open_in_new, size: 18),
+            onTap: notifier.openDeviceSettings,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Text(
+              [
+                if (state.syncFailed)
+                  'Hors ligne : vos choix sont enregistrés sur l’appareil et seront envoyés à la reconnexion.',
+                if (state.code != null) 'Code de l’appareil : ${state.code}',
+              ].join('\n'),
+              key: const ValueKey('notif-diagnostic'),
+              style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Choose the followed clubs (the same list as the star on a club page and Plus › Clubs suivis).
+class FollowClubsScreen extends ConsumerWidget {
+  const FollowClubsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final followed = ref.watch(favoriteClubsProvider);
+    final season = ref.watch(currentSeasonProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Clubs suivis')),
+      body: season.when(
+        loading: () => const ListSkeleton(),
+        error: (error, _) => MessageState(icon: Icons.cloud_off_outlined, title: failureMessage(error)),
+        data: (s) => LoadedView<List<Club>>(
+          value: ref.watch(clubsProvider(s.id)),
+          builder: (clubs) => ListView(
+            children: [
+              for (final club in [...clubs]..sort((a, b) => a.name.compareTo(b.name)))
+                CheckboxListTile(
+                  key: ValueKey('follow-${club.id}'),
+                  secondary: ClubCrest(url: club.logoUrl, name: club.name, size: 28),
+                  title: Text(club.name),
+                  value: followed.contains(club.id),
+                  onChanged: (_) => ref.read(favoriteClubsProvider.notifier).toggle(club.id),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
