@@ -253,7 +253,7 @@ class FirebaseGateway implements PushGateway {
 
   static PushPermission _map(AuthorizationStatus s) => switch (s) {
     AuthorizationStatus.authorized || AuthorizationStatus.provisional => PushPermission.granted,
-    AuthorizationStatus.denied => PushPermission.denied,
+    AuthorizationStatus.denied || AuthorizationStatus.deniedPermanently => PushPermission.denied,
     AuthorizationStatus.notDetermined => PushPermission.notDetermined,
   };
 
