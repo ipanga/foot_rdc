@@ -1,4 +1,4 @@
-NEXT_ACTION: Owner and testers install 5.12.11 (33) from TestFlight (Main testers) and Google Play internal testing and run docs/release/INTERNAL_BETA_TEST_PLAN.md section 1 on physical phones. After a public release, request the AdMob review (docs/ui-refinement/ADS_REMEDIATION.md).
+NEXT_ACTION: Owner testing of 5.12.11 (33) continues. FCM notifications (branch feat/fcm-notifications, build 34 prepared, not uploaded) wait for the owner's APNs key and Firebase service-account keys, then Staging delivery tests on physical phones (migration_ovhcloud/docs/review/footrdc-notifications-20261104/README.md).
 
 # Development status
 
@@ -26,6 +26,7 @@ None for internal testing.
 See `DECISIONS.md` and the limitations in the final report.
 
 ## Phase log
+| FCM notifications (« À la Une », club alerts) | IMPLEMENTED; simulators VERIFIED (token, settings, simulated banner); real delivery PENDING owner credentials | `058acd3` on `feat/fcm-notifications` (local) |
 
 | Phase | Status | Commit |
 |---|---|---|
