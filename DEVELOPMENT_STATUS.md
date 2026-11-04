@@ -1,4 +1,4 @@
-NEXT_ACTION: Owner testing of 5.12.11 (33) continues. FCM notifications (branch feat/fcm-notifications, build 34 prepared, not uploaded) wait for the owner's APNs key and Firebase service-account keys, then Staging delivery tests on physical phones (migration_ovhcloud/docs/review/footrdc-notifications-20261104/README.md).
+NEXT_ACTION: 5.12.11 (34) with FCM notifications is on TestFlight Internal (IN_BETA_TESTING) and Google Play internal (5 Nov 2026); production tracks unchanged (Play 30). Real FCM delivery verified on emulators via Staging. Physical-phone checklist needs the owner-approved Production plugin in mode test (migration_ovhcloud/docs/review/footrdc-notifications-20261104/README.md).
 
 # Development status
 
