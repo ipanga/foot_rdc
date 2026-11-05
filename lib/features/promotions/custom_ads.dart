@@ -44,7 +44,8 @@ class CustomAd {
 
   bool liveAt(DateTime now) => endsAt == null || now.isBefore(endsAt!);
 
-  /// Only HTTPS links with a host. Images: HTTPS, or a loopback host in debug builds (local QA stack).
+  /// Only HTTPS links with a host. Images: HTTPS; in debug builds also plain HTTP from the configured ads server
+  /// itself (a local QA stack set with FOOTRDC_ADS_BASE). Release builds use the HTTPS default, so never HTTP.
   static Uri? httpsLink(Object? raw) {
     if (raw is! String || raw.length > 2000) return null;
     final u = Uri.tryParse(raw);
@@ -57,8 +58,9 @@ class CustomAd {
     if (secure != null) return secure;
     if (!kDebugMode || raw is! String) return null;
     final u = Uri.tryParse(raw);
-    const loopback = {'127.0.0.1', 'localhost', '10.0.2.2'};
-    return u != null && u.scheme == 'http' && loopback.contains(u.host) ? u : null;
+    final base = Uri.tryParse(CustomAdsSource.baseUrl);
+    final sameServer = base != null && base.scheme == 'http' && u != null && u.scheme == 'http' && u.host == base.host;
+    return sameServer && u.userInfo.isEmpty ? u : null;
   }
 
   /// Null for anything incomplete or unsafe: such an entry is skipped, never shown half-built.
