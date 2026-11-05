@@ -1,4 +1,4 @@
-NEXT_ACTION: 5.12.11 (35) is on TestFlight Internal (5 Nov 2026 20:48 UTC; from `8841c47` on `feat/rdc-football-mobile-redesign`, pushed). Google Play internal: 35 (5 Nov 2026 21:53 local); beta track 34, production 30 (unchanged). Production: `rdc-football-mobile-ads` 0.1.1, no campaign; FCM mode test (test devices: iPhone 16A0A420, Samsung 7DB21FEE). Open: AdMob native validator warning « Not all asset views lie inside the native ad view » (existing NativeAdSlot, since 2731e94) — investigate before a public release; a Home ad slot built while hidden behind another screen stays empty on a slow first answer (refinement possible).
+NEXT_ACTION: 5.12.11 (36) for TestFlight Internal + Google Play internal (AdMob native validator fix on Android). Production: `rdc-football-mobile-ads` 0.1.1, no campaign; FCM mode test. Samsung test phone currently has a debug QA build (reinstall 36 from Play internal and re-mark its new code as test device).
 
 # Development status
 
