@@ -1,5 +1,18 @@
 # Test matrix
 
+## Physical Samsung Galaxy A56 (Android 17), 5 Nov 2026 evening, build 35 code
+
+| Check | Result |
+|---|---|
+| Debug QA build (ads from the dev stack via `adb reverse`, no notification registration) | fresh data: onboarding offered; 2 clubs + alerts → system permission dialog only then → allowed; Plus › Clubs suivis 2, Notifications « Activées », defaults kickoff/result/changes on, reminder/goals off |
+| Home custom ad | after the 3rd story; AdMob native test ad further down (6 stories apart) |
+| Tap | `VIEW https://www.example.com/…` in Chrome |
+| Article | custom ad after the introduction; AdMob test banner at the end |
+| No active campaign / offline / slow server (6 s) | no slot, no error / Home offline message, no slot / ads received but the slot built behind the onboarding screen stayed empty (by design: no layout move) |
+| AdMob | native validator (debug): « Not all asset views lie inside the native ad view » on the existing native template — pre-existing, open |
+| Release APK 35 (Production config) | installed, registered as `7DB21FEE` with app_version « 5.12.11 (35) »; marked test device (old `7653D556` unmarked); test message in foreground and in background (system notification, channel actualites) |
+| First reinstall | the previous install's 5 followed clubs reappeared during the first launch (most likely Android Auto Backup restoring app data; not proven); a clean data run behaves as specified |
+
 ## Custom mobile ads, 5 Nov 2026 (`feat/app-refinements-20261106`, working tree)
 
 | Layer | Scope | Result |

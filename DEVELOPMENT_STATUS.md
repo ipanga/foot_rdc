@@ -1,4 +1,4 @@
-NEXT_ACTION: build 5.12.11 (35) prepared on `feat/app-refinements-20261106` (local commits `76a066a` + version bump; release AAB and iOS release build compile; nothing uploaded). Upload to TestFlight/Play internal needs owner authorisation and the branch merged into `feat/rdc-football-mobile-redesign` and pushed (fastlane gate). Production has `rdc-football-mobile-ads` 0.1.1 with no campaign (5 Nov 18:07 UTC). Physical Samsung test PENDING: the phone was not visible to adb on 5 Nov evening.
+NEXT_ACTION: 5.12.11 (35) is on TestFlight Internal (5 Nov 2026 20:48 UTC; from `8841c47` on `feat/rdc-football-mobile-redesign`, pushed). Google Play internal NOT uploaded (still 34). Production: `rdc-football-mobile-ads` 0.1.1, no campaign; FCM mode test (test devices: iPhone 16A0A420, Samsung 7DB21FEE). Open: AdMob native validator warning « Not all asset views lie inside the native ad view » (existing NativeAdSlot, since 2731e94) — investigate before a public release; a Home ad slot built while hidden behind another screen stays empty on a slow first answer (refinement possible).
 
 # Development status
 
