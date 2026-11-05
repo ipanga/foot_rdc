@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foot_rdc/shared/widgets/category_label.dart';
 import 'package:foot_rdc/features/news/domain/entities/article.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
@@ -91,7 +92,6 @@ class ArticleListItem extends StatelessWidget {
 
   Widget _buildThumbnail(BuildContext context, bool isDark) {
     final colorScheme = Theme.of(context).colorScheme;
-    final category = formatCategory(article.category);
 
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -153,70 +153,39 @@ class ArticleListItem extends StatelessWidget {
               ),
             ),
 
-            // Category badge
-            if (category.isNotEmpty)
-              Positioned(
-                left: AppDesignSystem.space8,
-                bottom: AppDesignSystem.space8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDesignSystem.space8,
-                    vertical: AppDesignSystem.space4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.primaryContainerDark.withAlpha(230)
-                        : AppColors.primaryContainerLight.withAlpha(240),
-                    borderRadius: AppDesignSystem.borderRadiusSm,
-                    border: Border.all(
-                      color: colorScheme.primary.withAlpha(40),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Text(
-                    category.toUpperCase(),
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColors.onPrimaryContainerDark
-                          : AppColors.onPrimaryContainerLight,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
     );
   }
 
+  /// « RDC · 10:45 »: the category as a red kicker, then the time.
   Widget _buildMetaRow(BuildContext context, bool isDark) {
     final textColor = isDark
         ? AppColors.textTertiaryDark
         : AppColors.textTertiaryLight;
+    final category = formatCategory(article.category);
+    final date = Text(
+      formatArticleDate(article.dateGmt),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        color: textColor,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+      ),
+    );
 
     return Row(
       children: [
-        Icon(
-          Icons.schedule_rounded,
-          size: AppDesignSystem.iconXs,
-          color: textColor,
-        ),
-        const SizedBox(width: AppDesignSystem.space6),
-        Flexible(
-          child: Text(
-            formatArticleDate(article.dateGmt),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+        if (category.isNotEmpty) ...[
+          Flexible(child: CategoryLabel(category, fontSize: 10.5)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppDesignSystem.space6),
+            child: Text('·', style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w700)),
           ),
-        ),
+        ],
+        Flexible(child: date),
       ],
     );
   }
@@ -286,28 +255,8 @@ class ArticleFeaturedCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Category badge
                     if (category.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDesignSystem.space10,
-                          vertical: AppDesignSystem.space4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: AppDesignSystem.borderRadiusSm,
-                        ),
-                        child: Text(
-                          category.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ),
-
+                      CategoryLabel(category, color: Colors.white.withAlpha(225)),
                     const SizedBox(height: AppDesignSystem.space10),
 
                     // Title

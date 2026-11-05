@@ -180,18 +180,26 @@ final liveMatchesProvider = StreamProvider.autoDispose.family<List<Match>, int>(
   }
 });
 
-/// Followed clubs, kept on the device.
+/// Followed clubs, kept on the device by their canonical RDC Football team id, which stays the same across app
+/// upgrades and seasons (a relegated club stays followed).
 class FavoriteClubs extends StateNotifier<Set<int>> {
-  static const _key = 'rdcf_favorite_clubs';
+  static const key = 'rdcf_favorite_clubs';
+  late final Future<void> ready;
   FavoriteClubs() : super(const {}) {
-    SharedPreferences.getInstance().then((p) {
-      if (mounted) state = (p.getStringList(_key) ?? const []).map(int.tryParse).whereType<int>().toSet();
+    ready = SharedPreferences.getInstance().then((p) {
+      if (mounted) state = (p.getStringList(key) ?? const []).map(int.tryParse).whereType<int>().toSet();
     });
   }
   Future<void> toggle(int id) async {
-    state = state.contains(id) ? ({...state}..remove(id)) : {...state, id};
+    await ready;
+    await setAll(state.contains(id) ? ({...state}..remove(id)) : {...state, id});
+  }
+
+  Future<void> setAll(Set<int> ids) async {
+    await ready;
+    state = Set.unmodifiable(ids);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_key, state.map((e) => '$e').toList());
+    await prefs.setStringList(key, state.map((e) => '$e').toList());
   }
 }
 

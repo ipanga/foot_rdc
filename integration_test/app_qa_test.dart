@@ -20,6 +20,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:foot_rdc/features/onboarding/club_onboarding.dart';
 
 const footballApi = 'https://footrdc.com/wp-json/rdcfootball/v1';
 const wordpressApi = 'https://footrdc.com/wp-json/wp/v2';
@@ -43,6 +45,8 @@ void main() {
     await Hive.initFlutter((await getApplicationDocumentsDirectory()).path);
     if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(ArticleModelAdapter());
     await Hive.openBox<ArticleModel>('articles');
+    // The first-launch club selection is covered by onboarding_qa_test; here it is marked as answered.
+    await (await SharedPreferences.getInstance()).setString(ClubOnboarding.stateKey, 'later');
     await tester.pumpWidget(const ProviderScope(child: MyApp()));
     if (Platform.isAndroid) await binding.convertFlutterSurfaceToImage();
     final os = Platform.operatingSystem;

@@ -74,7 +74,7 @@ void main() {
   }) async {
     final g = gateway ?? FakeGateway();
     final b = backend ?? FakeBackend();
-    final n = NotificationNotifier(g, b, PushStore(), debounce: Duration.zero);
+    final n = NotificationNotifier(g, b, PushStore(), debounce: Duration.zero, appVersion: () async => '5.12.11 (35)');
     n.followsChanged(clubs);
     await n.ready;
     await n.sync();
@@ -154,17 +154,16 @@ void main() {
       expect((b.bodies.last['follows'] as List).length, 1, reason: 'unfollowing a club stops its alerts');
     });
 
-    test(
-      'turning everything off is saved, honoured by OneSignal during the transition, and stops the launch prompt',
-      () async {
-        final (n, g, b) = await start();
-        await n.setEnabled(false);
-        await n.sync();
-        expect(g.calls, contains('onesignal-false'));
-        expect(b.bodies.last['prefs']['enabled'], false);
-        expect(await NotificationNotifier.mayPromptAtLaunch(), isFalse);
-      },
-    );
+    test('turning everything off is saved as the user\'s choice and honoured by OneSignal during the transition', () async {
+      final (n, g, b) = await start();
+      await n.setEnabled(false);
+      await n.sync();
+      expect(g.calls, contains('onesignal-false'));
+      expect(b.bodies.last['prefs']['enabled'], false);
+      n.dispose();
+      final (n2, _, _) = await start();
+      expect(n2.state.prefs.enabled, isFalse, reason: 'kept across restarts');
+    });
 
     test('turning notifications on asks for the permission when it was never asked', () async {
       final g = FakeGateway(perm: PushPermission.notDetermined);
@@ -193,6 +192,114 @@ void main() {
       await n.setEnabled(false);
       expect(g.calls.where((c) => c == 'leave-onesignal').length, 1);
       expect(g.calls, isNot(contains('onesignal-false')));
+    });
+  });
+
+  group('Defaults and explicit choices (6 Nov 2026)', () {
+    test('new installation: kickoff, result and changes on; goals and reminder off; club alerts off until chosen', () {
+      const p = NotificationPrefs();
+      expect([p.kickoff, p.result, p.changes, p.goals, p.prematch, p.matchAlerts, p.news], [
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        true,
+      ]);
+      expect(p.clubFlags().values.every((v) => v == 0), isTrue, reason: 'nothing for clubs until alerts are on');
+      expect(p.copyWith(matchAlerts: true).clubFlags(), {
+        'prematch': 0,
+        'kickoff': 1,
+        'goals': 0,
+        'result': 1,
+        'changes': 1,
+      });
+    });
+
+    test('preferences saved by 5.12.11 (34) are all kept: a disabled alert is never re-enabled', () async {
+      SharedPreferences.setMockInitialValues({
+        PushStore.prefsKey: '{"enabled":true,"news":true,"match_alerts":true,"prematch":false,"kickoff":false,'
+            '"goals":false,"result":true,"changes":true,"quiet_start":null,"quiet_end":null}',
+      });
+      final p = await PushStore().loadPrefs();
+      expect(p.kickoff, isFalse);
+      expect(p.matchAlerts, isTrue);
+    });
+
+    test('only explicit choices are kept; untouched settings follow the current defaults', () async {
+      SharedPreferences.setMockInitialValues({
+        PushStore.prefsKey: '{"enabled":true,"news":false,"kickoff":false,"goals":true}',
+        PushStore.explicitKey: ['goals', 'news'],
+      });
+      final p = await PushStore().loadPrefs();
+      expect(p.news, isFalse);
+      expect(p.goals, isTrue);
+      expect(p.kickoff, isTrue, reason: 'kickoff was never chosen: the current default applies');
+    });
+
+    test('a change records only the keys the user changed', () async {
+      final (n, _, _) = await start();
+      await n.setPrefs(n.state.prefs.copyWith(goals: true));
+      final p = await SharedPreferences.getInstance();
+      expect(p.getStringList(PushStore.explicitKey), ['goals']);
+    });
+
+    test('notifications turned off with the OneSignal-era switch stay off after a later change', () async {
+      SharedPreferences.setMockInitialValues({PushStore.legacyEnabledKey: false});
+      final (n, _, _) = await start();
+      expect(n.state.prefs.enabled, isFalse);
+      await n.setPrefs(n.state.prefs.copyWith(news: false));
+      n.dispose();
+      final (n2, _, _) = await start();
+      expect(n2.state.prefs.enabled, isFalse);
+    });
+  });
+
+  group('Permission and registration (6 Nov 2026)', () {
+    test('the registration carries the app version and the device permission', () async {
+      final (_, _, b) = await start();
+      expect(b.bodies.last['app_version'], '5.12.11 (35)');
+      expect(b.bodies.last['permission'], 'granted');
+    });
+
+    test('a refusal in the system settings reaches the server as « disabled » when the app resumes', () async {
+      final (n, g, b) = await start();
+      expect(b.bodies.last['prefs']['enabled'], isTrue);
+      g.perm = PushPermission.denied;
+      await n.refresh();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await n.sync();
+      expect(b.bodies.last['prefs']['enabled'], isFalse);
+      expect(b.bodies.last['permission'], 'denied');
+      expect(b.bodies.last.containsKey('token'), isFalse);
+      expect(n.state.prefs.enabled, isTrue, reason: 'the user\'s own switch is untouched');
+      g.perm = PushPermission.granted;
+      await n.refresh();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await n.sync();
+      expect(b.bodies.last['prefs']['enabled'], isTrue);
+      expect(b.bodies.last['token'], 'tok-1');
+    });
+
+    test('nothing asks for the permission at start; turning on club alerts asks once, in context', () async {
+      final g = FakeGateway(perm: PushPermission.notDetermined);
+      final (n, _, _) = await start(gateway: g);
+      expect(g.calls, isNot(contains('request')));
+      await n.setPrefs(n.state.prefs.copyWith(goals: true));
+      expect(g.calls, isNot(contains('request')), reason: 'a sub-setting is not a reason to ask');
+      final permission = await n.enableClubAlerts();
+      expect(g.calls.where((c) => c == 'request').length, 1);
+      expect(permission, PushPermission.granted);
+      expect(n.state.prefs.matchAlerts && n.state.prefs.enabled, isTrue);
+    });
+
+    test('club alerts from the club selection keep the user\'s earlier per-type choices', () async {
+      final (n, _, _) = await start();
+      await n.setPrefs(n.state.prefs.copyWith(kickoff: false));
+      await n.enableClubAlerts();
+      expect(n.state.prefs.kickoff, isFalse);
+      expect(n.state.prefs.result, isTrue);
     });
   });
 
@@ -240,6 +347,49 @@ void main() {
       await tester.pumpAndSettle();
       expect(opened, ['footrdc://article/12']);
     });
+
+    testWidgets('no banner while notifications are refused or switched off, nor for a late message', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          scaffoldMessengerKey: appMessengerKey,
+          home: const Scaffold(body: SizedBox()),
+        ),
+      );
+      addTearDown(() => inAppBannersAllowed.value = true);
+      inAppBannersAllowed.value = false;
+      showForegroundNotification(msg('footrdc://article/1'));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('push-banner')), findsNothing);
+
+      inAppBannersAllowed.value = true;
+      final now = DateTime(2026, 11, 6, 12);
+      RemoteMessage at(DateTime sent) => RemoteMessage(
+        data: const {'link': 'footrdc://article/2'},
+        sentTime: sent,
+        notification: const RemoteNotification(title: 'FootRDC — test', body: 'x'),
+      );
+      showForegroundNotification(at(now.subtract(const Duration(minutes: 3))), now: now);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('push-banner')), findsNothing, reason: 'delivered 3 minutes late');
+      showForegroundNotification(at(now.subtract(const Duration(seconds: 5))), now: now);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('push-banner')), findsOneWidget);
+    });
+
+    test('the in-app banner switch follows the device state', () async {
+      final g = FakeGateway(perm: PushPermission.granted);
+      final (n, _, _) = await start(gateway: g);
+      expect(inAppBannersAllowed.value, isTrue);
+      g.perm = PushPermission.denied;
+      await n.refresh();
+      expect(inAppBannersAllowed.value, isFalse);
+      await n.setEnabled(false);
+      g.perm = PushPermission.granted;
+      await n.refresh();
+      expect(inAppBannersAllowed.value, isFalse, reason: 'switched off by the user');
+      await n.setEnabled(true);
+      expect(inAppBannersAllowed.value, isTrue);
+    });
   });
 
   group('Plus › Notifications', () {
@@ -257,7 +407,13 @@ void main() {
         ProviderScope(
           overrides: [
             notificationNotifierProvider.overrideWith(
-              (ref) => NotificationNotifier(g, FakeBackend(), PushStore(), debounce: Duration.zero),
+              (ref) => NotificationNotifier(
+                g,
+                FakeBackend(),
+                PushStore(),
+                debounce: Duration.zero,
+                appVersion: () async => '5.12.11 (35)',
+              ),
             ),
           ],
           child: MaterialApp(

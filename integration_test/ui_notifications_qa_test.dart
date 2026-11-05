@@ -7,6 +7,7 @@ import 'package:foot_rdc/core/notifications/push_messages.dart';
 import 'package:foot_rdc/features/news/presentation/screens/article_detail_screen.dart';
 import 'package:foot_rdc/features/news/presentation/widgets/article_list_item.dart';
 import 'package:foot_rdc/firebase_options.dart';
+import 'package:foot_rdc/features/football/presentation/widgets/club_picker.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'qa_support.dart';
@@ -41,11 +42,11 @@ void main() {
     await qa.pumpFor(const Duration(seconds: 1));
     await qa.shot('alertes-clubs');
     await tester.tap(find.byKey(const ValueKey('notif-clubs')));
-    await qa.wait(find.byType(CheckboxListTile));
-    await tester.tap(find.byType(CheckboxListTile).first);
+    await qa.wait(find.byType(ClubChoiceTile));
+    await tester.tap(find.byType(ClubChoiceTile).first);
     await qa.pumpFor(const Duration(seconds: 1));
     await qa.shot('choix-clubs');
-    await tester.tap(find.byType(CheckboxListTile).first); // leave the club list as it was
+    await tester.tap(find.byType(ClubChoiceTile).first); // leave the club list as it was
     await qa.back();
     await qa.wait(find.text('Articles à la Une'));
     await tester.scrollUntilVisible(

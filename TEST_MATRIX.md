@@ -1,5 +1,31 @@
 # Test matrix
 
+## Custom mobile ads, 5 Nov 2026 (`feat/app-refinements-20261106`, working tree)
+
+| Layer | Scope | Result |
+|---|---|---|
+| Unit and widget | 20 tests: parsing/unsafe input, 404, format errors, TTL, cache/refresh/offline back-off, end time, slot absent/present/semantics/tap/broken image/late answer, 320–768 px at 1–2×, light/dark contrast, article split | 170 passed in total |
+| `custom_ads_qa_test` (dev stack campaigns) | Home + article ads, light/dark | Pass on Pixel 8 Pro, iPhone 18 Pro, iPhone 17e |
+| Same, no active campaign (`QA_EXPECT_ADS=false`) | no slot anywhere | Pass on Pixel 8 Pro and iPhone 18 Pro (Android first run failed on a fresh-cache copy from a manual install < 10 min old — expected cache behaviour; clean install passes) |
+| Regression with ads active | `ui_ads` (AdMob), `app_qa` 17 steps, `ui_notifications`, `ui_article_nav`, `article_clubs`, `onboarding`, `onboarding_later` | Pass on Pixel 8 Pro; Pass on iPhone 18 Pro (`app_qa` passed on rerun after one live-data wait on « Prochain match ») |
+| Android by hand | browser intent on tap, broken image, offline, 130 % text | Pass |
+| WordPress | `mobile-ads-runtime` 72; gate 3,942; Staging scenarios and security | Pass |
+
+
+## App refinements, 6 Nov 2026 (`feat/app-refinements-20261106`, working tree)
+
+| Layer | Scope | Result |
+|---|---|---|
+| Unit and widget | onboarding (offer rules, Continuer/Plus tard, explicit alerts off, upgrade with clubs, offline, clubs outside the season, 320/768 px at 1×/2×/1.3×), notification defaults and explicit choices, permission sync, banner suppression, tab rule, category label contrast | 150 passed, 0 failed |
+| Pixel 8 Pro emulator | `onboarding`, `onboarding_later`, `ui_redesign` (light/dark), `app_qa` 17 steps, `ui_notifications`, `ui_article_nav`, `article_clubs` | Pass, 0 exceptions, 0 overflows |
+| iPhone 18 Pro, iOS 27 | same | Pass, 0 exceptions, 0 overflows |
+| iPhone 17e, iOS 27 | `ui_redesign`, `onboarding`, `onboarding_later` | Pass |
+| Android by hand (adb) | no launch prompt; contextual dialog; defaults; real restart; refuse/grant on resume; offline fresh install; dark + 130 % text | Pass (see `docs/refinements-20261106/REPORT.md`) |
+| iOS permission dialog | simulator cannot answer it | NOT RUN (physical iPhone with build 35) |
+
+Device QA uses `--dart-define=FOOTRDC_PUSH_BASE=https://127.0.0.1:9/qa-no-registration` so no QA device registers on Production.
+
+
 Results on app code `9d572f3`, with the test suite at `9054081`, 2 Nov 2026.
 
 | Layer | Scope | Result |

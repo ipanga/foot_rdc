@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/widgets.dart';
 import 'package:foot_rdc/core/notifications/push.dart';
+import 'package:foot_rdc/core/notifications/push_messages.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// Two separate things decide whether FootRDC notifications arrive:
 /// - the device permission, granted or refused in the system dialog or the system settings;
@@ -65,20 +67,36 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   final PushBackend _backend;
   final PushStore _store;
   final Duration debounce;
+
+  /// « 5.12.11 (35) »: sent on registration so the server can tell app versions apart.
+  final Future<String> Function() appVersion;
   Set<int> _clubs = const {};
   Timer? _timer;
   StreamSubscription<String>? _refresh;
   late final Future<void> ready;
   Future<void>? _running;
 
-  NotificationNotifier(this._push, this._backend, this._store, {this.debounce = const Duration(milliseconds: 600)})
-    : super(const NotificationState()) {
+  NotificationNotifier(
+    this._push,
+    this._backend,
+    this._store, {
+    this.debounce = const Duration(milliseconds: 600),
+    Future<String> Function()? appVersion,
+  }) : appVersion = appVersion ?? packageVersion,
+       super(const NotificationState()) {
+    // In-app banners only while this device really receives FootRDC notifications.
+    addListener((s) => inAppBannersAllowed.value = s.receiving);
     ready = _init();
   }
 
-  /// Whether the app may show the system permission dialog at launch: not after the user turned notifications off.
-  static Future<bool> mayPromptAtLaunch() async =>
-      (await SharedPreferences.getInstance()).getBool(PushStore.legacyEnabledKey) != false;
+  static Future<String> packageVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      return '${info.version} (${info.buildNumber})';
+    } catch (_) {
+      return '';
+    }
+  }
 
   Future<void> _init() async {
     final prefs = await _store.loadPrefs();
@@ -103,11 +121,15 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     _schedule();
   }
 
+  /// A choice of the user. The system permission is asked here, in context, when the user turns something on (never
+  /// at launch).
   Future<void> setPrefs(NotificationPrefs prefs) async {
     await ready;
-    final turnedOn = prefs.enabled && !state.prefs.enabled;
+    final old = state.prefs;
+    final turnedOn =
+        prefs.enabled && (!old.enabled || (prefs.news && !old.news) || (prefs.matchAlerts && !old.matchAlerts));
     state = state.copyWith(prefs: prefs);
-    await _store.savePrefs(prefs);
+    await _store.savePrefs(prefs, changed: NotificationPrefs.changedKeys(old, prefs));
     if (!await _store.leftOneSignal()) {
       // Until the server takes over, OneSignal follows the master switch, as before.
       await _push.setOneSignal(prefs.enabled);
@@ -116,6 +138,14 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
       await requestPermission();
     }
     _schedule();
+  }
+
+  /// « Alertes de mes clubs » turned on from the club selection: notifications on, match alerts on (with the
+  /// defaults or the user's earlier per-type choices). Returns the device permission afterwards.
+  Future<PushPermission> enableClubAlerts() async {
+    await ready;
+    await setPrefs(state.prefs.copyWith(enabled: true, matchAlerts: true));
+    return state.permission;
   }
 
   Future<void> setEnabled(bool enabled) async {
@@ -172,17 +202,21 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     final (install, secret) = await _store.identity();
     final token = state.hasPermission ? await _push.token() : null;
     final prefs = state.prefs;
+    final version = await appVersion();
     final offset = DateTime.now().timeZoneOffset.inMinutes;
     int? utc(int? local) => local == null ? null : (local - offset) % 1440;
     final body = {
       'install_id': install,
       'platform': _push.platform,
-      'app_version': '',
+      'app_version': version,
+      // Informative (servers up to 0.1.1 ignore it); « enabled » below already reflects a refusal.
+      'permission': state.permission.name,
       'locale': 'fr',
       'timezone': 'UTC',
       'token': ?token,
       'prefs': {
-        'enabled': prefs.enabled,
+        // The server sends nothing to a device that refuses notifications (it would arrive nowhere, or late).
+        'enabled': prefs.enabled && state.permission != PushPermission.denied,
         'news': prefs.news,
         'quiet_start': prefs.quietHours ? utc(prefs.quietStart) : null,
         'quiet_end': prefs.quietHours ? utc(prefs.quietEnd) : null,
@@ -218,5 +252,8 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 final notificationNotifierProvider = StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
   final notifier = NotificationNotifier(FirebaseGateway(), PushBackend(), PushStore());
   ref.listen<Set<int>>(favoriteClubsProvider, (_, next) => notifier.followsChanged(next), fireImmediately: true);
+  // A permission changed in the system settings reaches the server when the app comes back, on any screen.
+  final lifecycle = AppLifecycleListener(onResume: notifier.refresh);
+  ref.onDispose(lifecycle.dispose);
   return notifier;
 });

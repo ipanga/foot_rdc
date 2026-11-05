@@ -72,4 +72,19 @@ void main() {
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
     });
   }
+
+  testWidgets('selected tab: no filled shape behind the icon, one short red rule, bold red label', (tester) async {
+    small(tester);
+    await tester.pumpWidget(bar(index: 2, theme: AppTheme.lightTheme));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('nav-indicator')), findsOneWidget);
+    final filled = tester
+        .widgetList<Container>(find.byType(Container))
+        .where((c) => c.decoration is BoxDecoration && (c.decoration as BoxDecoration).color != null)
+        .where((c) => c.constraints?.maxHeight != 3); // the rule (0 wide on the other tabs)
+    expect(filled, isEmpty, reason: 'the pill background is gone');
+    final label = tester.widget<Text>(find.text('Matchs'));
+    expect(label.style?.fontWeight, FontWeight.w700);
+    expect(tester.widget<Text>(find.text('Accueil')).style?.fontWeight, FontWeight.w500);
+  });
 }

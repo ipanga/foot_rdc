@@ -1,4 +1,4 @@
-NEXT_ACTION: 5.12.11 (34) with FCM notifications is on TestFlight Internal (IN_BETA_TESTING) and Google Play internal (5 Nov 2026); production tracks unchanged (Play 30). Real FCM delivery verified on emulators via Staging. Physical-phone checklist needs the owner-approved Production plugin in mode test (migration_ovhcloud/docs/review/footrdc-notifications-20261104/README.md).
+NEXT_ACTION: owner review of (1) the 6 Nov refinements and (2) custom mobile ads, both uncommitted on `feat/app-refinements-20261106` (reports `docs/refinements-20261106/REPORT.md`, `docs/custom-ads-20261105/PROGRESS.md`, `migration_ovhcloud/docs/review/footrdc-mobile-ads-20261105/README.md`). Staging runs plugin `rdc-football-mobile-ads` 0.1.1 until Sat 7 Nov 16:15 UTC (auto-stop). After approval: commit, Production plugin install (separate approval), build 5.12.11 (35) internal only with authorisation.
 
 # Development status
 
@@ -26,6 +26,8 @@ None for internal testing.
 See `DECISIONS.md` and the limitations in the final report.
 
 ## Phase log
+| Custom mobile ads (WordPress « Publicités mobiles » + slots home_feed/article_inline) | IMPLEMENTED; Staging VERIFIED; 170 tests; device QA PASS Pixel 8 Pro, iPhone 18 Pro, iPhone 17e | `feat/app-refinements-20261106` (uncommitted) + rdc-football-platform `feat/mobile-ads` |
+| App refinements 6 Nov (club onboarding, notification defaults/permission, tabs, category, header, notification hardening) | IMPLEMENTED; 150 tests; device QA PASS on Pixel 8 Pro, iPhone 18 Pro, iPhone 17e | `feat/app-refinements-20261106` (uncommitted) |
 | FCM notifications (« À la Une », club alerts) | IMPLEMENTED; simulators VERIFIED (token, settings, simulated banner); real delivery PENDING owner credentials | `058acd3` on `feat/fcm-notifications` (local) |
 
 | Phase | Status | Commit |

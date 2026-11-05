@@ -109,24 +109,57 @@ class _FollowedPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ids = ref.watch(favoriteClubsProvider);
     final season = ref.watch(currentSeasonProvider).valueOrNull;
+    void choose() => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FollowClubsScreen()));
     return Scaffold(
-      appBar: AppBar(title: const Text('Clubs suivis')),
-      body: season == null
+      appBar: AppBar(
+        title: const Text('Clubs suivis'),
+        actions: [
+          TextButton(key: const ValueKey('followed-edit'), onPressed: choose, child: const Text('Modifier')),
+          const SizedBox(width: 4),
+        ],
+      ),
+      body: ids.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const MessageState(
+                    icon: Icons.star_border,
+                    title: 'Aucun club suivi',
+                    detail: 'Choisissez vos clubs pour les retrouver ici et recevoir leurs alertes.',
+                  ),
+                  FilledButton(onPressed: choose, child: const Text('Choisir mes clubs')),
+                ],
+              ),
+            )
+          : season == null
           ? const ListSkeleton()
           : LoadedView<List<Club>>(
               value: ref.watch(clubsProvider(season.id)),
+              onRetry: () => ref.invalidate(clubsProvider(season.id)),
               builder: (clubs) {
-                final rows = clubs.where((c) => ids.contains(c.id)).toList();
-                if (rows.isEmpty) {
-                  return const MessageState(
-                    icon: Icons.star_border,
-                    title: 'Aucun club suivi',
-                    detail: 'Touchez l’étoile sur la page d’un club pour le retrouver ici.',
-                  );
-                }
-                return ListView(children: [for (final club in rows) ClubTile(club: club)]);
+                final rows = clubs.where((c) => ids.contains(c.id)).toList()..sort((a, b) => a.name.compareTo(b.name));
+                final inSeason = {for (final c in clubs) c.id};
+                // Followed clubs outside this season (relegated, or a changed list) stay followed and listed.
+                final elsewhere = ids.where((id) => !inSeason.contains(id)).toList()..sort();
+                return ListView(
+                  children: [
+                    for (final club in rows) ClubTile(club: club),
+                    for (final id in elsewhere) _FollowedElsewhere(id: id),
+                  ],
+                );
               },
             ),
     );
+  }
+}
+
+class _FollowedElsewhere extends ConsumerWidget {
+  final int id;
+  const _FollowedElsewhere({required this.id});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final club = ref.watch(clubProvider(id)).valueOrNull?.value ?? Club(id: id, name: 'Club n° $id');
+    return ClubTile(club: club, subtitle: 'Hors de la saison en cours');
   }
 }

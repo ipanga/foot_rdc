@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +20,8 @@ import 'package:foot_rdc/core/navigation/deep_link_handler.dart';
 import 'package:foot_rdc/core/notifications/push_messages.dart';
 import 'package:foot_rdc/core/navigation/deep_links.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
+import 'package:foot_rdc/features/onboarding/club_onboarding.dart';
+import 'package:foot_rdc/features/promotions/custom_ads.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,9 +53,7 @@ Future<void> main() async {
   // Add foreground notification handler
   OneSignal.Notifications.addForegroundWillDisplayListener((event) {
     if (kDebugMode) {
-      print(
-        "OneSignal notification will display: ${event.notification.notificationId}",
-      );
+      print("OneSignal notification will display: ${event.notification.notificationId}");
     }
   });
 
@@ -63,21 +62,12 @@ Future<void> main() async {
     final link = notificationLink(event.notification.additionalData, event.notification.launchUrl);
     if (link != null) pushLinks.add(link);
     if (kDebugMode) {
-      print(
-        "OneSignal notification clicked: ${event.notification.notificationId}",
-      );
+      print("OneSignal notification clicked: ${event.notification.notificationId}");
     }
   });
 
-  // The system permission dialog, once: the system shows it only while the user has not answered. Never after the
-  // user turned notifications off in Plus › Notifications, and never a detour to the system settings at launch.
-  // Never awaited: the dialog must not hold back the first frame.
-  // Same operating-system permission for OneSignal (older flow) and Firebase Cloud Messaging.
-  unawaited(
-    NotificationNotifier.mayPromptAtLaunch().then((ask) async {
-      if (ask) await FirebaseMessaging.instance.requestPermission(alert: true, badge: true, sound: true);
-    }),
-  );
+  // No system permission dialog at launch: it is asked in context, when the user turns on alerts (club selection,
+  // Plus › Notifications). OneSignal (kept during the transition) uses the same system permission.
   unawaited(setUpPushMessaging());
 
   await MobileAds.instance.initialize();
@@ -100,6 +90,8 @@ class MyApp extends ConsumerWidget {
     ref.watch(themeCustomNotifierProvider);
     // Starts notification registration (token, preferences, followed clubs) with the app.
     ref.listen(notificationNotifierProvider, (_, _) {});
+    // FootRDC advertiser banners: fetched at start so they are known before the reader reaches a slot.
+    ref.listen(customAdsProvider, (_, _) {});
 
     return MaterialApp(
       title: 'FootRDC',
@@ -112,12 +104,12 @@ class MyApp extends ConsumerWidget {
       ],
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ref
-          .read(themeCustomNotifierProvider.notifier)
-          .getFlutterThemeMode(context),
+      themeMode: ref.read(themeCustomNotifierProvider.notifier).getFlutterThemeMode(context),
       navigatorKey: appNavigatorKey,
       scaffoldMessengerKey: appMessengerKey,
-      home: const FootballLifecycle(child: DeepLinkHandler(child: HomeScreen())),
+      home: const FootballLifecycle(
+        child: DeepLinkHandler(child: ClubOnboardingGate(child: HomeScreen())),
+      ),
       debugShowCheckedModeBanner: false,
     );
   }

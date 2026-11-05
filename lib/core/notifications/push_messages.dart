@@ -9,6 +9,14 @@ import '../navigation/deep_link_handler.dart';
 /// Messenger used for in-app notification banners.
 final appMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
+/// Whether this device receives FootRDC notifications (switch on and permission granted). Set by the notification
+/// state; a message that reaches the app while notifications are refused is not shown as a banner either.
+final inAppBannersAllowed = ValueNotifier<bool>(true);
+
+/// A message older than this when it reaches the open app (phone offline, delayed delivery) is not shown as a banner:
+/// it would be out of date. Normal delivery takes a few seconds.
+const staleBannerAge = Duration(minutes: 2);
+
 /// The article or match on screen (`footrdc://article/12`, `footrdc://match/34`), set by those screens.
 /// A notification about it while it is open is not shown again.
 final currentContentLink = ValueNotifier<String?>(null);
@@ -47,10 +55,13 @@ Future<void> setUpPushMessaging() async {
 }
 
 @visibleForTesting
-void showForegroundNotification(RemoteMessage message) {
+void showForegroundNotification(RemoteMessage message, {DateTime? now}) {
   final link = pushLink(message);
   final n = message.notification;
   if (n == null || (link != null && link == currentContentLink.value)) return;
+  if (!inAppBannersAllowed.value) return;
+  final sent = message.sentTime;
+  if (sent != null && (now ?? DateTime.now()).difference(sent) > staleBannerAge) return;
   showNotificationBanner(title: n.title ?? 'FootRDC', body: n.body ?? '', link: link);
 }
 

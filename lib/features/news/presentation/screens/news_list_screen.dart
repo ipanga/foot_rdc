@@ -12,10 +12,13 @@ import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
 import 'package:foot_rdc/shared/widgets/news_app_bar.dart';
 import 'package:foot_rdc/features/search/presentation/screens/search_screen.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
+import 'package:foot_rdc/core/utils/string_utils.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/core/network/network_exceptions.dart' as network;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:foot_rdc/shared/widgets/ads.dart';
+import 'package:foot_rdc/features/promotions/custom_ad_slot.dart';
+import 'package:foot_rdc/features/promotions/custom_ads.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:foot_rdc/features/football/presentation/widgets/home_football.dart';
@@ -154,7 +157,7 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
     final theme = Theme.of(context);
     return Semantics(
       button: true,
-      label: article.title,
+      label: decodeHtmlEntities(article.title),
       excludeSemantics: true,
       child: InkWell(
         onTap: () => Navigator.of(context).push(
@@ -178,7 +181,7 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
               child: Text(
-                article.title,
+                decodeHtmlEntities(article.title),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, height: 1.2),
@@ -433,6 +436,10 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
                   );
                 },
               );
+              // One FootRDC advertiser banner after the first three stories, far from Google's native ads (from the 9th).
+              if (adjustedIndex == 3) {
+                return Column(children: [row, const CustomAdSlot(placement: AdPlacement.homeFeed)]);
+              }
               if (adjustedIndex == 5) {
                 return Column(children: [const HomeLinafootSnapshot(), row]);
               }

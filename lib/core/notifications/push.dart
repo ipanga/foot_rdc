@@ -34,12 +34,15 @@ class NotificationPrefs {
   final int? quietStart;
   final int? quietEnd;
 
+  /// Defaults (6 Nov 2026): once the user turns on alerts for followed clubs, kickoff, final result and
+  /// postponement/cancellation alerts are on; goals and the one-hour reminder are off. Values the user changed are
+  /// kept (see [PushStore.loadPrefs]).
   const NotificationPrefs({
     this.enabled = true,
     this.news = true,
     this.matchAlerts = false,
     this.prematch = false,
-    this.kickoff = false,
+    this.kickoff = true,
     this.goals = false,
     this.result = true,
     this.changes = true,
@@ -86,18 +89,32 @@ class NotificationPrefs {
     'quiet_end': quietEnd,
   };
 
-  factory NotificationPrefs.fromJson(Map<String, dynamic> j) => NotificationPrefs(
-    enabled: j['enabled'] != false,
-    news: j['news'] != false,
-    matchAlerts: j['match_alerts'] == true,
-    prematch: j['prematch'] == true,
-    kickoff: j['kickoff'] == true,
-    goals: j['goals'] == true,
-    result: j['result'] != false,
-    changes: j['changes'] != false,
-    quietStart: j['quiet_start'] is int ? j['quiet_start'] as int : null,
-    quietEnd: j['quiet_end'] is int ? j['quiet_end'] as int : null,
-  );
+  /// Missing or malformed values take the current defaults.
+  factory NotificationPrefs.fromJson(Map<String, dynamic> j) {
+    const d = NotificationPrefs();
+    bool b(String key, bool fallback) => j[key] is bool ? j[key] as bool : fallback;
+    return NotificationPrefs(
+      enabled: b('enabled', d.enabled),
+      news: b('news', d.news),
+      matchAlerts: b('match_alerts', d.matchAlerts),
+      prematch: b('prematch', d.prematch),
+      kickoff: b('kickoff', d.kickoff),
+      goals: b('goals', d.goals),
+      result: b('result', d.result),
+      changes: b('changes', d.changes),
+      quietStart: j['quiet_start'] is int ? j['quiet_start'] as int : null,
+      quietEnd: j['quiet_end'] is int ? j['quiet_end'] as int : null,
+    );
+  }
+
+  /// Keys whose value differs between two sets of preferences.
+  static Set<String> changedKeys(NotificationPrefs a, NotificationPrefs b) {
+    final x = a.toJson(), y = b.toJson();
+    return {
+      for (final k in x.keys)
+        if (x[k] != y[k]) k,
+    };
+  }
 
   /// What the server receives for each followed club (nothing when match alerts are off).
   Map<String, int> clubFlags() => {
@@ -126,12 +143,24 @@ class PushStore {
   /// Notifications switched on or off before this screen existed (key of the OneSignal-era setting).
   static const legacyEnabledKey = 'notifications_enabled';
 
+  /// Keys the user set explicitly. Only those are kept from storage; every other key follows the current defaults,
+  /// so a later change of defaults reaches users who never touched that setting, and never overrides a choice.
+  static const explicitKey = 'rdcf_push_explicit';
+
   Future<NotificationPrefs> loadPrefs() async {
     final p = await SharedPreferences.getInstance();
     final raw = p.getString(prefsKey);
     if (raw != null) {
       try {
-        return NotificationPrefs.fromJson(Map<String, dynamic>.from(jsonDecode(raw) as Map));
+        final stored = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+        final explicit = p.getStringList(explicitKey);
+        // Saved before explicit keys were tracked (5.12.11 (34)): every stored value counts as the user's choice.
+        if (explicit == null) return NotificationPrefs.fromJson(stored);
+        final merged = const NotificationPrefs().toJson();
+        for (final k in explicit) {
+          if (stored.containsKey(k)) merged[k] = stored[k];
+        }
+        return NotificationPrefs.fromJson(merged);
       } catch (_) {
         // Corrupt value: start again from defaults.
       }
@@ -139,9 +168,17 @@ class PushStore {
     return NotificationPrefs(enabled: p.getBool(legacyEnabledKey) ?? true);
   }
 
-  Future<void> savePrefs(NotificationPrefs prefs) async {
+  /// Saves [prefs]; [changed] are the keys the user just changed.
+  Future<void> savePrefs(NotificationPrefs prefs, {Set<String> changed = const {}}) async {
     final p = await SharedPreferences.getInstance();
+    final legacy = p.getString(prefsKey) != null && p.getStringList(explicitKey) == null;
+    // Notifications turned off with the OneSignal-era switch stay a choice of the user.
+    final oneSignalOff = p.getString(prefsKey) == null && p.getBool(legacyEnabledKey) == false;
+    final explicit = legacy
+        ? prefs.toJson().keys.toSet()
+        : {...?p.getStringList(explicitKey), ...changed, if (oneSignalOff) 'enabled'};
     await p.setString(prefsKey, jsonEncode(prefs.toJson()));
+    await p.setStringList(explicitKey, explicit.toList()..sort());
     await p.setBool(legacyEnabledKey, prefs.enabled);
   }
 
@@ -190,9 +227,11 @@ class PushConfig {
 /// The FootRDC server side (RDC Football Notify). Its own HTTP client: registration bodies carry the secret and the
 /// token, so they must never pass through the app's logging interceptor.
 class PushBackend {
+  /// FOOTRDC_PUSH_BASE overrides only the notification server (device QA points it at nothing, so test devices
+  /// never register on Production); otherwise the RDC Football API base.
   static const baseUrl = String.fromEnvironment(
-    'RDCF_API_BASE',
-    defaultValue: 'https://footrdc.com/wp-json/rdcfootball/v1',
+    'FOOTRDC_PUSH_BASE',
+    defaultValue: String.fromEnvironment('RDCF_API_BASE', defaultValue: 'https://footrdc.com/wp-json/rdcfootball/v1'),
   );
   static const _hostHeader = String.fromEnvironment('FOOTRDC_HOST_HEADER');
   final Dio dio;

@@ -9,6 +9,8 @@ String formatCategory(String category) {
 
   s = s.replaceAll('-', ' ').trim();
   if (s.isEmpty) return '';
+  // WordPress slugs lose accents: the home category reads « À la Une ».
+  if (s.toLowerCase() == 'a la une') return 'À la Une';
 
   return s[0].toUpperCase() + s.substring(1);
 }

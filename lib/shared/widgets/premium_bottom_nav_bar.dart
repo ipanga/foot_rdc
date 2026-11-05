@@ -4,7 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
 
-/// The app's bottom tabs: icon in a pill when selected, label always shown, announced as a selected tab.
+/// The app's bottom tabs: the selected one has a filled icon and a bold label in FootRDC red, with a short red rule
+/// at the top edge; the others are outlined in grey. Labels always shown; the tab is announced as selected.
 /// Labels keep readable contrast in light and dark, and shrink rather than wrap at large text sizes.
 class PremiumBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -111,40 +112,51 @@ class _NavItem extends StatelessWidget {
         highlightShape: BoxShape.rectangle,
         splashColor: active.withAlpha(30),
         highlightColor: Colors.transparent,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            AnimatedContainer(
-              duration: AppDesignSystem.durationNormal,
-              curve: Curves.easeOutCubic,
-              width: selected ? 56 : 40,
-              height: 30,
-              decoration: BoxDecoration(
-                color: selected ? active.withAlpha(isDark ? 46 : 28) : Colors.transparent,
-                borderRadius: AppDesignSystem.borderRadiusFull,
+            // A short rule on the bar's top edge marks the selected tab, without a filled shape around the icon.
+            Align(
+              alignment: Alignment.topCenter,
+              child: AnimatedContainer(
+                key: selected ? const ValueKey('nav-indicator') : null,
+                duration: AppDesignSystem.durationNormal,
+                curve: Curves.easeOutCubic,
+                width: selected ? 28 : 0,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: active,
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(3)),
+                ),
               ),
-              alignment: Alignment.center,
-              child: icon,
             ),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              // Up to 1.3× system text; beyond that the label shrinks to its slot instead of wrapping.
-              child: MediaQuery.withClampedTextScaling(
-                maxScaleFactor: 1.3,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    item.label,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.1,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      color: color,
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: 26, child: Center(child: icon)),
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    // Up to 1.3× system text; beyond that the label shrinks to its slot instead of wrapping.
+                    child: MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: 1.3,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          item.label,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.1,
+                            letterSpacing: selected ? 0.1 : 0.2,
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            color: color,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ],

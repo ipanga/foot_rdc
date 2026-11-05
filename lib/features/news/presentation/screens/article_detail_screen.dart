@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foot_rdc/shared/widgets/category_label.dart';
 import 'package:foot_rdc/core/notifications/push_messages.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,8 @@ import 'package:foot_rdc/core/theme/app_colors.dart';
 import 'package:foot_rdc/core/theme/app_design_system.dart';
 import 'package:foot_rdc/shared/widgets/app_snackbar.dart';
 import 'package:foot_rdc/shared/widgets/ads.dart';
+import 'package:foot_rdc/features/promotions/custom_ad_slot.dart';
+import 'package:foot_rdc/features/promotions/custom_ads.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -116,6 +119,309 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
     final Color overlayBg = isDark
         ? Colors.black.withAlpha(140)
         : Colors.white.withAlpha(217);
+
+    // The article's HTML with the app's styles and embeds; used for the whole text or for its two parts.
+    Widget articleHtml(String data) => Html(
+      data: data,
+      style: {
+        "body": Style(
+          margin: Margins.zero,
+          padding: HtmlPaddings.zero,
+          fontSize: FontSize(16.5),
+          lineHeight: const LineHeight(1.7),
+          fontFamily: 'OpenSans',
+          color: isDark
+              ? AppColors.textPrimaryDark
+              : AppColors.textPrimaryLight,
+        ),
+        "p": Style(
+          margin: Margins.only(bottom: 18),
+          fontSize: FontSize(16.5),
+          lineHeight: const LineHeight(1.7),
+        ),
+        "h1": Style(
+          fontFamily: 'OpenSans',
+          fontWeight: FontWeight.w800,
+          fontSize: FontSize(26),
+          margin: Margins.only(top: 28, bottom: 14),
+          color: isDark
+              ? AppColors.textPrimaryDark
+              : AppColors.textPrimaryLight,
+        ),
+        "h2": Style(
+          fontFamily: 'OpenSans',
+          fontWeight: FontWeight.w700,
+          fontSize: FontSize(22),
+          margin: Margins.only(top: 24, bottom: 12),
+          color: isDark
+              ? AppColors.textPrimaryDark
+              : AppColors.textPrimaryLight,
+        ),
+        "h3": Style(
+          fontFamily: 'OpenSans',
+          fontWeight: FontWeight.w700,
+          fontSize: FontSize(19),
+          margin: Margins.only(top: 20, bottom: 10),
+          color: isDark
+              ? AppColors.textPrimaryDark
+              : AppColors.textPrimaryLight,
+        ),
+        "h4, h5, h6": Style(
+          fontFamily: 'OpenSans',
+          fontWeight: FontWeight.w600,
+          fontSize: FontSize(17),
+          margin: Margins.only(top: 18, bottom: 8),
+          color: isDark
+              ? AppColors.textPrimaryDark
+              : AppColors.textPrimaryLight,
+        ),
+        "a": Style(
+          fontFamily: 'OpenSans',
+          color: colorScheme.primary,
+          textDecoration: TextDecoration.underline,
+          textDecorationColor: colorScheme.primary.withAlpha(100),
+        ),
+        "strong, b": Style(
+          fontWeight: FontWeight.w700,
+          color: isDark
+              ? AppColors.textPrimaryDark
+              : AppColors.textPrimaryLight,
+        ),
+        "em, i": Style(
+          fontStyle: FontStyle.italic,
+        ),
+        "blockquote": Style(
+          margin: Margins.only(
+            left: 0,
+            right: 0,
+            top: 16,
+            bottom: 16,
+          ),
+          padding: HtmlPaddings.only(
+            left: 16,
+            top: 12,
+            bottom: 12,
+          ),
+          border: Border(
+            left: BorderSide(
+              color: colorScheme.primary,
+              width: 4,
+            ),
+          ),
+          backgroundColor: isDark
+              ? AppColors.surfaceContainerDark
+              : AppColors.surfaceContainerLight,
+          fontStyle: FontStyle.italic,
+          color: isDark
+              ? AppColors.textSecondaryDark
+              : AppColors.textSecondaryLight,
+        ),
+        "ul, ol": Style(
+          margin: Margins.only(bottom: 16, left: 8),
+          padding: HtmlPaddings.only(left: 16),
+        ),
+        "li": Style(
+          margin: Margins.only(bottom: 8),
+          lineHeight: const LineHeight(1.6),
+        ),
+        "img": Style(
+          width: Width(double.infinity),
+          margin: Margins.only(top: 16, bottom: 16),
+        ),
+        "figure": Style(
+          margin: Margins.only(top: 20, bottom: 20),
+        ),
+        "figcaption": Style(
+          fontSize: FontSize(13),
+          color: isDark
+              ? AppColors.textTertiaryDark
+              : AppColors.textTertiaryLight,
+          textAlign: TextAlign.center,
+          margin: Margins.only(top: 8),
+          fontStyle: FontStyle.italic,
+        ),
+        "pre": Style(
+          backgroundColor: isDark
+              ? AppColors.surfaceContainerDark
+              : AppColors.surfaceContainerLight,
+          padding: HtmlPaddings.all(16),
+          margin: Margins.only(top: 16, bottom: 16),
+          fontFamily: 'monospace',
+          fontSize: FontSize(14),
+        ),
+        "code": Style(
+          backgroundColor: isDark
+              ? AppColors.surfaceContainerDark
+              : AppColors.surfaceContainerLight,
+          padding: HtmlPaddings.symmetric(
+            horizontal: 6,
+            vertical: 2,
+          ),
+          fontFamily: 'monospace',
+          fontSize: FontSize(14),
+        ),
+        "hr": Style(
+          margin: Margins.only(top: 24, bottom: 24),
+          border: Border(
+            bottom: BorderSide(
+              color: isDark
+                  ? AppColors.borderDark
+                  : AppColors.borderLight,
+              width: 1,
+            ),
+          ),
+        ),
+        "table": Style(
+          border: Border.all(
+            color: isDark
+                ? AppColors.borderDark
+                : AppColors.borderLight,
+          ),
+          margin: Margins.only(top: 16, bottom: 16),
+        ),
+        "th": Style(
+          backgroundColor: isDark
+              ? AppColors.surfaceContainerDark
+              : AppColors.surfaceContainerLight,
+          padding: HtmlPaddings.all(12),
+          fontWeight: FontWeight.w600,
+        ),
+        "td": Style(
+          padding: HtmlPaddings.all(12),
+          border: Border.all(
+            color: isDark
+                ? AppColors.borderDark
+                : AppColors.borderLight,
+            width: 0.5,
+          ),
+        ),
+      },
+      extensions: [
+        // Custom image rendering with loading placeholder
+        TagExtension(
+          tagsToExtend: {"img"},
+          builder: (extensionContext) {
+            final src = extensionContext.attributes['src'];
+            if (src == null || src.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppDesignSystem.space12,
+              ),
+              child: ClipRRect(
+                borderRadius: AppDesignSystem.borderRadiusMd,
+                child: Image.network(
+                  src,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder:
+                      (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.surfaceContainerDark
+                            : AppColors.surfaceContainerLight,
+                        borderRadius:
+                            AppDesignSystem.borderRadiusMd,
+                      ),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress
+                                      .expectedTotalBytes !=
+                                  null
+                              ? loadingProgress
+                                      .cumulativeBytesLoaded /
+                                  loadingProgress
+                                      .expectedTotalBytes!
+                              : null,
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 120,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.surfaceContainerDark
+                            : AppColors.surfaceContainerLight,
+                        borderRadius:
+                            AppDesignSystem.borderRadiusMd,
+                      ),
+                      child: Column(
+                        mainAxisAlignment:
+                            MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.broken_image_outlined,
+                            size: 32,
+                            color: isDark
+                                ? AppColors.textTertiaryDark
+                                : AppColors.textTertiaryLight,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Image non disponible',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark
+                                  ? AppColors.textTertiaryDark
+                                  : AppColors.textTertiaryLight,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        ),
+        // Custom iframe rendering for YouTube and Twitter
+        TagExtension(
+          tagsToExtend: {"iframe"},
+          builder: (extensionContext) {
+            final src = extensionContext.attributes['src'] ?? '';
+            return _buildEmbedWidget(src, isDark, colorScheme);
+          },
+        ),
+        // Twitter blockquote embeds
+        TagExtension(
+          tagsToExtend: {"blockquote"},
+          child: null,
+          builder: (extensionContext) {
+            final className =
+                extensionContext.attributes['class'] ?? '';
+            if (className.contains('twitter')) {
+              return _buildTwitterEmbed(
+                extensionContext,
+                isDark,
+                colorScheme,
+              );
+            }
+            // Return default styled blockquote for non-Twitter content
+            return _buildDefaultBlockquote(
+              extensionContext,
+              isDark,
+              colorScheme,
+            );
+          },
+        ),
+      ],
+      onLinkTap: (url, attributes, element) async {
+        if (url != null) {
+          await _handleLinkTap(url, context, theme);
+        }
+      },
+    );
 
     return Scaffold(
       backgroundColor:
@@ -221,24 +527,7 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
                     Row(
                       children: [
                         if (category.isNotEmpty) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppDesignSystem.space8,
-                              vertical: AppDesignSystem.space4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withAlpha(20),
-                              borderRadius: AppDesignSystem.borderRadiusSm,
-                            ),
-                            child: Text(
-                              formatCategory(category).toUpperCase(),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
+                          Flexible(child: CategoryLabel(formatCategory(category), fontSize: 12)),
                           const SizedBox(width: AppDesignSystem.space10),
                         ],
                         if (date.isNotEmpty)
@@ -272,310 +561,22 @@ class _ArticleDetailScreenState extends ConsumerState<ArticleDetailScreen> {
 
                     const SizedBox(height: AppDesignSystem.space20),
 
-                    // HTML Content with improved styling
-                    Html(
-                      data: content.isEmpty
+                    // Article text; one FootRDC advertiser banner after the introduction when the article is long enough.
+                    ...() {
+                      final body = content.isEmpty
                           ? '<p>Aucun contenu disponible</p>'
-                          : _preprocessHtmlContent(content),
-                      style: {
-                        "body": Style(
-                          margin: Margins.zero,
-                          padding: HtmlPaddings.zero,
-                          fontSize: FontSize(16.5),
-                          lineHeight: const LineHeight(1.7),
-                          fontFamily: 'OpenSans',
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
+                          : _preprocessHtmlContent(content);
+                      final split = splitAfterIntroduction(body);
+                      if (split == null) return [articleHtml(body)];
+                      return [
+                        articleHtml(split.$1),
+                        const CustomAdSlot(
+                          placement: AdPlacement.articleInline,
+                          padding: EdgeInsets.fromLTRB(0, 4, 0, 20),
                         ),
-                        "p": Style(
-                          margin: Margins.only(bottom: 18),
-                          fontSize: FontSize(16.5),
-                          lineHeight: const LineHeight(1.7),
-                        ),
-                        "h1": Style(
-                          fontFamily: 'OpenSans',
-                          fontWeight: FontWeight.w800,
-                          fontSize: FontSize(26),
-                          margin: Margins.only(top: 28, bottom: 14),
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
-                        ),
-                        "h2": Style(
-                          fontFamily: 'OpenSans',
-                          fontWeight: FontWeight.w700,
-                          fontSize: FontSize(22),
-                          margin: Margins.only(top: 24, bottom: 12),
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
-                        ),
-                        "h3": Style(
-                          fontFamily: 'OpenSans',
-                          fontWeight: FontWeight.w700,
-                          fontSize: FontSize(19),
-                          margin: Margins.only(top: 20, bottom: 10),
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
-                        ),
-                        "h4, h5, h6": Style(
-                          fontFamily: 'OpenSans',
-                          fontWeight: FontWeight.w600,
-                          fontSize: FontSize(17),
-                          margin: Margins.only(top: 18, bottom: 8),
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
-                        ),
-                        "a": Style(
-                          fontFamily: 'OpenSans',
-                          color: colorScheme.primary,
-                          textDecoration: TextDecoration.underline,
-                          textDecorationColor: colorScheme.primary.withAlpha(100),
-                        ),
-                        "strong, b": Style(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
-                        ),
-                        "em, i": Style(
-                          fontStyle: FontStyle.italic,
-                        ),
-                        "blockquote": Style(
-                          margin: Margins.only(
-                            left: 0,
-                            right: 0,
-                            top: 16,
-                            bottom: 16,
-                          ),
-                          padding: HtmlPaddings.only(
-                            left: 16,
-                            top: 12,
-                            bottom: 12,
-                          ),
-                          border: Border(
-                            left: BorderSide(
-                              color: colorScheme.primary,
-                              width: 4,
-                            ),
-                          ),
-                          backgroundColor: isDark
-                              ? AppColors.surfaceContainerDark
-                              : AppColors.surfaceContainerLight,
-                          fontStyle: FontStyle.italic,
-                          color: isDark
-                              ? AppColors.textSecondaryDark
-                              : AppColors.textSecondaryLight,
-                        ),
-                        "ul, ol": Style(
-                          margin: Margins.only(bottom: 16, left: 8),
-                          padding: HtmlPaddings.only(left: 16),
-                        ),
-                        "li": Style(
-                          margin: Margins.only(bottom: 8),
-                          lineHeight: const LineHeight(1.6),
-                        ),
-                        "img": Style(
-                          width: Width(double.infinity),
-                          margin: Margins.only(top: 16, bottom: 16),
-                        ),
-                        "figure": Style(
-                          margin: Margins.only(top: 20, bottom: 20),
-                        ),
-                        "figcaption": Style(
-                          fontSize: FontSize(13),
-                          color: isDark
-                              ? AppColors.textTertiaryDark
-                              : AppColors.textTertiaryLight,
-                          textAlign: TextAlign.center,
-                          margin: Margins.only(top: 8),
-                          fontStyle: FontStyle.italic,
-                        ),
-                        "pre": Style(
-                          backgroundColor: isDark
-                              ? AppColors.surfaceContainerDark
-                              : AppColors.surfaceContainerLight,
-                          padding: HtmlPaddings.all(16),
-                          margin: Margins.only(top: 16, bottom: 16),
-                          fontFamily: 'monospace',
-                          fontSize: FontSize(14),
-                        ),
-                        "code": Style(
-                          backgroundColor: isDark
-                              ? AppColors.surfaceContainerDark
-                              : AppColors.surfaceContainerLight,
-                          padding: HtmlPaddings.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          fontFamily: 'monospace',
-                          fontSize: FontSize(14),
-                        ),
-                        "hr": Style(
-                          margin: Margins.only(top: 24, bottom: 24),
-                          border: Border(
-                            bottom: BorderSide(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        "table": Style(
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.borderDark
-                                : AppColors.borderLight,
-                          ),
-                          margin: Margins.only(top: 16, bottom: 16),
-                        ),
-                        "th": Style(
-                          backgroundColor: isDark
-                              ? AppColors.surfaceContainerDark
-                              : AppColors.surfaceContainerLight,
-                          padding: HtmlPaddings.all(12),
-                          fontWeight: FontWeight.w600,
-                        ),
-                        "td": Style(
-                          padding: HtmlPaddings.all(12),
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.borderDark
-                                : AppColors.borderLight,
-                            width: 0.5,
-                          ),
-                        ),
-                      },
-                      extensions: [
-                        // Custom image rendering with loading placeholder
-                        TagExtension(
-                          tagsToExtend: {"img"},
-                          builder: (extensionContext) {
-                            final src = extensionContext.attributes['src'];
-                            if (src == null || src.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppDesignSystem.space12,
-                              ),
-                              child: ClipRRect(
-                                borderRadius: AppDesignSystem.borderRadiusMd,
-                                child: Image.network(
-                                  src,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Container(
-                                      height: 200,
-                                      width: double.infinity,
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? AppColors.surfaceContainerDark
-                                            : AppColors.surfaceContainerLight,
-                                        borderRadius:
-                                            AppDesignSystem.borderRadiusMd,
-                                      ),
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          value: loadingProgress
-                                                      .expectedTotalBytes !=
-                                                  null
-                                              ? loadingProgress
-                                                      .cumulativeBytesLoaded /
-                                                  loadingProgress
-                                                      .expectedTotalBytes!
-                                              : null,
-                                          strokeWidth: 2,
-                                          color: colorScheme.primary,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      height: 120,
-                                      width: double.infinity,
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? AppColors.surfaceContainerDark
-                                            : AppColors.surfaceContainerLight,
-                                        borderRadius:
-                                            AppDesignSystem.borderRadiusMd,
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.broken_image_outlined,
-                                            size: 32,
-                                            color: isDark
-                                                ? AppColors.textTertiaryDark
-                                                : AppColors.textTertiaryLight,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Image non disponible',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isDark
-                                                  ? AppColors.textTertiaryDark
-                                                  : AppColors.textTertiaryLight,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        // Custom iframe rendering for YouTube and Twitter
-                        TagExtension(
-                          tagsToExtend: {"iframe"},
-                          builder: (extensionContext) {
-                            final src = extensionContext.attributes['src'] ?? '';
-                            return _buildEmbedWidget(src, isDark, colorScheme);
-                          },
-                        ),
-                        // Twitter blockquote embeds
-                        TagExtension(
-                          tagsToExtend: {"blockquote"},
-                          child: null,
-                          builder: (extensionContext) {
-                            final className =
-                                extensionContext.attributes['class'] ?? '';
-                            if (className.contains('twitter')) {
-                              return _buildTwitterEmbed(
-                                extensionContext,
-                                isDark,
-                                colorScheme,
-                              );
-                            }
-                            // Return default styled blockquote for non-Twitter content
-                            return _buildDefaultBlockquote(
-                              extensionContext,
-                              isDark,
-                              colorScheme,
-                            );
-                          },
-                        ),
-                      ],
-                      onLinkTap: (url, attributes, element) async {
-                        if (url != null) {
-                          await _handleLinkTap(url, context, theme);
-                        }
-                      },
-                    ),
+                        articleHtml(split.$2),
+                      ];
+                    }(),
 
                     // One inline banner at the end of the article body, before the related clubs.
                     const InlineBannerAd(),

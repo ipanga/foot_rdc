@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:foot_rdc/features/football/presentation/widgets/club_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/notifications/push.dart';
 import '../../shared/providers/notification_provider.dart';
 import '../../shared/providers/theme_provider.dart';
-import '../football/domain/models.dart';
 import '../football/presentation/providers.dart';
 import '../football/presentation/widgets/football_widgets.dart';
 
@@ -307,34 +307,19 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
   }
 }
 
-/// Choose the followed clubs (the same list as the star on a club page and Plus › Clubs suivis).
+/// Choose the followed clubs (the same list as the star on a club page and Plus › Clubs suivis). Changes apply at once.
 class FollowClubsScreen extends ConsumerWidget {
   const FollowClubsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final followed = ref.watch(favoriteClubsProvider);
-    final season = ref.watch(currentSeasonProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Clubs suivis')),
-      body: season.when(
-        loading: () => const ListSkeleton(),
-        error: (error, _) => MessageState(icon: Icons.cloud_off_outlined, title: failureMessage(error)),
-        data: (s) => LoadedView<List<Club>>(
-          value: ref.watch(clubsProvider(s.id)),
-          builder: (clubs) => ListView(
-            children: [
-              for (final club in [...clubs]..sort((a, b) => a.name.compareTo(b.name)))
-                CheckboxListTile(
-                  key: ValueKey('follow-${club.id}'),
-                  secondary: ClubCrest(url: club.logoUrl, name: club.name, size: 28),
-                  title: Text(club.name),
-                  value: followed.contains(club.id),
-                  onChanged: (_) => ref.read(favoriteClubsProvider.notifier).toggle(club.id),
-                ),
-            ],
-          ),
-        ),
+      body: ClubPicker(
+        selected: followed,
+        onToggle: (id) => ref.read(favoriteClubsProvider.notifier).toggle(id),
+        padding: const EdgeInsets.only(bottom: 24),
       ),
     );
   }

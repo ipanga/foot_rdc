@@ -19,6 +19,7 @@ FootRDC is a French-first news and football app for Congolese football. Football
 | Fixtures, results, standings, clubs, squads, players, events | RDC Football REST `https://footrdc.com/wp-json/rdcfootball/v1` | Server is authoritative. Flutter never calculates standings or match state. |
 | Articles, categories, authors, media | WordPress REST `https://footrdc.com/wp-json/wp/v2` | Never moved into RDC Football. |
 | SportsPress | removed | `SPORTSPRESS_USAGE_REMAINING: 0` |
+| FootRDC's own advertisers (« Publicités mobiles ») | `GET …/rdcfootball/v1/mobile-ads` (plugin `rdc-football-mobile-ads`) | Image + HTTPS link only; separate from AdMob; slots `home_feed`, `article_inline` (`lib/features/promotions/`). 404 = no ads. |
 
 Production is read-only for this project: public GET requests only.
 
@@ -46,7 +47,7 @@ Flutter 3.44.2, Dart 3.12.2. Riverpod (code-gen and manual), Dio (`DioClient`), 
 
 ## Environments
 
-Production API by default. `RDCF_API_ORIGIN` remains for local work. iOS simulator and Android emulator `Pixel_8_Pro` for QA.
+Production API by default. `RDCF_API_ORIGIN` remains for local work. Device QA overrides: `FOOTRDC_PUSH_BASE` (notification registration only; QA points it at nothing) and `FOOTRDC_ADS_BASE` (custom ads only; QA uses the rdc-football-platform dev stack `http://127.0.0.1:8472/wp-json/rdcfootball/v1`, Android with `adb reverse tcp:8472 tcp:8472`). iOS simulator and Android emulator `Pixel_8_Pro` for QA.
 
 ## Non-negotiable constraints
 
@@ -55,6 +56,7 @@ Production API by default. `RDCF_API_ORIGIN` remains for local work. iOS simulat
 - No mutation of Production. No change to the Sportmonks scheduler.
 - ActuRDC, SportRDC and Tootiye are out of scope.
 - `ios/Podfile.lock` carried an uncommitted change before this work began; do not commit it by accident.
+- Ads: at most one custom ad per screen placement, never next to an AdMob ad, never overlay/popup/sticky; labelled « PUBLICITÉ ».
 - Bottom tabs, in order: Accueil, Édito, Matchs, Linafoot, Plus. Name them with `AppTab`, never by position.
 - Édito stays a bottom tab. Design is FootRDC's own; never copy another app's assets.
 - macOS has no `timeout`; long commands use `tool/qa_drive.sh` or `perl -e 'alarm N; exec @ARGV'`.
