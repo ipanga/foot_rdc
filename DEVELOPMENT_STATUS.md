@@ -1,4 +1,4 @@
-NEXT_ACTION: 5.12.11 (36) for TestFlight Internal + Google Play internal (AdMob native validator fix on Android). Production: `rdc-football-mobile-ads` 0.1.1, no campaign; FCM mode test. Samsung test phone currently has a debug QA build (reinstall 36 from Play internal and re-mark its new code as test device).
+NEXT_ACTION: 5.12.11 (36) on TestFlight Internal (6 Nov 00:48) and Google Play internal (01:03); Play beta 34, production 30 unchanged. AdMob native validator warning fixed on Android (own native layout). Production: `rdc-football-mobile-ads` 0.1.1, no campaign; FCM mode test. Samsung test phone has a debug QA build: install 36 from Play internal, then re-mark its new notification code as test device.
 
 # Development status
 

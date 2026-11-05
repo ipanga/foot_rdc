@@ -1,5 +1,16 @@
 # Test matrix
 
+## AdMob native validator fix, 6 Nov 2026 (build 36)
+
+| Check | Result |
+|---|---|
+| Before (builds 33–35, plugin medium template) | emulator: 1 « Not all asset views lie inside the native ad view » per affected ad (5 of 5 in one run); Samsung: same warning |
+| Cause | the template registers its store/advertiser text and hides it (GONE) for rated ads |
+| After (Android: `FootrdcNativeAdFactory`, `footrdc_native_ad.xml`) | emulator, 80 scroll steps, 41 with an ad on screen, 4 ads: 0 warnings; validator « No implementation issues found » |
+| Regression | `ui_ads_qa_test` pass; 172 unit/widget tests; analyze 17 infos |
+| Not re-run | Samsung (phone locked during the evening run); iOS keeps the template (no warning observed there) |
+
+
 ## Physical Samsung Galaxy A56 (Android 17), 5 Nov 2026 evening, build 35 code
 
 | Check | Result |
