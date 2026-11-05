@@ -106,11 +106,34 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
   }
 
   void _updateListWithAds(List<Article> articles) {
-    _disposeNativeAds();
+    // When the list only grows (« load more »), the ads already in it stay in place: replacing them would request new
+    // ads, make the one being read flicker, and re-create its native view mid-layout (an SDK validator warning).
+    final keep = <int, NativeAd>{};
+    if (_listItems.isNotEmpty && articles.isNotEmpty && identical(_listItems.first, articles.first)) {
+      var articleIndex = -1;
+      for (final item in _listItems) {
+        if (item is NativeAd) {
+          keep[articleIndex] = item;
+        } else {
+          articleIndex++;
+        }
+      }
+    }
+    for (final item in _listItems) {
+      if (item is NativeAd && !keep.containsValue(item)) {
+        item.dispose();
+        _nativeAdLoaded.remove(item);
+      }
+    }
     _listItems.clear();
     for (int i = 0; i < articles.length; i++) {
       _listItems.add(articles[i]);
       if ((i + 1) % _adFrequency == 0 && i >= 4 && i < articles.length - 1) {
+        final kept = keep.remove(i);
+        if (kept != null) {
+          _listItems.add(kept);
+          continue;
+        }
         final nativeAd = createNativeAd(
           onLoaded: (ad) {
             if (!mounted) return;
@@ -123,8 +146,13 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen>
           },
         );
         _nativeAdLoaded[nativeAd] = false;
-        _listItems.insert(i + 1, nativeAd);
+        _listItems.add(nativeAd);
       }
+    }
+    // Positions that no longer exist.
+    for (final ad in keep.values) {
+      ad.dispose();
+      _nativeAdLoaded.remove(ad);
     }
   }
 

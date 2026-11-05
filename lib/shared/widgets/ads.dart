@@ -25,7 +25,15 @@ class AdLabel extends StatelessWidget {
 }
 
 /// A native medium-template ad in a list. [loaded] is null when the ad failed: the slot then takes no space.
-class NativeAdSlot extends StatelessWidget {
+///
+/// Two rules keep every ad asset inside Google's native ad view (the SDK's validator warns « Not all asset views lie
+/// inside the native ad view » otherwise):
+/// - the platform view is created only once the whole slot is visible in the list: the SDK checks the assets when the
+///   view is created, and a view created while partly below the visible area was reported on Android every time
+///   (texture-layer platform views; measured 5 Nov 2026, 5 of 5);
+/// - on Android the ad uses FootRDC's own layout (`footrdc_native_ad.xml`, every asset inside the native ad view) in a
+///   350 dp frame it fills; the same space is reserved before the ad appears, so nothing moves.
+class NativeAdSlot extends StatefulWidget {
   final NativeAd ad;
   final bool? loaded;
   const NativeAdSlot({super.key, required this.ad, required this.loaded});
@@ -34,14 +42,84 @@ class NativeAdSlot extends StatelessWidget {
   static const minSide = 320.0;
   static const maxSide = 400.0;
 
+  /// Height of the Android native ad frame (`footrdc_native_ad.xml` fills it).
+  static const androidTemplateHeight = 350.0;
+
+  @override
+  State<NativeAdSlot> createState() => _NativeAdSlotState();
+}
+
+class _NativeAdSlotState extends State<NativeAdSlot> {
+  var _onScreen = false;
+  ScrollPosition? _position;
+
+  @visibleForTesting
+  bool get onScreenForTests => _onScreen;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final position = Scrollable.maybeOf(context)?.position;
+    if (!identical(position, _position)) {
+      _position?.removeListener(_scheduleCheck);
+      _position = position;
+      if (!_onScreen) _position?.addListener(_scheduleCheck);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  @override
+  void dispose() {
+    _position?.removeListener(_scheduleCheck);
+    super.dispose();
+  }
+
+  var _checkScheduled = false;
+
+  /// Scrolling moves the slot at the next layout: check after that frame, once per frame.
+  void _scheduleCheck() {
+    if (_checkScheduled || _onScreen) return;
+    _checkScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScheduled = false;
+      _check();
+    });
+  }
+
+  /// True once the whole slot is inside the list's visible area (or covers it entirely when it is taller).
+  void _check() {
+    if (_onScreen || !mounted) return;
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return;
+    final viewport = Scrollable.maybeOf(context)?.context.findRenderObject();
+    final double top, height;
+    if (viewport is RenderBox && viewport.attached && viewport.hasSize) {
+      top = box.localToGlobal(Offset.zero, ancestor: viewport).dy;
+      height = viewport.size.height;
+    } else {
+      top = box.localToGlobal(Offset.zero).dy;
+      height = MediaQuery.sizeOf(context).height;
+    }
+    final bottom = top + box.size.height;
+    final fits = top >= 0 && bottom <= height;
+    final covers = box.size.height > height && top <= 0 && bottom >= height;
+    if (fits || covers) {
+      _position?.removeListener(_scheduleCheck);
+      setState(() => _onScreen = true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final loaded = widget.loaded;
     if (loaded == null) return const SizedBox.shrink();
+    final android = defaultTargetPlatform == TargetPlatform.android;
     return LayoutBuilder(
       builder: (context, constraints) {
         // Never squeeze the template below its minimum: on a narrower screen, show nothing.
-        if (constraints.maxWidth < minSide) return const SizedBox.shrink();
-        final width = constraints.maxWidth.clamp(minSide, maxSide);
+        if (constraints.maxWidth < NativeAdSlot.minSide) return const SizedBox.shrink();
+        final width = constraints.maxWidth.clamp(NativeAdSlot.minSide, NativeAdSlot.maxSide);
+        final height = android ? NativeAdSlot.androidTemplateHeight : NativeAdSlot.minSide;
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Center(
@@ -54,13 +132,17 @@ class NativeAdSlot extends StatelessWidget {
                   const AdLabel(),
                   ConstrainedBox(
                     key: const ValueKey('native-ad-frame'),
-                    constraints: const BoxConstraints(
-                      minWidth: minSide,
-                      minHeight: minSide,
-                      maxWidth: maxSide,
-                      maxHeight: maxSide,
-                    ),
-                    child: loaded == true ? AdWidget(ad: ad) : const SizedBox(width: minSide, height: minSide),
+                    constraints: android
+                        ? BoxConstraints.tightFor(width: width, height: height)
+                        : const BoxConstraints(
+                            minWidth: NativeAdSlot.minSide,
+                            minHeight: NativeAdSlot.minSide,
+                            maxWidth: NativeAdSlot.maxSide,
+                            maxHeight: NativeAdSlot.maxSide,
+                          ),
+                    child: loaded && _onScreen
+                        ? AdWidget(key: ValueKey(widget.ad), ad: widget.ad)
+                        : SizedBox(width: width, height: height),
                   ),
                 ],
               ),
@@ -85,8 +167,16 @@ NativeAd createNativeAd({required void Function(NativeAd ad) onLoaded, required 
         },
       ),
       request: const AdRequest(),
-      nativeTemplateStyle: NativeTemplateStyle(templateType: TemplateType.medium),
+      // Android: FootRDC's own layout (FootrdcNativeAdFactory), whose assets all stay inside the native ad view; the
+      // plugin's medium template hides a registered asset for rated ads (SDK validator warning). iOS: the template.
+      factoryId: defaultTargetPlatform == TargetPlatform.android ? androidNativeAdFactoryId : null,
+      nativeTemplateStyle: defaultTargetPlatform == TargetPlatform.android
+          ? null
+          : NativeTemplateStyle(templateType: TemplateType.medium),
     )..load();
+
+/// Registered in MainActivity.kt (`NATIVE_AD_FACTORY`).
+const androidNativeAdFactoryId = 'footrdcNative';
 
 /// An inline adaptive banner in reading content, following Google's inline adaptive guide: the size comes from the
 /// available width; the slot takes space only once the ad has loaded, at the size the SDK reports.

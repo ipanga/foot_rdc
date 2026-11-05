@@ -8,11 +8,14 @@ import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
 
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         createNotificationChannels()
+        // Native ads in lists use FootRDC's own layout (see FootrdcNativeAdFactory).
+        GoogleMobileAdsPlugin.registerNativeAdFactory(flutterEngine, NATIVE_AD_FACTORY, FootrdcNativeAdFactory(layoutInflater))
         // Plus › Notifications: open this app's notification settings (permission, sound, per channel).
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "footrdc/notification_settings").setMethodCallHandler { call, result ->
             if (call.method == "open") {
@@ -27,6 +30,16 @@ class MainActivity : FlutterActivity() {
                 result.notImplemented()
             }
         }
+    }
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        GoogleMobileAdsPlugin.unregisterNativeAdFactory(flutterEngine, NATIVE_AD_FACTORY)
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
+    companion object {
+        /** Must match `androidNativeAdFactoryId` in lib/shared/widgets/ads.dart. */
+        const val NATIVE_AD_FACTORY = "footrdcNative"
     }
 
     /** One channel per kind of message, so users can tune sound and importance for each in the system settings. */

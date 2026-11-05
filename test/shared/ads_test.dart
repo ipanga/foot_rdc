@@ -66,6 +66,47 @@ void main() {
     expect(await frameAt(tester, 300), Size.zero);
   });
 
+  testWidgets(
+    'Android: the frame is the template height (350) before and after loading, so nothing moves',
+    (tester) async {
+      final before = await frameAt(tester, 390);
+      expect(before.height, NativeAdSlot.androidTemplateHeight);
+      expect(before.width, inInclusiveRange(320, 400));
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  testWidgets('the ad view is created only once the whole slot is visible', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final controller = ScrollController();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ListView(
+            controller: controller,
+            children: [
+              const SizedBox(height: 900),
+              NativeAdSlot(ad: ad, loaded: false),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final state = tester.state(find.byType(NativeAdSlot, skipOffstage: false));
+    expect((state as dynamic).onScreenForTests, isFalse, reason: 'built below the screen: no platform view yet');
+    controller.jumpTo(300);
+    await tester.pump();
+    await tester.pump();
+    expect((state as dynamic).onScreenForTests, isFalse, reason: 'only partly visible: still no platform view');
+    controller.jumpTo(controller.position.maxScrollExtent);
+    await tester.pump();
+    await tester.pump();
+    expect((state as dynamic).onScreenForTests, isTrue, reason: 'entirely visible');
+  });
+
   testWidgets('the inline banner takes no space before an ad has loaded', (tester) async {
     disableInlineBannerAdsForTests();
     await tester.pumpWidget(
