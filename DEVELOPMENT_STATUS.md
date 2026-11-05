@@ -1,4 +1,4 @@
-NEXT_ACTION: owner review of (1) the 6 Nov refinements and (2) custom mobile ads, both uncommitted on `feat/app-refinements-20261106` (reports `docs/refinements-20261106/REPORT.md`, `docs/custom-ads-20261105/PROGRESS.md`, `migration_ovhcloud/docs/review/footrdc-mobile-ads-20261105/README.md`). Staging runs plugin `rdc-football-mobile-ads` 0.1.1 until Sat 7 Nov 16:15 UTC (auto-stop). After approval: commit, Production plugin install (separate approval), build 5.12.11 (35) internal only with authorisation.
+NEXT_ACTION: build 5.12.11 (35) prepared on `feat/app-refinements-20261106` (local commits `76a066a` + version bump; release AAB and iOS release build compile; nothing uploaded). Upload to TestFlight/Play internal needs owner authorisation and the branch merged into `feat/rdc-football-mobile-redesign` and pushed (fastlane gate). Production has `rdc-football-mobile-ads` 0.1.1 with no campaign (5 Nov 18:07 UTC). Physical Samsung test PENDING: the phone was not visible to adb on 5 Nov evening.
 
 # Development status
 
