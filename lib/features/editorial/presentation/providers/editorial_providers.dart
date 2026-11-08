@@ -15,11 +15,6 @@ class EditorialChannel {
     title: 'ÉDITO',
     missingText: 'La catégorie Édito n\'a pas été trouvée. Réessayez plus tard.',
   );
-  static const bonASavoir = EditorialChannel(
-    slug: ApiConstants.bonASavoirCategorySlug,
-    title: 'BON À SAVOIR',
-    missingText: 'La catégorie Bon à savoir n\'a pas été trouvée. Réessayez plus tard.',
-  );
 }
 
 /// Category ID for a slug, cached for the session. Null when the category no longer exists on WordPress.

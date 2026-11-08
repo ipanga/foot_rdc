@@ -159,7 +159,7 @@ class ArticleListItem extends StatelessWidget {
     );
   }
 
-  /// « RDC · 10:45 »: the category as a red kicker, then the time.
+  /// « RDC · 10:45 »: the category as a kicker in the date's colour, then the time.
   Widget _buildMetaRow(BuildContext context, bool isDark) {
     final textColor = isDark
         ? AppColors.textTertiaryDark
@@ -256,7 +256,7 @@ class ArticleFeaturedCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (category.isNotEmpty)
-                      CategoryLabel(category, color: Colors.white.withAlpha(225)),
+                      CategoryLabel(category, color: Colors.white.withAlpha(180)),
                     const SizedBox(height: AppDesignSystem.space10),
 
                     // Title

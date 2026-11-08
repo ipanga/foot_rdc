@@ -12,7 +12,7 @@ import 'package:foot_rdc/features/news/domain/entities/article.dart';
 import 'package:foot_rdc/features/news/presentation/screens/article_detail_screen.dart';
 import 'package:foot_rdc/features/news/presentation/widgets/article_list_item.dart';
 
-/// Editorial feed for the WordPress category `bon-a-savoir`.
+/// Editorial feed for a WordPress category (the Édito tab).
 /// Slim sibling to [NewsListScreen] — same article entity and list item
 /// widget, but no carousel and no native-ad insertion (lower ad density for
 /// long-form content).

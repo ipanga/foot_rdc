@@ -6,7 +6,9 @@ import 'package:foot_rdc/features/news/presentation/providers/article_cache_prov
 import 'package:foot_rdc/features/home/presentation/app_tabs.dart';
 import 'package:foot_rdc/shared/providers/connectivity_provider.dart';
 import 'package:foot_rdc/shared/widgets/connectivity_banner.dart';
+import 'package:foot_rdc/shared/widgets/auto_hide_bottom_bar.dart';
 import 'package:foot_rdc/shared/widgets/premium_bottom_nav_bar.dart';
+import 'package:foot_rdc/features/app_update/app_update.dart';
 import 'package:foot_rdc/features/editorial/presentation/providers/editorial_providers.dart';
 import 'package:foot_rdc/features/editorial/presentation/screens/editorial_list_screen.dart';
 import 'package:foot_rdc/features/football/presentation/providers.dart';
@@ -25,6 +27,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
   final GlobalKey<EditorialListScreenState> _editoKey = GlobalKey<EditorialListScreenState>();
 
+  /// The tab bar hides while reading further down any tab and returns going back up (see [BottomBarVisibility]).
+  final _bar = BottomBarVisibility();
+  bool _onTop = true;
+
   @override
   void initState() {
     super.initState();
@@ -34,13 +40,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _bar.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Back from an article, a club or a Plus page: the tabs are there again.
+    final onTop = ModalRoute.isCurrentOf(context) ?? true;
+    if (onTop && !_onTop) _bar.show();
+    _onTop = onTop;
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) _refresh(ref.read(currentTabProvider));
+    if (state == AppLifecycleState.resumed) {
+      _bar.show();
+      _refresh(ref.read(currentTabProvider));
+    }
   }
 
   void _refresh(AppTab tab) {
@@ -67,7 +86,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   Widget build(BuildContext context) {
     final currentTab = ref.watch(currentTabProvider);
 
-    ref.listen<AppTab>(currentTabProvider, (_, next) => _refresh(next));
+    ref.listen<AppTab>(currentTabProvider, (_, next) {
+      _bar.show();
+      _refresh(next);
+    });
 
     // Refresh once per offline to online transition, never in a loop.
     ref.listen<AsyncValue<ConnectivityStatus>>(connectivityStatusProvider, (prev, next) {
@@ -81,20 +103,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     return Scaffold(
       extendBody: false,
       resizeToAvoidBottomInset: false,
-      body: TabPages(current: currentTab, builder: _page),
+      body: NotificationListener<ScrollNotification>(
+        onNotification: _bar.onScroll,
+        child: TabPages(current: currentTab, builder: _page),
+      ),
       bottomNavigationBar: Offstage(
         offstage: typing,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Offline notice and the optional update suggestion stay in view when the tabs slide away.
             const ConnectivityBanner(),
-            // Tab labels have a fixed height, so they do not grow with system text size, as on native tab bars.
-            MediaQuery.withClampedTextScaling(
-              maxScaleFactor: 1.0,
-              child: PremiumBottomNavBar(
-                currentIndex: currentTab.index,
-                onTap: (index) => ref.read(currentTabProvider.notifier).state = AppTab.values[index],
-                items: [for (final tab in AppTab.values) appTabNavItem(tab)],
+            if (currentTab == AppTab.home) const AppUpdateBanner(),
+            AutoHideBottomBar(
+              visibility: _bar,
+              // Tab labels have a fixed height, so they do not grow with system text size, as on native tab bars.
+              child: MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.0,
+                child: PremiumBottomNavBar(
+                  currentIndex: currentTab.index,
+                  onTap: (index) => ref.read(currentTabProvider.notifier).state = AppTab.values[index],
+                  items: [for (final tab in AppTab.values) appTabNavItem(tab)],
+                ),
               ),
             ),
           ],

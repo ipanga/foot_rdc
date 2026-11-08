@@ -37,7 +37,7 @@ void main() {
 
     await qa.nav('Plus');
     await tester.tap(find.text('Notifications'));
-    await qa.wait(find.text('Préférence FootRDC'));
+    await qa.wait(find.text('Articles à la Une'));
     await qa.shot('notifications-sombre');
     await qa.back();
 
@@ -53,7 +53,7 @@ void main() {
     await qa.pumpFor(const Duration(seconds: 1));
     await qa.back();
     await tester.tap(find.text('Notifications'));
-    await qa.wait(find.text('Préférence FootRDC'));
+    await qa.wait(find.text('Articles à la Une'));
     await qa.shot('notifications');
     await qa.back();
   });

@@ -9,7 +9,6 @@ class ApiConstants {
   static const String postsEndpoint = '$baseUrl$wpApiPath/posts';
 
   // Editorial content
-  static const String bonASavoirCategorySlug = 'bon-a-savoir';
   static const String editoCategorySlug = 'editorial';
 
   // Pagination defaults

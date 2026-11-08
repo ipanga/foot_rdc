@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/notification_provider.dart';
 import '../../shared/providers/theme_provider.dart';
 
-import '../editorial/presentation/providers/editorial_providers.dart';
-import '../editorial/presentation/screens/editorial_list_screen.dart';
 import '../football/domain/models.dart';
 import '../football/presentation/providers.dart';
 import '../football/presentation/screens/clubs_screen.dart';
@@ -48,7 +46,6 @@ class MoreScreen extends ConsumerWidget {
           const SectionHeader('Articles'),
           tile(Icons.search, 'Recherche', const SearchScreen()),
           tile(Icons.bookmark_border, 'Articles enregistrés', const _SavedPage()),
-          tile(Icons.lightbulb_outline, 'Bon à savoir', EditorialListScreen(channel: EditorialChannel.bonASavoir)),
           const SectionHeader('Application'),
           tile(
             Icons.palette_outlined,

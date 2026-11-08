@@ -50,7 +50,8 @@ class AppColors {
   // ============================================
   static const Color textPrimaryLight = Color(0xFF0F172A);
   static const Color textSecondaryLight = Color(0xFF475569);
-  static const Color textTertiaryLight = Color(0xFF94A3B8);
+  // Dates, categories and other secondary meta text: 4.8:1 on white (was #94A3B8, 2.6:1).
+  static const Color textTertiaryLight = Color(0xFF64748B);
   static const Color textDisabledLight = Color(0xFFCBD5E1);
 
   static const Color textPrimaryDark = Color(0xFFF8FAFC);

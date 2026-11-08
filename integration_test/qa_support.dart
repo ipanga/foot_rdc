@@ -91,7 +91,13 @@ class Qa {
     }
   }
 
+  /// Taps a bottom tab. The tab bar hides while reading further down, so first go back up until it can be tapped.
   Future<void> nav(String label) async {
+    final size = tester.view.physicalSize / tester.view.devicePixelRatio;
+    for (var i = 0; i < 8 && find.text(label).hitTestable().evaluate().isEmpty; i++) {
+      await tester.dragFrom(Offset(size.width / 2, size.height * 0.4), const Offset(0, 160));
+      await pumpFor(const Duration(milliseconds: 500));
+    }
     await tester.tap(find.text(label).last);
     await pumpFor(const Duration(milliseconds: 400));
   }

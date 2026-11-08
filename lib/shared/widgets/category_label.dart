@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:foot_rdc/core/theme/app_colors.dart';
 
-/// An article's category as an editorial kicker: small capitals in FootRDC red, no box. The red shade keeps a 4.5:1
-/// contrast on the light and dark surfaces.
+/// An article's category as an editorial kicker: small capitals, no box, in the colour of the publication date shown
+/// beside it (the shared tertiary text token).
 class CategoryLabel extends StatelessWidget {
   final String text;
   final double fontSize;
 
-  /// Overrides the red (for example white on a photo).
+  /// Overrides the colour (for example white on a photo, matching the date there).
   final Color? color;
   const CategoryLabel(this.text, {super.key, this.fontSize = 11, this.color});
 
@@ -19,7 +19,7 @@ class CategoryLabel extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        color: color ?? (isDark ? AppColors.brandPrimaryLight : AppColors.brandPrimaryDark),
+        color: color ?? (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight),
         fontSize: fontSize,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.9,

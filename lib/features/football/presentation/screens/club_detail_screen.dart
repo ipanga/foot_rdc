@@ -268,7 +268,7 @@ class ClubNewsTile extends StatelessWidget {
                       item.category!.toUpperCase(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: text.labelSmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
+                      style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
                     ),
                   Text(
                     item.title,

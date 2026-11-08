@@ -8,6 +8,8 @@ News/editorial remains FootRDC WordPress API; dedicated configurable Core footba
 
 Production roadmap DEFERRED: sportrdc.com first, separately audit/migrate manual/FTP deployment toward GitHub-controlled reviewed immutable release/health/rollback; validate RDC Football with existing editorial/theme; separately approve GeneratePress later; only then consider FootRDC.com. No production deployment/workflow/theme/SportPress/scheduler/readiness change here. REAL LINAFOOT LIVE VALIDATION: PENDING.
 
+Navigation pass (8 Nov 2026): see `docs/ui-nav-scroll-20261108/REPORT.md` — IMPLEMENTED on `feat/ui-nav-scroll-20261108` (uncommitted), awaiting owner review; Android update suggestion DEFERRED.
+
 App refinements (6 Nov 2026): see `docs/refinements-20261106/PROGRESS.md` (club onboarding, notification defaults and hardening, tabs, category, header) — IMPLEMENTED, awaiting owner review.
 
 Status markers: `TODO` · `IN_PROGRESS` · `DONE` · `DEFERRED`.

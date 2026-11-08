@@ -245,6 +245,14 @@ class MatchChip extends StatelessWidget {
         if (scored) Text('${side.score}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
       ],
     );
+    // The strip on Accueil has a fixed height: text grows up to 1.3× here (full size on the Matchs tab).
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: _chip(context, scheme, line, scored),
+    );
+  }
+
+  Widget _chip(BuildContext context, ColorScheme scheme, Widget Function(MatchSide) line, bool scored) {
     return Semantics(
       button: true,
       label:
