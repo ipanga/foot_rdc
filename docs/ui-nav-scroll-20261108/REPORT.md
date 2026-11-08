@@ -53,7 +53,10 @@ QA script: `integration_test/ui_nav_scroll_qa_test.dart` (prints `QA-BAR … vis
 ## Pre-release checks (after the colour change)
 `flutter analyze` 0 errors/warnings, `flutter test` 179 passed. Device: iPhone 11 navigation + redesign QA, iPhone 18 Pro full app + ads + notifications QA, Pixel 8 Pro navigation + full app + settings QA — all PASS, 0 exceptions (`logs/prerelease-*`, `screens/prerelease-*`). The settings QA still looked for « Préférence FootRDC » (renamed on 6 Nov); updated to « Articles à la Une ».
 
+## Release
+5.12.11 (37) from `c5f8fcd` (feature commit `821d55a`) via `fastlane beta_all`: TestFlight — processed, distributed to internal testers (17:36); Google Play — internal track, completed (17:41). No public track, no App Review submission.
+
 ## Next steps
-1. Your review of the screens (and the contrast choice).
-2. Commit on request; then a build for internal testing only with your approval.
-3. Later phase: Android update suggestion.
+1. Check 37 on the testers' phones (scroll hide/show, category colour, Plus).
+2. Later phase: Android update suggestion.
+3. The update line only appears once a public App Store version above 5.12.11 exists.

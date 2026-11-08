@@ -1,4 +1,4 @@
-NEXT_ACTION: 5.12.11 (37) uploading to TestFlight Internal and Google Play internal (8 Nov): auto-hiding tab bar, no tab indicator, readable category/date colour, « Bon à savoir » removed, iOS update line. Play beta 34, production 30 unchanged. Android update suggestion deferred.
+NEXT_ACTION: 5.12.11 (37) on TestFlight Internal (8 Nov 17:36 local, distributed to internal testers) and Google Play internal (17:41), source `c5f8fcd`: auto-hiding tab bar, no tab indicator, readable category/date colour, « Bon à savoir » removed, iOS update line. Play beta 34, production 30 unchanged. Android update suggestion deferred.
 
 # Development status
 
@@ -26,7 +26,7 @@ None for internal testing.
 See `DECISIONS.md` and the limitations in the final report.
 
 ## Phase log
-| Navigation pass 8 Nov (category in date colour, no tab indicator, tab bar hides while scrolling, « Bon à savoir » removed, iOS update suggestion) | IMPLEMENTED; 179 tests; device QA PASS iPhone 11 (incl. very large text), iPhone 18 Pro, Pixel 8 Pro; owner-approved 8 Nov — `docs/ui-nav-scroll-20261108/REPORT.md` | `9ef607d`; released as 5.12.11 (37) internal |
+| Navigation pass 8 Nov (category in date colour, no tab indicator, tab bar hides while scrolling, « Bon à savoir » removed, iOS update suggestion) | IMPLEMENTED; 179 tests; device QA PASS iPhone 11 (incl. very large text), iPhone 18 Pro, Pixel 8 Pro; owner-approved 8 Nov — `docs/ui-nav-scroll-20261108/REPORT.md` | `821d55a`; released as 5.12.11 (37) internal from `c5f8fcd` |
 | Custom mobile ads (WordPress « Publicités mobiles » + slots home_feed/article_inline) | IMPLEMENTED; Staging VERIFIED; 170 tests; device QA PASS Pixel 8 Pro, iPhone 18 Pro, iPhone 17e | `feat/app-refinements-20261106` (uncommitted) + rdc-football-platform `feat/mobile-ads` |
 | App refinements 6 Nov (club onboarding, notification defaults/permission, tabs, category, header, notification hardening) | IMPLEMENTED; 150 tests; device QA PASS on Pixel 8 Pro, iPhone 18 Pro, iPhone 17e | `feat/app-refinements-20261106` (uncommitted) |
 | FCM notifications (« À la Une », club alerts) | IMPLEMENTED; simulators VERIFIED (token, settings, simulated banner); real delivery PENDING owner credentials | `058acd3` on `feat/fcm-notifications` (local) |
