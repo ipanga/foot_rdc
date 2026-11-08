@@ -1,4 +1,4 @@
-NEXT_ACTION: 5.12.11 (36) on TestFlight Internal (6 Nov 00:48) and Google Play internal (01:03); Play beta 34, production 30 unchanged. AdMob native validator warning fixed on Android (own native layout). Production: `rdc-football-mobile-ads` 0.1.1, no campaign; FCM mode test. Samsung test phone has a debug QA build: install 36 from Play internal, then re-mark its new notification code as test device.
+NEXT_ACTION: 5.12.11 (37) uploading to TestFlight Internal and Google Play internal (8 Nov): auto-hiding tab bar, no tab indicator, readable category/date colour, « Bon à savoir » removed, iOS update line. Play beta 34, production 30 unchanged. Android update suggestion deferred.
 
 # Development status
 
@@ -7,8 +7,8 @@ NEXT_ACTION: 5.12.11 (36) on TestFlight Internal (6 Nov 00:48) and Google Play i
 | Branch | `feat/rdc-football-mobile-redesign`, pushed, head `ff54f72` (fast-forwarded from `feat/ui-refinement`) |
 | Current phase | Internal beta 5.12.11 (33) with the UI refinement on both stores; physical testing next |
 | Latest app code commit | `a4dabbc`; uploaded source revision `ff54f72` |
-| Version | Flutter `5.12.11+33`; iOS CFBundleVersion 33, CFBundleShortVersionString 5.12.11; Android versionCode 33, versionName 5.12.11 |
-| Tests | `flutter test`: 113 passed, 0 failed. `flutter analyze`: 17 infos, 0 errors, 0 warnings |
+| Version | Flutter `5.12.11+37`; iOS CFBundleVersion 37, CFBundleShortVersionString 5.12.11; Android versionCode 37, versionName 5.12.11 |
+| Tests | `flutter test`: 179 passed (8 Nov); earlier: 113 passed, 0 failed. `flutter analyze`: 17 infos, 0 errors, 0 warnings |
 | Device QA | Pre-release runs on iPhone 11, iPhone 18 Pro, Pixel 8 Pro: all pass after the club-news test fix; screens in `docs/ui-refinement/screens/prerelease/` |
 | Emulators | iPhone 18 Pro booted; Pixel_8_Pro restored to default size and text |
 | API | Production read-only; no writes made |
@@ -26,7 +26,7 @@ None for internal testing.
 See `DECISIONS.md` and the limitations in the final report.
 
 ## Phase log
-| Navigation pass 8 Nov (category in date colour, no tab indicator, tab bar hides while scrolling, « Bon à savoir » removed, iOS update suggestion) | IMPLEMENTED; 179 tests; device QA PASS iPhone 11 (incl. very large text), iPhone 18 Pro, Pixel 8 Pro; awaiting owner review — `docs/ui-nav-scroll-20261108/REPORT.md` | `feat/ui-nav-scroll-20261108` (uncommitted) |
+| Navigation pass 8 Nov (category in date colour, no tab indicator, tab bar hides while scrolling, « Bon à savoir » removed, iOS update suggestion) | IMPLEMENTED; 179 tests; device QA PASS iPhone 11 (incl. very large text), iPhone 18 Pro, Pixel 8 Pro; owner-approved 8 Nov — `docs/ui-nav-scroll-20261108/REPORT.md` | `9ef607d`; released as 5.12.11 (37) internal |
 | Custom mobile ads (WordPress « Publicités mobiles » + slots home_feed/article_inline) | IMPLEMENTED; Staging VERIFIED; 170 tests; device QA PASS Pixel 8 Pro, iPhone 18 Pro, iPhone 17e | `feat/app-refinements-20261106` (uncommitted) + rdc-football-platform `feat/mobile-ads` |
 | App refinements 6 Nov (club onboarding, notification defaults/permission, tabs, category, header, notification hardening) | IMPLEMENTED; 150 tests; device QA PASS on Pixel 8 Pro, iPhone 18 Pro, iPhone 17e | `feat/app-refinements-20261106` (uncommitted) |
 | FCM notifications (« À la Une », club alerts) | IMPLEMENTED; simulators VERIFIED (token, settings, simulated banner); real delivery PENDING owner credentials | `058acd3` on `feat/fcm-notifications` (local) |
