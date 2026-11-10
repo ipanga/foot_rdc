@@ -122,5 +122,6 @@ If a Claude session is interrupted mid-batch:
 | DONE | « Tout voir » → Matchs › Résultats, « Calendrier » → Matchs › Calendrier | `matchesSectionProvider` in `providers.dart`, consumed by `MatchesScreen` |
 | DONE | Launcher icon from `Logo Foot RDC_1.png` (Android adaptive + legacy, iOS) | `tool/generate_launcher_icons.py`; notification icon unchanged |
 | DONE | Tests and device QA | `test/football/home_matches_test.dart`, `integration_test/home_matches_qa_test.dart`; report `docs/home-matches-20261110/REPORT.md` |
-| TODO | Owner review, then commit and internal release | No upload without approval |
+| DONE | Internal release 5.12.12 (38) | TestFlight internal 16:26, Google Play internal 16:30 (10 Nov); 5.12.11 train closed by App Store Connect |
+| TODO | Physical-phone checks of build 38 | |
 
