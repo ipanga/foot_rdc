@@ -1,6 +1,6 @@
 # Accueil: recent results and upcoming fixtures, new launcher icon (10 Nov 2026)
 
-Branch `feat/rdc-football-mobile-redesign`. Released as **5.12.11 (38) to TestFlight internal testers and Google Play internal testing** on owner request (10 Nov, « internal tracks »); nothing public.
+Branch `feat/rdc-football-mobile-redesign`. Released as **5.12.12 (38) to TestFlight internal testers and Google Play internal testing** on owner request (10 Nov, « internal tracks »); nothing public.
 
 ## 1. What changed
 
