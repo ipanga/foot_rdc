@@ -113,3 +113,14 @@ If a Claude session is interrupted mid-batch:
 3. Use `git status` and `git diff` to see what files were already touched.
 4. Resume from the next `TODO` after that row.
 5. Mark each item `DONE` as it ships; bump the next one to `IN_PROGRESS` before starting it.
+
+## Batch — Accueil results/fixtures and launcher icon (10 Nov 2026)
+
+| Status | Item | Notes |
+|---|---|---|
+| DONE | « Derniers résultats » and « Prochains matchs » carousels on Accueil | `home_football.dart` (`HomeMatchStrip`, `HomeMatchCard`, `homeResults`, `homeFixtures`), existing providers and cache |
+| DONE | « Tout voir » → Matchs › Résultats, « Calendrier » → Matchs › Calendrier | `matchesSectionProvider` in `providers.dart`, consumed by `MatchesScreen` |
+| DONE | Launcher icon from `Logo Foot RDC_1.png` (Android adaptive + legacy, iOS) | `tool/generate_launcher_icons.py`; notification icon unchanged |
+| DONE | Tests and device QA | `test/football/home_matches_test.dart`, `integration_test/home_matches_qa_test.dart`; report `docs/home-matches-20261110/REPORT.md` |
+| TODO | Owner review, then commit and internal release | No upload without approval |
+

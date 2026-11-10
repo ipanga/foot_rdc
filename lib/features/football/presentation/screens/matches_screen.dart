@@ -18,54 +18,86 @@ class MatchesScreen extends ConsumerWidget {
     final season = ref.watch(activeSeasonProvider);
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Matchs'),
-          actions: const [SeasonButton()],
-          // Three equal tabs: on a small screen with large text, a label shrinks to fit instead of being cut.
-          bottom: TabBar(
-            tabs: [
-              for (final label in const ["Aujourd'hui", 'Calendrier', 'Résultats'])
-                Tab(
-                  child: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
+      initialIndex: ref.read(matchesSectionProvider) ?? MatchesSection.today,
+      child: _SectionJump(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Matchs'),
+            actions: const [SeasonButton()],
+            // Three equal tabs: on a small screen with large text, a label shrinks to fit instead of being cut.
+            bottom: TabBar(
+              tabs: [
+                for (final label in const ["Aujourd'hui", 'Calendrier', 'Résultats'])
+                  Tab(
+                    child: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
+                  ),
+              ],
+            ),
+          ),
+          body: season.when(
+            loading: () => const ListSkeleton(),
+            error: (error, _) => MessageState(
+              icon: Icons.cloud_off_outlined,
+              title: failureMessage(error),
+              onRetry: () => ref.invalidate(seasonsProvider),
+            ),
+            data: (s) => TabBarView(
+              children: [
+                switch (current.valueOrNull) {
+                  final c? => _Today(season: c.id),
+                  null => const ListSkeleton(),
+                },
+                Column(
+                  children: [
+                    PastSeasonBanner(season: s),
+                    Expanded(
+                      child: SeasonMatchList(key: ValueKey('f${s.id}'), season: s, view: 'fixtures'),
+                    ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-        body: season.when(
-          loading: () => const ListSkeleton(),
-          error: (error, _) => MessageState(
-            icon: Icons.cloud_off_outlined,
-            title: failureMessage(error),
-            onRetry: () => ref.invalidate(seasonsProvider),
-          ),
-          data: (s) => TabBarView(
-            children: [
-              switch (current.valueOrNull) {
-                final c? => _Today(season: c.id),
-                null => const ListSkeleton(),
-              },
-              Column(
-                children: [
-                  PastSeasonBanner(season: s),
-                  Expanded(
-                    child: SeasonMatchList(key: ValueKey('f${s.id}'), season: s, view: 'fixtures'),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  PastSeasonBanner(season: s),
-                  Expanded(
-                    child: SeasonMatchList(key: ValueKey('r${s.id}'), season: s, view: 'results'),
-                  ),
-                ],
-              ),
-            ],
+                Column(
+                  children: [
+                    PastSeasonBanner(season: s),
+                    Expanded(
+                      child: SeasonMatchList(key: ValueKey('r${s.id}'), season: s, view: 'results'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+}
+
+/// Moves to the section another screen asked for (Accueil's « Tout voir » or « Calendrier »), once.
+class _SectionJump extends ConsumerStatefulWidget {
+  final Widget child;
+  const _SectionJump({required this.child});
+  @override
+  ConsumerState<_SectionJump> createState() => _SectionJumpState();
+}
+
+class _SectionJumpState extends ConsumerState<_SectionJump> {
+  @override
+  void initState() {
+    super.initState();
+    // First opening: DefaultTabController already started on the asked section; the request is consumed.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && ref.read(matchesSectionProvider) != null) ref.read(matchesSectionProvider.notifier).state = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<int?>(matchesSectionProvider, (_, next) {
+      if (next == null) return;
+      DefaultTabController.of(context).animateTo(next);
+      ref.read(matchesSectionProvider.notifier).state = null;
+    });
+    return widget.child;
   }
 }
 

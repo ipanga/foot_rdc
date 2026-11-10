@@ -28,6 +28,9 @@ void main() {
       }
       await qa.shot('accueil-$mode');
 
+      // Accueil's match carousels can push the first story below the fold on a small phone.
+      await tester.ensureVisible(find.byType(ArticleListItem).first);
+      await qa.pumpFor(const Duration(milliseconds: 600));
       await tester.tap(find.byType(ArticleListItem).first);
       await qa.wait(find.byType(ArticleDetailScreen));
       await qa.pumpFor(const Duration(seconds: 3));

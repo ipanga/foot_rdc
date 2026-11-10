@@ -1,4 +1,4 @@
-NEXT_ACTION: 5.12.11 (37) on TestFlight Internal (8 Nov 17:36 local, distributed to internal testers) and Google Play internal (17:41), source `c5f8fcd`: auto-hiding tab bar, no tab indicator, readable category/date colour, « Bon à savoir » removed, iOS update line. Play beta 34, production 30 unchanged. Android update suggestion deferred.
+NEXT_ACTION: Accueil « Derniers résultats » / « Prochains matchs » and new launcher icon (Logo Foot RDC_1) implemented 10 Nov, uncommitted, awaiting owner review — docs/home-matches-20261110/REPORT.md. 5.12.11 (37) remains the latest internal build (source `c5f8fcd`); no upload without approval.
 
 # Development status
 
@@ -8,7 +8,7 @@ NEXT_ACTION: 5.12.11 (37) on TestFlight Internal (8 Nov 17:36 local, distributed
 | Current phase | Internal beta 5.12.11 (33) with the UI refinement on both stores; physical testing next |
 | Latest app code commit | `a4dabbc`; uploaded source revision `ff54f72` |
 | Version | Flutter `5.12.11+37`; iOS CFBundleVersion 37, CFBundleShortVersionString 5.12.11; Android versionCode 37, versionName 5.12.11 |
-| Tests | `flutter test`: 179 passed (8 Nov); earlier: 113 passed, 0 failed. `flutter analyze`: 17 infos, 0 errors, 0 warnings |
+| Tests | `flutter test`: 188 passed (10 Nov); 179 passed (8 Nov); earlier: 113 passed, 0 failed. `flutter analyze`: 17 infos, 0 errors, 0 warnings |
 | Device QA | Pre-release runs on iPhone 11, iPhone 18 Pro, Pixel 8 Pro: all pass after the club-news test fix; screens in `docs/ui-refinement/screens/prerelease/` |
 | Emulators | iPhone 18 Pro booted; Pixel_8_Pro restored to default size and text |
 | API | Production read-only; no writes made |
@@ -26,6 +26,7 @@ None for internal testing.
 See `DECISIONS.md` and the limitations in the final report.
 
 ## Phase log
+| Accueil results/fixtures carousels + new launcher icon (10 Nov) | IMPLEMENTED; 188 tests; analyze 0 errors/warnings; release builds OK; device QA PASS iPhone 11, iPhone 18 Pro, Pixel 8 Pro, small Android, iPhone 11 very large text; icons verified on iOS home screens and Android drawer/app info/recents — `docs/home-matches-20261110/REPORT.md` | uncommitted on `feat/rdc-football-mobile-redesign` |
 | Navigation pass 8 Nov (category in date colour, no tab indicator, tab bar hides while scrolling, « Bon à savoir » removed, iOS update suggestion) | IMPLEMENTED; 179 tests; device QA PASS iPhone 11 (incl. very large text), iPhone 18 Pro, Pixel 8 Pro; owner-approved 8 Nov — `docs/ui-nav-scroll-20261108/REPORT.md` | `821d55a`; released as 5.12.11 (37) internal from `c5f8fcd` |
 | Custom mobile ads (WordPress « Publicités mobiles » + slots home_feed/article_inline) | IMPLEMENTED; Staging VERIFIED; 170 tests; device QA PASS Pixel 8 Pro, iPhone 18 Pro, iPhone 17e | `feat/app-refinements-20261106` (uncommitted) + rdc-football-platform `feat/mobile-ads` |
 | App refinements 6 Nov (club onboarding, notification defaults/permission, tabs, category, header, notification hardening) | IMPLEMENTED; 150 tests; device QA PASS on Pixel 8 Pro, iPhone 18 Pro, iPhone 17e | `feat/app-refinements-20261106` (uncommitted) |

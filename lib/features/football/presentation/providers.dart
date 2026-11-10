@@ -31,6 +31,16 @@ final seasonsProvider = StreamProvider<Loaded<List<Season>>>((ref) => _swr(ref, 
 /// The season chosen in Matchs or Classement; null means the API's current season.
 final selectedSeasonIdProvider = StateProvider<int?>((ref) => null);
 
+/// Section of the Matchs tab to show next, asked for by another screen (Accueil's « Tout voir » and « Calendrier »).
+/// The Matchs tab consumes it once.
+final matchesSectionProvider = StateProvider<int?>((ref) => null);
+
+abstract final class MatchesSection {
+  static const today = 0;
+  static const fixtures = 1;
+  static const results = 2;
+}
+
 final currentSeasonProvider = Provider<AsyncValue<Season>>(
   (ref) => ref.watch(seasonsProvider).whenData((loaded) {
     final rows = loaded.value;
